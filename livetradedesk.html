@@ -173,7 +173,8 @@ footer {
 
 <script>
 function toggleMenu() {
-    document.getElementById("menu").classList.toggle("active");
+    const menu = document.getElementById("menu");
+    menu.style.right = (menu.style.right === "0px") ? "-260px" : "0px";
 }
 </script>
 
