@@ -23,34 +23,47 @@ header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 25px;
+    padding: 10px 20px;
     border-bottom: 1px solid #1a1a1a;
     z-index: 1000;
+}
+
+/* LOGO FIX */
+.logo {
+    height: 42px;
+    width: auto;
+    object-fit: contain;
 }
 
 /* HAMBURGER */
 .hamburger {
     cursor: pointer;
-    width: 50px;
+    width: 45px;
 }
 
 .hamburger div {
     height: 3px;
     background: #fff;
-    margin: 5px 0;
+    margin: 6px 0;
+    transition: 0.3s;
 }
 
 /* MENU */
 .menu {
     position: fixed;
     top: 0;
-    right: -260px;
+    right: -280px;
     width: 260px;
     height: 100%;
     background: #0a0a0a;
     padding-top: 80px;
-    transition: 0.3s;
+    transition: 0.35s ease;
     z-index: 999;
+    border-left: 1px solid #1a1a1a;
+}
+
+.menu.active {
+    right: 0;
 }
 
 .menu a {
@@ -65,7 +78,6 @@ header {
     color: #ff2a2a;
 }
 
-
 /* HERO */
 .banner {
     height: 55vh;
@@ -74,11 +86,13 @@ header {
     justify-content: center;
     text-align: center;
     background: radial-gradient(circle at center, #111 0%, #000 60%);
+    padding-top: 60px;
 }
 
 .banner h1 {
-    font-size: 3.5rem;
+    font-size: 3.2rem;
     color: #ff2a2a;
+    margin: 0;
 }
 
 .banner p {
@@ -87,7 +101,7 @@ header {
 
 /* SECTIONS */
 .section {
-    padding: 80px 30px;
+    padding: 80px 25px;
     max-width: 1200px;
     margin: auto;
 }
@@ -99,7 +113,7 @@ header {
 /* GRID */
 .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: 20px;
     margin-top: 30px;
 }
@@ -119,12 +133,12 @@ header {
 }
 
 .comingsoon {
-    color: #666;
+    color: #777;
     font-size: 0.95rem;
     margin-top: 10px;
 }
 
-/* LIVE CHAT */
+/* CHAT */
 .chat-box {
     background: #0b0b0b;
     border: 1px solid #1f1f1f;
@@ -139,7 +153,6 @@ header {
 .chat-messages {
     flex: 1;
     color: #666;
-    overflow: hidden;
 }
 
 .chat-input {
@@ -154,13 +167,13 @@ footer {
     padding: 30px;
     background: #0a0a0a;
     border-top: 1px solid #1a1a1a;
+    color: #666;
 }
 </style>
 
 <script>
 function toggleMenu() {
-    const menu = document.getElementById("menu");
-    menu.style.right = (menu.style.right === "0px") ? "-100%" : "0px";
+    document.getElementById("menu").classList.toggle("active");
 }
 </script>
 
@@ -169,7 +182,8 @@ function toggleMenu() {
 <body>
 
 <header>
-    <img src="https://raw.githubusercontent.com/rebeltrading/rebeltrading/main/rebeltradinglogo.png">
+    <img class="logo" src="https://raw.githubusercontent.com/rebeltrading/rebeltrading/main/rebeltradinglogo.png" alt="Rebel Trading Logo">
+
     <div class="hamburger" onclick="toggleMenu()">
         <div></div>
         <div></div>
@@ -177,6 +191,7 @@ function toggleMenu() {
     </div>
 </header>
 
+<!-- MENU -->
 <div id="menu" class="menu">
     <a href="index.html">Home</a>
     <a href="index.html#who">Who</a>
@@ -201,33 +216,33 @@ This is Rebel Trading’s live execution environment where traders observe real-
 </p>
 
 <p>
-Access is restricted to subscribed members ($50/month). All content below is currently in development and shown as placeholders for system structure. Live Trade Desk will be live soon!
+Access is restricted to subscribed members ($50/month). All systems below are currently under development and marked as coming soon. Live Trade Desk will be launching shortly.
 </p>
 </section>
 
-<!-- MAIN DASHBOARD -->
+<!-- DASHBOARD -->
 <section class="section">
 
 <div class="grid">
 
 <div class="tile">
 <h3>Live Chart Feed</h3>
-<div class="placeholder">TradingView Charts (Placeholder)</div>
+<div class="comingsoon">Coming soon</div>
 </div>
 
 <div class="tile">
 <h3>Trade Screen</h3>
-<div class="placeholder">Live Trades / Entries (Placeholder)</div>
+<div class="comingsoon">Coming soon</div>
 </div>
 
 <div class="tile">
 <h3>Market Screener</h3>
-<div class="placeholder">Stock / Futures Scanner (Placeholder)</div>
+<div class="comingsoon">Coming soon</div>
 </div>
 
 <div class="tile">
 <h3>News Feed</h3>
-<div class="placeholder">Real-Time Market News (Placeholder)</div>
+<div class="comingsoon">Coming soon</div>
 </div>
 
 </div>
@@ -239,10 +254,10 @@ Access is restricted to subscribed members ($50/month). All content below is cur
 
 <div class="chat-box">
     <div class="chat-messages">
-        <p>Chat messages will appear here (placeholder)</p>
+        <p>Coming soon</p>
     </div>
     <div class="chat-input">
-        Type message (locked system - subscription required)
+        Type message (coming soon)
     </div>
 </div>
 
