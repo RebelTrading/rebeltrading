@@ -87,15 +87,14 @@ nav a:hover {
     color: #a8a8a8;
 }
 
-/* BOX GRID */
+/* BOX */
 .box-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: 20px;
     margin-top: 30px;
 }
 
-/* STANDARD BOX */
 .box {
     background: #0b0b0b;
     border: 1px solid #1f1f1f;
@@ -111,41 +110,6 @@ nav a:hover {
 
 .box h3 {
     color: #fff;
-}
-
-/* PACKAGE CARD */
-.price-box {
-    border: 1px solid #1f1f1f;
-    border-radius: 14px;
-    padding: 24px;
-    background: linear-gradient(145deg, #0c0c0c, #070707);
-    transition: 0.2s;
-}
-
-.price-box:hover {
-    border-color: #ff2a2a;
-    transform: translateY(-5px);
-}
-
-.price-box h3 {
-    color: #ff2a2a;
-    margin-bottom: 10px;
-}
-
-.price {
-    font-size: 1.7rem;
-    color: #fff;
-    margin: 10px 0;
-}
-
-.tag {
-    display: inline-block;
-    padding: 4px 10px;
-    font-size: 0.75rem;
-    background: #1a1a1a;
-    color: #aaa;
-    border-radius: 20px;
-    margin-bottom: 10px;
 }
 
 /* FOOTER */
@@ -166,7 +130,7 @@ footer {
     <nav>
         <a href="#who">Who</a>
         <a href="#join">Join</a>
-        <a href="#packages">Packages</a>
+        <a href="#sim">Sim Evaluation</a>
         <a href="#how">How</a>
     </nav>
 </header>
@@ -182,128 +146,126 @@ footer {
 <!-- WHO -->
 <section id="who" class="section">
     <h2>Who is Rebel Trading?</h2>
+
     <p>
-        Rebel Trading Group was founded by Teddy Teske in 2026 after over 20 years of trading stocks, options, and intraday scalping systems. Built from real execution experience, not theory, Rebel Trading is designed to develop disciplined and structured traders.
+        Rebel Trading Group was founded by Teddy Teske in 2026 after more than 20 years of trading stocks, options, and intraday scalping systems. The firm was built from real execution experience in live markets—not theory or education.
     </p>
+
     <p>
-        Our strategy is a high-frequency scalping system refined over decades of live market conditions, built around precision entries and strict risk awareness.
+        Our mission is simple: identify disciplined traders, refine their execution, and allocate capital only to those who demonstrate consistent performance under pressure.
     </p>
 </section>
 
 <!-- JOIN -->
 <section id="join" class="section">
-    <h2>Joining Rebel Trading</h2>
+    <h2>Recruitment Process</h2>
 
     <p>
-        Rebel Trading is a performance-based trading system built for disciplined stock traders. There are no subscriptions, no courses, and no application process.
+        Rebel Trading operates as a selective trading desk, not a retail education platform.
+        Traders are recruited through performance review rather than subscriptions or paid courses.
     </p>
 
     <p>
-        Traders simply select an evaluation package and begin trading in a structured simulated environment with defined risk parameters.
+        To be considered, applicants must submit:
+        <br>• Trading journal (TradeZella or equivalent)
+        <br>• Short cover letter describing strategy and experience
     </p>
 
     <p>
-        Our system is built on a two-stage progression model:
-    </p>
-
-    <p>
-        <strong>Stage 1 — Evaluation Phase:</strong>  
-        Traders must reach the profit target while respecting strict risk limits. Failure occurs only if drawdown thresholds are breached. There are no artificial time constraints or trailing/EOD drawdown mechanics.
-    </p>
-
-    <p>
-        <strong>Stage 2 — Funded Sim Phase:</strong>  
-        Traders who pass the evaluation are promoted into a funded simulation account where they trade with scaled capital under live market conditions.
-    </p>
-
-    <p>
-        In the funded sim phase, traders are continuously measured on key performance metrics including:
-        consistent profitability, drawdown control, risk-to-reward efficiency, and position sizing discipline.
-    </p>
-
-    <p>
-        Traders who maintain strong performance metrics over time in the funded sim phase may be invited to join Rebel Trading as live account traders, managing real capital with an 80/20 profit split structure.
-    </p>
-
-    <p>
-        Rebel Trading is designed as a performance pipeline: only traders who demonstrate consistency and risk control across both evaluation and funded simulation phases are considered for live capital allocation.
+        Selected traders are assigned to our internal simulation environment and given access to a structured evaluation system.
     </p>
 </section>
 
-<!-- PACKAGES -->
-<section id="packages" class="section">
-    <h2>Evaluation Packages</h2>
+<!-- SIM EVALUATION -->
+<section id="sim" class="section">
+    <h2>Sim Evaluation (100K Unified Account)</h2>
+
+    <p>
+        All approved traders enter the same controlled simulation environment:
+        <strong>“Sim Trader 01” — $100,000 TradingView Paper Account</strong>
+    </p>
+
+    <p>
+        Traders receive structured trade direction and execute within strict risk parameters using real-time market data and simulated execution logic.
+    </p>
 
     <div class="box-container">
 
-        <div class="price-box">
-            <div class="tag">ENTRY</div>
-            <h3>25K Evaluation</h3>
-            <div class="price">$29.99</div>
-            <p>
-                • $25,000 simulated capital<br>
-                • Profit target: $1,250 (5%)<br>
-                • Static drawdown: $1,000 (4%)<br>
-                • Max daily loss: $500<br>
-                • Pass = hit target OR maintain controlled risk behavior<br>
-                • Fail = breach drawdown
-            </p>
-        </div>
-
-        <div class="price-box">
-            <div class="tag">STANDARD</div>
-            <h3>50K Evaluation</h3>
-            <div class="price">$49.99</div>
-            <p>
-                • $50,000 simulated capital<br>
-                • Profit target: $2,500 (5%)<br>
-                • Static drawdown: $2,000 (4%)<br>
-                • Max daily loss: $1,000<br>
-                • Consistency scoring applies<br>
-                • Fail = breach drawdown
-            </p>
-        </div>
-
-        <div class="price-box">
-            <div class="tag">PRO</div>
-            <h3>100K Evaluation</h3>
-            <div class="price">$79.99</div>
+        <div class="box">
+            <h3>Evaluation Rules</h3>
             <p>
                 • $100,000 simulated capital<br>
-                • Profit target: $5,000 (5%)<br>
-                • Static drawdown: $4,000 (4%)<br>
-                • Max daily loss: $1,500<br>
-                • Elite consistency requirement<br>
-                • Fail = breach drawdown
+                • Static drawdown model (no trailing rules)<br>
+                • Defined daily loss limit<br>
+                • No time pressure or artificial deadlines
+            </p>
+        </div>
+
+        <div class="box">
+            <h3>Pass Criteria</h3>
+            <p>
+                • Consistent profitability<br>
+                • Controlled drawdown behavior<br>
+                • Repeatable execution (not single trade luck)<br>
+                • Risk discipline under live conditions
+            </p>
+        </div>
+
+        <div class="box">
+            <h3>Failure Condition</h3>
+            <p>
+                • Breach of static drawdown limit<br>
+                • Excessive risk concentration<br>
+                • Breakdown in execution discipline
             </p>
         </div>
 
     </div>
+
+    <p style="margin-top:20px;">
+        Traders who pass the evaluation phase are advanced into a funded simulation environment where performance is tracked under scaled capital conditions.
+    </p>
 </section>
 
 <!-- HOW IT WORKS -->
 <section id="how" class="section">
     <h2>How It Works</h2>
 
+    <div class="box-container">
+
         <div class="box">
-            <h3>1. Evaluation</h3>
-            <p>Trade within a simulated environment under structured risk rules.</p>
+            <h3>1. Recruitment</h3>
+            <p>
+                Traders submit a journal and cover letter for review by our team.
+            </p>
         </div>
 
         <div class="box">
-            <h3>2. Pass or Fail</h3>
-            <p>Hit profit target to pass. Breach drawdown = failure. No time limits.</p>
+            <h3>2. Simulation Assignment</h3>
+            <p>
+                Approved traders receive access to the unified TradingView evaluation account.
+            </p>
         </div>
 
         <div class="box">
-            <h3>3. Funded Sim Access</h3>
-            <p>Successful traders are moved into funded simulation with profit splits.</p>
+            <h3>3. Performance Evaluation</h3>
+            <p>
+                Traders are assessed on consistency, discipline, and risk management—not just profit.
+            </p>
         </div>
+
+        <div class="box">
+            <h3>4. Funded Consideration</h3>
+            <p>
+                Top performers advance into funded simulation and may later be considered for live capital allocation.
+            </p>
+        </div>
+
     </div>
 </section>
 
 <footer>
-    © 2026 Rebel Trading Group — Built for disciplined traders only.
+    © 2026 Rebel Trading Group — Built for disciplined execution only.
 </footer>
 
 </body>
