@@ -11,7 +11,6 @@ body {
     font-family: Arial, Helvetica, sans-serif;
     background: #000;
     color: #bdbdbd;
-    scroll-behavior: smooth;
 }
 
 /* HEADER */
@@ -19,30 +18,54 @@ header {
     position: fixed;
     top: 0;
     width: 100%;
-    background: rgba(0,0,0,0.85);
+    background: rgba(0,0,0,0.9);
     backdrop-filter: blur(10px);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 40px;
+    padding: 12px 25px;
     border-bottom: 1px solid #1a1a1a;
     z-index: 1000;
 }
 
 header img {
-    height: 80px;
+    height: 60px;
 }
 
-nav a {
+/* HAMBURGER */
+.hamburger {
+    cursor: pointer;
+    width: 30px;
+}
+
+.hamburger div {
+    height: 3px;
+    background: #fff;
+    margin: 5px 0;
+}
+
+/* MENU */
+.menu {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: 260px;
+    height: 100%;
+    background: #0a0a0a;
+    padding-top: 80px;
+    transition: 0.3s;
+    z-index: 999;
+}
+
+.menu a {
+    display: block;
+    padding: 15px 25px;
     color: #aaa;
-    margin: 0 14px;
     text-decoration: none;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    transition: 0.2s;
+    font-weight: bold;
 }
 
-nav a:hover {
+.menu a:hover {
     color: #ff2a2a;
 }
 
@@ -54,40 +77,29 @@ nav a:hover {
     justify-content: center;
     text-align: center;
     background: radial-gradient(circle at center, #111 0%, #000 60%);
-    padding-top: 80px;
 }
 
 .banner h1 {
     font-size: 4rem;
     color: #ff2a2a;
-    letter-spacing: 2px;
-    margin-bottom: 10px;
 }
 
 .banner p {
-    font-size: 1.2rem;
     color: #888;
 }
 
 /* SECTIONS */
 .section {
-    padding: 110px 40px;
+    padding: 100px 30px;
     max-width: 1100px;
     margin: auto;
 }
 
 .section h2 {
     color: #ff2a2a;
-    font-size: 2rem;
-    margin-bottom: 20px;
 }
 
-.section p {
-    line-height: 1.6;
-    color: #a8a8a8;
-}
-
-/* BOX GRID */
+/* GRID */
 .box-container {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -99,17 +111,29 @@ nav a:hover {
 .box {
     background: #0b0b0b;
     border: 1px solid #1f1f1f;
-    padding: 22px;
-    border-radius: 12px;
-    transition: 0.2s;
+    padding: 20px;
+    border-radius: 10px;
 }
 
 .box:hover {
     border-color: #ff2a2a;
-    transform: translateY(-4px);
 }
 
-.box h3 {
+/* PACKAGE */
+.package {
+    background: linear-gradient(145deg, #0c0c0c, #070707);
+    border: 1px solid #1f1f1f;
+    padding: 25px;
+    border-radius: 14px;
+    text-align: center;
+}
+
+.package h3 {
+    color: #ff2a2a;
+}
+
+.price {
+    font-size: 2rem;
     color: #fff;
 }
 
@@ -119,173 +143,164 @@ footer {
     padding: 30px;
     background: #0a0a0a;
     border-top: 1px solid #1a1a1a;
-    color: #666;
 }
 </style>
+
+<script>
+function toggleMenu() {
+    const menu = document.getElementById("menu");
+    menu.style.right = (menu.style.right === "0px") ? "-100%" : "0px";
+}
+</script>
+
 </head>
 
 <body>
 
 <header>
     <img src="https://raw.githubusercontent.com/rebeltrading/rebeltrading/main/rebeltradinglogo.png">
-    <nav>
-        <a href="#who">Who</a>
-        <a href="#join">Join</a>
-        <a href="#sim">Sim</a>
-        <a href="#how">How</a>
-    </nav>
+    <div class="hamburger" onclick="toggleMenu()">
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
 </header>
+
+<div id="menu" class="menu">
+    <a href="#who">Who</a>
+    <a href="#how">How</a>
+    <a href="#join">Join</a>
+    <a href="#package">Evaluation</a>
+</div>
 
 <!-- HERO -->
 <div class="banner">
     <div>
         <h1>TRADE LIKE A REBEL</h1>
-        <p>Precision. Discipline. Execution.</p>
+        <p>Futures. Discipline. Precision.</p>
     </div>
 </div>
 
 <!-- WHO -->
 <section id="who" class="section">
-    <h2>Who is Rebel Trading?</h2>
-
-    <p>
-        Rebel Trading Group was founded by Teddy Teske in 2026 after more than 20 years of trading stocks, options, and intraday scalping systems. Built from real market execution experience, the firm focuses on identifying disciplined traders and refining execution under pressure.
-    </p>
-
-    <p>
-        Our approach is simple: remove noise, enforce structure, and evaluate traders based on consistency—not hype or single trades.
-    </p>
+<h2>Who We Are</h2>
+<p>
+Rebel Trading Group is a private futures trading firm built around one principle: consistency over hype.
+</p>
+<p>
+We do not operate like traditional prop firms. There are no mass signups, no monthly fees, and no system designed for failure. We recruit and develop a small number of traders who already demonstrate edge and discipline.
+</p>
+<p>
+Our model is simple — identify strong traders, refine execution, and allocate capital only when probability is in our favor.
+</p>
 </section>
 
 <!-- HOW -->
 <section id="how" class="section">
-    <h2>How It Works</h2>
+<h2>How It Works</h2>
 
-    <div class="box-container">
+<div class="box-container">
 
-        <div class="box">
-            <h3>Applications</h3>
-            <p>
-                Submit TradeZella journal + cover letter for review. Selected traders enter simulation.
-            </p>
-        </div>
+<div class="box">
+<h3>Applications</h3>
+<p>Submit your trade journal + cover letter. We review performance, consistency, and risk profile.</p>
+</div>
 
-        <div class="box">
-            <h3>Recruitment</h3>
-            <p>
-                Traders may also be invited directly based on performance or referrals.
-            </p>
-        </div>
+<div class="box">
+<h3>Recruitment</h3>
+<p>Top traders may be invited directly through referral or performance recognition.</p>
+</div>
 
-        <div class="box">
-            <h3>Sim Evaluation</h3>
-            <p>
-                Trade in a unified $100K TradingView account under strict risk rules and performance metrics.
-            </p>
-        </div>
+<div class="box">
+<h3>Evaluation</h3>
+<p>Approved traders enter a structured 100K futures simulation under strict rules.</p>
+</div>
 
-        <div class="box">
-            <h3>Funded Progression</h3>
-            <p>
-                Top performers are recruited to join our trading team and trade with real capital with a 80/20 profit split. 
-            </p>
-        </div>
+<div class="box">
+<h3>Live Capital</h3>
+<p>Top performers are trained and placed on live accounts with an 80/20 profit split.</p>
+</div>
 
-    </div>
+</div>
 </section>
 
 <!-- JOIN -->
 <section id="join" class="section">
-    <h2>Applications & Recruitment</h2>
+<h2>Applications & Selection</h2>
 
-    <p>
-        Rebel Trading accepts traders through two entry paths:
-    </p>
+<p>
+We only accept traders who demonstrate real edge. This is not open enrollment.
+</p>
 
-    <p>
-        <strong>1. Applications:</strong> Traders may submit a verified TradeZella journal or equivalent trading history along with a short cover letter outlining strategy, experience, and risk approach.
-    </p>
+<p><strong>Phase 1 Requirements:</strong></p>
 
-    <p>
-        To be considered, traders must meet the following <strong>Phase 1 Historical Filter</strong> requirements:
-    </p>
+<p>
+• Minimum 12 months trading history OR 300+ trades<br>
+• Minimum 60% win rate<br>
+• Max drawdown: 10–15%<br>
+• No single month > 80% of total profits<br>
+• Consistent, controlled risk behavior
+</p>
 
-    <p>
-        • Minimum 12 months of trading history (or 300+ executed trades minimum)<br>
-        • Minimum 60% win rate over the evaluated period<br>
-        • Maximum drawdown between 10%–15% based on verified journal performance<br>
-        • No single month may account for more than 80% of total profits (profit consistency requirement)<br>
-        • Demonstrated controlled risk behavior (no excessive account volatility or account blow-up patterns)
-    </p>
+<p>
+Only traders who meet these standards are offered access to our evaluation environment.
+</p>
 
-    <p>
-        This phase is designed to ensure traders are not relying on short-term performance spikes, but instead demonstrate sustained, repeatable edge and disciplined risk management.
-    </p>
-
-    <p>
-        <strong>2. Recruitment:</strong> Traders may also be identified through performance networks, referrals, or internal review and invited directly into the simulation evaluation phase.
-    </p>
-
-    <p>
-        All approved traders proceed into a controlled evaluation environment using a provided TradingView simulation account where performance is tracked under standardized risk rules.
-    </p>
 </section>
 
-<!-- SIM -->
-<section id="sim" class="section">
-    <h2>100K Sim Evaluation</h2>
+<!-- PACKAGE -->
+<section id="package" class="section">
+<h2>No Cost Evaluation</h2>
 
-    <p>
-        All approved traders are placed into a single structured simulation environment through out IKBR Master Account.
-        <strong>Interactive Brokers “Sim Account” w/ provided sim login — $100,000 Sim Account</strong>
-    </p>
+<p>
+We operate differently than traditional prop firms. There are no evaluation fees.
+Only approved traders are placed into a structured simulation environment.
+</p>
 
-    <p>
-        Traders are given access to trade freely across NASDAQ equities, SPY, and all major US-listed stocks. There are no restricted symbols.
-    </p>
+<div class="package">
 
-    <div class="box-container">
+<h3>100K Futures Evaluation</h3>
+<div class="price">$0</div>
 
-        <div class="box">
-            <h3>Profit Target</h3>
-            <p>
-                • 6% account growth required<br>
-                • $6,000 on $100,000 account<br>
-                • Target must be reached within 90 days<br>
-                • No upfront costs for evalutation. Recruitment-only<br>
-            </p>
-        </div>
+<p>
+• $100,000 Sim Account<br>
+• Trade Futures (Indices, etc.)<br>
+• Max size: 8 Minis / 80 Micros<br>
+</p>
 
-        <div class="box">
-            <h3>Risk Rules</h3>
-            <p>
-                • Static drawdown: 3% ($3,000 max loss)<br>
-                • Max daily loss enforced: 1% ($1,000 max daily loss)<br>
-                • No trailing drawdown. Static only<br>
-                • No end-of-day reset manipulation<br>
-                • No upfront costs for evalutation. Recruitment-only<br>
-            </p>
-        </div>
+<hr>
 
-        <div class="box">
-            <h3>Consistency Requirement</h3>
-            <p>
-                • Minimum 40% consistency score<br>
-                • No reliance on single large winning trade<br>
-                • Measured across full evaluation period<br>
-                • No upfront costs for evalutation. Recruitment-only<br>
-            </p>
-        </div>
+<p>
+<strong>Profit Target:</strong><br>
+• $6,000 (6%)
+</p>
 
-    </div>
+<p>
+<strong>Drawdown:</strong><br>
+• Static: $3,000 (3%)<br>
+• Daily Loss: $1,000
+</p>
 
-    <p style="margin-top:20px;">
-        Traders who meet all requirements and pass the evaluation phase are recruited to join our trade desk, where performance is tracked under scaled capital conditions and longer-term evaluation metrics. Traders will be put through a 30 day training period with our internal team prior to trading real capital. All traders who move past training start with a funded 5K Live Account under set conditions: max drawdown (static) and controlled risk management. 
-    </p>
+<p>
+<strong>Consistency:</strong><br>
+• Minimum 40% score<br>
+• No single trade dominance
+</p>
+
+</div>
+
+<p style="margin-top:20px;">
+Our system is built to reduce failure rates. We do not mass-assign accounts. Only vetted traders are evaluated, allowing us to offer this at no cost.
+</p>
+
+<p>
+Traders who pass are placed into a 90-day training phase. Upon completion, traders are funded with a $5,000 live account and begin trading under an 80/20 profit split.
+</p>
+
 </section>
 
 <footer>
-    © 2026 Rebel Trading Group — Built for disciplined execution only.
+© 2026 Rebel Trading Group — Private Futures Trading Firm
 </footer>
 
 </body>
