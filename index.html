@@ -139,56 +139,54 @@ header img {
 
 /* BUTTON */
 .apply-btn {
+    display: inline-block;
     margin-top: 30px;
-    padding: 15px 30px;
+    padding: 14px 28px;
     background: #ff2a2a;
     color: #fff;
-    border: none;
-    border-radius: 6px;
-    font-size: 1rem;
-    cursor: pointer;
+    font-weight: bold;
+    text-decoration: none;
+    border-radius: 8px;
+    transition: 0.2s;
 }
 
 .apply-btn:hover {
-    background: #e02222;
+    background: #cc0000;
 }
 
-/* MODAL */
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 2000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.8);
-    justify-content: center;
-    align-items: center;
+/* FORM */
+.form-section {
+    padding: 100px 30px;
+    max-width: 600px;
+    margin: auto;
 }
 
-.modal-content {
-    background: #111;
-    padding: 30px;
-    border-radius: 10px;
-    width: 90%;
-    max-width: 400px;
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
 
-.modal-content input,
-.modal-content button {
-    width: 100%;
-    padding: 10px;
-    margin-top: 10px;
-    background: #000;
-    border: 1px solid #333;
+input, textarea {
+    padding: 12px;
+    background: #0b0b0b;
+    border: 1px solid #1f1f1f;
     color: #fff;
+    border-radius: 6px;
 }
 
-.modal-content button {
+button {
+    padding: 12px;
     background: #ff2a2a;
     border: none;
+    color: #fff;
+    font-weight: bold;
+    border-radius: 6px;
     cursor: pointer;
+}
+
+button:hover {
+    background: #cc0000;
 }
 
 /* FOOTER */
@@ -204,14 +202,6 @@ footer {
 function toggleMenu() {
     const menu = document.getElementById("menu");
     menu.style.right = (menu.style.right === "0px") ? "-100%" : "0px";
-}
-
-function openForm() {
-    document.getElementById("modal").style.display = "flex";
-}
-
-function closeForm() {
-    document.getElementById("modal").style.display = "none";
 }
 </script>
 
@@ -233,8 +223,10 @@ function closeForm() {
     <a href="#how">How</a>
     <a href="#join">Join</a>
     <a href="#package">Evaluation</a>
+    <a href="#apply">Apply</a>
 </div>
 
+<!-- HERO -->
 <div class="banner">
     <div>
         <h1>TRADE LIKE A REBEL</h1>
@@ -242,73 +234,152 @@ function closeForm() {
     </div>
 </div>
 
+<!-- WHO -->
 <section id="who" class="section">
 <h2>Who We Are</h2>
-<p>Rebel Trading Group is a private futures trading firm built around consistency.</p>
-<p>We recruit selectively and develop disciplined traders into capital-ready professionals.</p>
-</section>
-
-<section id="how" class="section">
-<h2>How It Works</h2>
-<div class="box-container">
-<div class="box"><h3>Applications</h3><p>Submit journal + cover letter.</p></div>
-<div class="box"><h3>Recruitment</h3><p>Top traders may be invited.</p></div>
-<div class="box"><h3>Evaluation</h3><p>Trade 100K sim under rules.</p></div>
-<div class="box"><h3>Live Capital</h3><p>80/20 funded accounts.</p></div>
-</div>
-</section>
-
-<section id="join" class="section">
-<h2>Applications & Selection</h2>
-<p>Only disciplined traders are accepted.</p>
 <p>
-• 12 months history OR 300 trades<br>
-• 60% win rate<br>
-• 10–15% max drawdown<br>
-• Consistent performance required
+Rebel Trading Group is a private futures trading firm built around one principle: consistency over hype.
+</p>
+<p>
+We do not operate like traditional prop firms. There are no mass signups, no monthly fees, and no system designed for failure. We recruit and develop a small number of traders who already demonstrate edge and discipline.
+</p>
+<p>
+Our model is simple — identify strong traders, refine execution, and allocate capital only when probability is in our favor.
 </p>
 </section>
 
-<section id="package" class="section">
-<h2>No Cost Evaluation</h2>
+<!-- HOW -->
+<section id="how" class="section">
+<h2>How It Works</h2>
 
-<div class="package">
-<h3>100K Futures Evaluation</h3>
-<div class="price">$0</div>
-<p>• Max size: 8 Minis / 80 Micros</p>
-<p><strong>Target:</strong> $6,000</p>
-<p><strong>Drawdown:</strong> $3,000 static</p>
-<p><strong>Daily Loss:</strong> $1,000</p>
-<p><strong>Consistency:</strong> Required</p>
+<div class="box-container">
+
+<div class="box">
+<h3>Applications</h3>
+<p>Submit your trade journal + cover letter. We review performance, consistency, and risk profile.</p>
 </div>
 
-<button class="apply-btn" onclick="openForm()">Submit Application</button>
+<div class="box">
+<h3>Recruitment</h3>
+<p>Top traders may be invited directly through referral or performance recognition.</p>
+</div>
+
+<div class="box">
+<h3>Evaluation</h3>
+<p>Approved traders enter a structured 100K futures simulation under strict rules.</p>
+</div>
+
+<div class="box">
+<h3>Live Capital</h3>
+<p>Top performers are trained and placed on live accounts with an 80/20 profit split.</p>
+</div>
+
+</div>
+</section>
+
+<!-- JOIN -->
+<section id="join" class="section">
+<h2>Applications & Selection</h2>
+
+<p>
+We only accept traders who demonstrate real edge. This is not open enrollment.
+</p>
+
+<p><strong>Phase 1 Requirements:</strong></p>
+
+<p>
+• Minimum 12 months trading history OR 300+ trades<br>
+• Minimum 60% win rate<br>
+• Max drawdown: 10–15%<br>
+• No single month > 80% of total profits<br>
+• Consistent, controlled risk behavior
+</p>
+
+<p>
+Only traders who meet these standards are offered access to our evaluation environment.
+</p>
 
 </section>
 
-<!-- MODAL FORM -->
-<div id="modal" class="modal" onclick="closeForm()">
-<div class="modal-content" onclick="event.stopPropagation()">
+<!-- PACKAGE -->
+<section id="package" class="section">
+<h2>No Cost Evaluation</h2>
 
-<h3 style="color:#ff2a2a;">Apply Now</h3>
+<p>
+We operate differently than traditional prop firms. There are no evaluation fees.
+Only approved traders are placed into a structured simulation environment.
+</p>
+
+<div class="package">
+
+<h3>100K Futures Evaluation</h3>
+<div class="price">$0</div>
+
+<p>
+• $100,000 Sim Account<br>
+• Trade Futures (Indices, etc.)<br>
+• Max size: 8 Minis / 80 Micros<br>
+</p>
+
+<hr>
+
+<p>
+<strong>Profit Target:</strong><br>
+• $6,000 (6%)
+</p>
+
+<p>
+<strong>Drawdown:</strong><br>
+• Static: $3,000 (3%)<br>
+• Daily Loss: $1,000
+</p>
+
+<p>
+<strong>Consistency:</strong><br>
+• Minimum 40% score<br>
+• No single trade dominance
+</p>
+
+</div>
+
+<p style="margin-top:20px;">
+Our system is built to reduce failure rates. We do not mass-assign accounts. Only vetted traders are evaluated, allowing us to offer this at no cost.
+</p>
+
+<p>
+Traders who pass are placed into a 90-day training phase. Upon completion, traders are funded with a $5,000 live account and begin trading under an 80/20 profit split.
+</p>
+
+<!-- APPLY BUTTON -->
+<a href="#apply" class="apply-btn">Submit Application</a>
+
+</section>
+
+<!-- APPLICATION FORM -->
+<section id="apply" class="form-section">
+<h2>Submit Application</h2>
 
 <form action="https://formspree.io/f/mbdwdwqd" method="POST" enctype="multipart/form-data">
+    
+    <label>Name</label>
+    <input type="text" name="name" required>
 
-<input type="text" name="name" placeholder="Full Name" required>
+    <label>Email</label>
+    <input type="email" name="email" required>
 
-<input type="email" name="email" placeholder="Email Address" required>
+    <label>Trade Journal (CSV or PDF)</label>
+    <input type="file" name="file" accept=".csv,.pdf" required>
 
-<input type="file" name="file" accept=".csv,.pdf" required>
+    <label>Cover Letter</label>
+    <textarea name="message" rows="5" placeholder="Briefly explain your trading experience and strategy"></textarea>
 
-<button type="submit">Submit Application</button>
-
+    <button type="submit">Submit Application</button>
 </form>
 
-</div>
-</div>
+</section>
 
 <footer>
-© 2026 Rebel Trading Group
+© 2026 Rebel Trading Group — Private Futures Trading Firm
 </footer>
 
 </body>
