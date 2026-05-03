@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rebel University | Rebel Trading Group</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #000;
+    color: #bdbdbd;
+}
+
+/* HEADER */
+header {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    background: rgba(0,0,0,0.9);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 10px;
+    box-sizing: border-box;
+    border-bottom: 1px solid #1a1a1a;
+    z-index: 1000;
+}
+
+header img {
+    height: 60px;
+    object-fit: contain;
+}
+
+/* HAMBURGER */
+.hamburger {
+    cursor: pointer;
+    width: 50px;
+}
+
+.hamburger div {
+    height: 3px;
+    background: #fff;
+    margin: 5px 0;
+}
+
+/* MENU */
+.menu {
+    position: fixed;
+    top: 0;
+    right: -260px;
+    width: 260px;
+    height: 100%;
+    background: #0a0a0a;
+    padding-top: 80px;
+    transition: 0.3s;
+    z-index: 999;
+}
+
+.menu a {
+    display: block;
+    padding: 15px 25px;
+    color: #aaa;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.menu a:hover {
+    color: #ff2a2a;
+}
+
+/* MAIN LAYOUT */
+.university-container {
+    display: flex;
+    margin-top: 80px;
+    height: calc(100vh - 80px);
+}
+
+/* SIDEBAR */
+.sidebar {
+    width: 280px;
+    background: #0a0a0a;
+    border-right: 1px solid #1a1a1a;
+    padding: 20px;
+}
+
+.sidebar h2 {
+    color: #ff2a2a;
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+}
+
+.course {
+    padding: 12px;
+    border: 1px solid #1f1f1f;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.course:hover {
+    border-color: #ff2a2a;
+}
+
+.course.active {
+    border-color: #ff2a2a;
+    background: #111;
+    color: #fff;
+}
+
+/* CONTENT AREA */
+.content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+/* PLAYER AREA */
+.player {
+    width: 100%;
+    max-width: 900px;
+    height: 500px;
+    background: #0b0b0b;
+    border: 1px solid #1f1f1f;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.player h2 {
+    color: #ff2a2a;
+}
+
+/* TITLE */
+.title {
+    position: absolute;
+    top: 90px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+}
+
+.title h1 {
+    color: #ff2a2a;
+    margin: 0;
+}
+
+.title p {
+    color: #777;
+}
+</style>
+
+<script>
+function toggleMenu() {
+    const menu = document.getElementById("menu");
+    menu.style.right = (menu.style.right === "0px") ? "-260px" : "0px";
+}
+
+function loadCourse(courseName) {
+    document.getElementById("playerContent").innerHTML =
+        "<h2>" + courseName + "</h2><p>Coming soon</p>";
+
+    const courses = document.querySelectorAll(".course");
+    courses.forEach(c => c.classList.remove("active"));
+    event.currentTarget.classList.add("active");
+}
+</script>
+
+</head>
+
+<body>
+
+<header>
+    <img src="https://raw.githubusercontent.com/rebeltrading/rebeltrading/main/rebeltradinglogo.png">
+
+    <div class="hamburger" onclick="toggleMenu()">
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
+</header>
+
+<!-- MENU -->
+<div id="menu" class="menu">
+    <a href="index.html">Home</a>
+    <a href="livetradedesk.html">Live Trade Desk</a>
+    <a href="liveaccounts.html">Live Accounts</a>
+    <a href="rebeluniversity.html">Rebel University</a>
+</div>
+
+<!-- TITLE -->
+<div class="title">
+    <h1>🎓 Rebel University</h1>
+    <p>Internal Training & Education Platform</p>
+</div>
+
+<!-- MAIN -->
+<div class="university-container">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <h2>Courses</h2>
+
+        <div class="course" onclick="loadCourse('How to Trade Like a Rebel')">
+            Course #1<br>
+            <strong>How to Trade Like a Rebel</strong>
+        </div>
+
+        <div class="course" onclick="loadCourse('Advanced Trading Techniques')">
+            Course #2<br>
+            <strong>Advanced Trading Techniques</strong>
+        </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+        <div id="playerContent" class="player">
+            <div>
+                <h2>Rebel University</h2>
+                <p>Select a course to begin</p>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>
