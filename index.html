@@ -10,7 +10,7 @@ body {
     margin: 0;
     font-family: Arial, Helvetica, sans-serif;
     background: #000;
-    color: #bbb;
+    color: #bdbdbd;
     scroll-behavior: smooth;
 }
 
@@ -84,7 +84,7 @@ nav a:hover {
 
 .section p {
     line-height: 1.6;
-    color: #aaa;
+    color: #a8a8a8;
 }
 
 /* BOX GRID */
@@ -95,8 +95,9 @@ nav a:hover {
     margin-top: 30px;
 }
 
+/* STANDARD BOX */
 .box {
-    background: linear-gradient(145deg, #111, #0a0a0a);
+    background: #0b0b0b;
     border: 1px solid #1f1f1f;
     padding: 22px;
     border-radius: 12px;
@@ -110,16 +111,20 @@ nav a:hover {
 
 .box h3 {
     color: #fff;
-    margin-bottom: 10px;
 }
 
-/* PACKAGES */
+/* PACKAGE CARD */
 .price-box {
-    border: 1px solid #222;
+    border: 1px solid #1f1f1f;
     border-radius: 14px;
-    padding: 25px;
-    background: #0b0b0b;
-    text-align: left;
+    padding: 24px;
+    background: linear-gradient(145deg, #0c0c0c, #070707);
+    transition: 0.2s;
+}
+
+.price-box:hover {
+    border-color: #ff2a2a;
+    transform: translateY(-5px);
 }
 
 .price-box h3 {
@@ -128,15 +133,15 @@ nav a:hover {
 }
 
 .price {
-    font-size: 1.8rem;
+    font-size: 1.7rem;
     color: #fff;
     margin: 10px 0;
 }
 
 .tag {
     display: inline-block;
-    padding: 3px 10px;
-    font-size: 0.8rem;
+    padding: 4px 10px;
+    font-size: 0.75rem;
     background: #1a1a1a;
     color: #aaa;
     border-radius: 20px;
@@ -157,13 +162,12 @@ footer {
 <body>
 
 <header>
-    <img src="https://raw.githubusercontent.com/rebeltrading/rebeltrading/main/rebeltradinglogo.png" alt="Rebel Trading Logo">
+    <img src="https://raw.githubusercontent.com/rebeltrading/rebeltrading/main/rebeltradinglogo.png">
     <nav>
         <a href="#who">Who</a>
         <a href="#join">Join</a>
         <a href="#packages">Packages</a>
         <a href="#how">How</a>
-        <a href="#invest">Invest</a>
     </nav>
 </header>
 
@@ -171,7 +175,7 @@ footer {
 <div class="banner">
     <div>
         <h1>TRADE LIKE A REBEL</h1>
-        <p>Precision Execution. No Noise. No Excuses.</p>
+        <p>Precision. Discipline. Execution.</p>
     </div>
 </div>
 
@@ -179,10 +183,10 @@ footer {
 <section id="who" class="section">
     <h2>Who is Rebel Trading?</h2>
     <p>
-        Rebel Trading Group was founded by Teddy Teske in 2026 after over 20 years of experience in stocks, options, and market scalping systems. Built from real execution—not theory—Rebel Trading exists to develop disciplined, structured, and elite-level traders.
+        Rebel Trading Group was founded by Teddy Teske in 2026 after over 20 years of trading stocks, options, and intraday scalping systems. Built from real execution experience, not theory, Rebel Trading is designed to develop disciplined and structured traders.
     </p>
     <p>
-        Our edge is a fast-paced scalping methodology refined over decades of live market conditions, built around precision entries and strict risk awareness, maintaining an 82% win rate as of 2026.
+        Our strategy is a high-frequency scalping system refined over decades of live market conditions, built around precision entries and strict risk awareness.
     </p>
 </section>
 
@@ -190,10 +194,10 @@ footer {
 <section id="join" class="section">
     <h2>Joining Rebel Trading</h2>
     <p>
-        Rebel Trading is invite-only. We do not sell courses or memberships. We recruit traders based on performance and discipline.
+        We are a private trading group. No subscriptions. No courses. No entry fees beyond evaluation selection.
     </p>
     <p>
-        Applicants submit a trading journal (TradeZella or equivalent) plus a short cover letter. Selected traders enter a structured evaluation phase using a simulated trading environment.
+        Traders submit a verified journal and are selected based on performance, discipline, and consistency.
     </p>
 </section>
 
@@ -204,15 +208,16 @@ footer {
     <div class="box-container">
 
         <div class="price-box">
-            <div class="tag">ENTRY LEVEL</div>
+            <div class="tag">ENTRY</div>
             <h3>25K Evaluation</h3>
             <div class="price">$29.99</div>
             <p>
                 • $25,000 simulated capital<br>
-                • $1,000 profit target<br>
-                • Static drawdown: $1,000<br>
-                • 2-week evaluation window<br>
-                • Pass = funded sim access
+                • Profit target: $1,250 (5%)<br>
+                • Static drawdown: $1,000 (4%)<br>
+                • Max daily loss: $500<br>
+                • Pass = hit target OR maintain controlled risk behavior<br>
+                • Fail = breach drawdown
             </p>
         </div>
 
@@ -222,10 +227,11 @@ footer {
             <div class="price">$49.99</div>
             <p>
                 • $50,000 simulated capital<br>
-                • $2,000 profit target<br>
-                • Static drawdown: $2,000<br>
-                • 2-week evaluation window<br>
-                • Higher consistency requirement
+                • Profit target: $2,500 (5%)<br>
+                • Static drawdown: $2,000 (4%)<br>
+                • Max daily loss: $1,000<br>
+                • Consistency scoring applies<br>
+                • Fail = breach drawdown
             </p>
         </div>
 
@@ -235,10 +241,11 @@ footer {
             <div class="price">$79.99</div>
             <p>
                 • $100,000 simulated capital<br>
-                • $3,000–$5,000 profit target<br>
-                • Static drawdown: $3,000<br>
-                • Strict execution review<br>
-                • Elite trader filter tier
+                • Profit target: $5,000 (5%)<br>
+                • Static drawdown: $4,000 (4%)<br>
+                • Max daily loss: $1,500<br>
+                • Elite consistency requirement<br>
+                • Fail = breach drawdown
             </p>
         </div>
 
@@ -252,36 +259,28 @@ footer {
     <div class="box-container">
         <div class="box">
             <h3>1. Apply</h3>
-            <p>Submit your trading journal and apply for evaluation.</p>
+            <p>Submit your trading journal for review.</p>
         </div>
 
         <div class="box">
-            <h3>2. Evaluation Phase</h3>
-            <p>Trade in a simulated environment with structured capital and rules.</p>
+            <h3>2. Evaluation</h3>
+            <p>Trade within a simulated environment under structured risk rules.</p>
         </div>
 
         <div class="box">
-            <h3>3. Performance Review</h3>
-            <p>We analyze consistency, risk behavior, and execution quality.</p>
+            <h3>3. Pass or Fail</h3>
+            <p>Hit profit target to pass. Breach drawdown = failure. No time limits.</p>
         </div>
 
         <div class="box">
             <h3>4. Funded Sim Access</h3>
-            <p>Qualified traders move into funded simulation with profit splits.</p>
+            <p>Successful traders are moved into funded simulation with profit splits.</p>
         </div>
     </div>
 </section>
 
-<!-- INVEST -->
-<section id="invest" class="section">
-    <h2>Invest With Us</h2>
-    <p>
-        Rebel Trading is developing structured capital deployment opportunities for qualified partners. More information coming soon.
-    </p>
-</section>
-
 <footer>
-    © 2026 Rebel Trading Group — Built for precision traders only.
+    © 2026 Rebel Trading Group — Built for disciplined traders only.
 </footer>
 
 </body>
