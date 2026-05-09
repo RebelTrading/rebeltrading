@@ -29,12 +29,12 @@ header {
 }
 
 header img {
-    height: 90px;
+    height: 85px;
 }
 
 /* HERO */
 .banner {
-    height: 45vh;
+    height: 40vh;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -46,6 +46,7 @@ header img {
 .banner h1 {
     font-size: 3rem;
     color: #ff2a2a;
+    letter-spacing: 2px;
 }
 
 .banner p {
@@ -54,13 +55,14 @@ header img {
 
 /* LOGIN */
 .login-box {
-    max-width: 400px;
+    max-width: 420px;
     margin: 80px auto;
     background: #0b0b0b;
     border: 1px solid #1f1f1f;
-    padding: 30px;
-    border-radius: 12px;
+    padding: 35px;
+    border-radius: 14px;
     text-align: center;
+    box-shadow: 0 0 25px rgba(255,42,42,0.08);
 }
 
 .login-box input {
@@ -81,6 +83,7 @@ header img {
     color: #fff;
     font-weight: bold;
     cursor: pointer;
+    border-radius: 6px;
 }
 
 .login-btn:hover {
@@ -90,50 +93,47 @@ header img {
 /* DASHBOARD */
 .dashboard {
     display: none;
-    padding: 60px 30px;
+    padding: 60px 25px;
     max-width: 1200px;
     margin: auto;
 }
 
-.section-title {
-    color: #ff2a2a;
-    margin-bottom: 20px;
-}
-
-/* CARDS */
+/* GRID */
 .grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: 20px;
 }
 
+/* NEON CARDS */
 .card {
     background: #0b0b0b;
     border: 1px solid #1f1f1f;
-    padding: 20px;
-    border-radius: 12px;
+    padding: 22px;
+    border-radius: 14px;
+    position: relative;
+    overflow: hidden;
+    transition: 0.2s;
+}
+
+.card:hover {
+    border-color: #ff2a2a;
+    box-shadow: 0 0 18px rgba(255,42,42,0.15);
+    transform: translateY(-3px);
 }
 
 .card h3 {
     color: #fff;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 
 .value {
-    font-size: 1.8rem;
+    font-size: 2rem;
     color: #ff2a2a;
+    text-shadow: 0 0 10px rgba(255,42,42,0.4);
 }
 
-/* EQUITY BOX */
-.equity-box {
-    margin-top: 30px;
-    padding: 25px;
-    background: #0b0b0b;
-    border: 1px solid #1f1f1f;
-    border-radius: 12px;
-}
-
-/* STATUS */
+/* STATUS BADGE */
 .status {
     display: inline-block;
     padding: 5px 10px;
@@ -141,6 +141,22 @@ header img {
     border-radius: 20px;
     color: #aaa;
     margin-top: 10px;
+    font-size: 12px;
+}
+
+/* SECTION TITLE */
+.section-title {
+    color: #ff2a2a;
+    margin: 30px 0 20px;
+}
+
+/* PERFORMANCE BOX */
+.performance {
+    margin-top: 30px;
+    padding: 25px;
+    background: #0b0b0b;
+    border: 1px solid #1f1f1f;
+    border-radius: 14px;
 }
 
 /* FOOTER */
@@ -151,19 +167,71 @@ footer {
     border-top: 1px solid #1a1a1a;
     margin-top: 80px;
 }
+
+/* SMALL TEXT GLOW */
+.glow {
+    color: #ff2a2a;
+    text-shadow: 0 0 8px rgba(255,42,42,0.5);
+}
 </style>
 
 <script>
-function login() {
-    const user = document.getElementById("user").value;
-    const pass = document.getElementById("pass").value;
+const API_URL = "http://YOUR_SERVER_IP:8000";
 
-    if(user && pass) {
+/* LOGIN */
+async function login() {
+    const email = document.getElementById("user").value;
+    const password = document.getElementById("pass").value;
+
+    try {
+        const res = await fetch(`${API_URL}/login`, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({email, password})
+        });
+
+        const data = await res.json();
+
+        if (!data.access_token) {
+            alert("Login failed");
+            return;
+        }
+
+        localStorage.setItem("token", data.access_token);
+
         document.getElementById("login").style.display = "none";
         document.getElementById("dashboard").style.display = "block";
-    } else {
-        alert("Enter credentials");
+
+        loadDashboard();
+
+    } catch (err) {
+        console.log(err);
+        alert("Server error");
     }
+}
+
+/* LOAD USER DATA */
+async function loadDashboard() {
+    const token = localStorage.getItem("token");
+
+    const res = await fetch(`${API_URL}/me`, {
+        headers: {
+            "Authorization": "Bearer " + token
+        }
+    });
+
+    const data = await res.json();
+
+    document.getElementById("balance").innerText = `$${data.balance}`;
+    document.getElementById("pnl").innerText = `$${data.pnl}`;
+    document.getElementById("drawdown").innerText = `${data.drawdown}%`;
+    document.getElementById("winrate").innerText = `${data.winrate}%`;
+}
+
+/* LOGOUT */
+function logout() {
+    localStorage.removeItem("token");
+    location.reload();
 }
 </script>
 
@@ -179,14 +247,14 @@ function login() {
 <div class="banner">
     <div>
         <h1>MEMBER DASHBOARD</h1>
-        <p>Performance tracking & evaluation system</p>
+        <p>Live performance tracking & evaluation system</p>
     </div>
 </div>
 
 <!-- LOGIN -->
 <div id="login" class="login-box">
     <h2 style="color:#fff;">Member Login</h2>
-    <input type="text" id="user" placeholder="Username">
+    <input type="text" id="user" placeholder="Email">
     <input type="password" id="pass" placeholder="Password">
     <button class="login-btn" onclick="login()">Login</button>
 </div>
@@ -194,60 +262,62 @@ function login() {
 <!-- DASHBOARD -->
 <div id="dashboard" class="dashboard">
 
-    <h2 class="section-title">Account Overview</h2>
+    <h2 class="section-title glow">Account Overview</h2>
 
     <div class="grid">
 
         <div class="card">
             <h3>Account Balance</h3>
-            <div class="value">$100,000</div>
-            <span class="status">Active Sim</span>
-        </div>
-
-        <div class="card">
-            <h3>Equity</h3>
-            <div class="value">$102,450</div>
-            <span class="status">+2.45%</span>
+            <div class="value" id="balance">$0</div>
+            <span class="status">Live Sim</span>
         </div>
 
         <div class="card">
             <h3>Daily PnL</h3>
-            <div class="value">+$320</div>
-            <span class="status">Today</span>
+            <div class="value" id="pnl">$0</div>
+            <span class="status">Real-time</span>
         </div>
 
         <div class="card">
             <h3>Drawdown</h3>
-            <div class="value">1.2%</div>
-            <span class="status">Safe</span>
-        </div>
-
-        <div class="card">
-            <h3>Profit Target</h3>
-            <div class="value">42%</div>
-            <span class="status">To 6% Goal</span>
+            <div class="value" id="drawdown">0%</div>
+            <span class="status">Risk Monitor</span>
         </div>
 
         <div class="card">
             <h3>Win Rate</h3>
-            <div class="value">61%</div>
-            <span class="status">Performance Metric</span>
+            <div class="value" id="winrate">0%</div>
+            <span class="status">Performance</span>
+        </div>
+
+        <div class="card">
+            <h3>Evaluation Status</h3>
+            <div class="value">ACTIVE</div>
+            <span class="status">Phase 1</span>
+        </div>
+
+        <div class="card">
+            <h3>System Mode</h3>
+            <div class="value">SIM</div>
+            <span class="status">MT5 Bridge Ready</span>
         </div>
 
     </div>
 
-    <div class="equity-box">
-        <h2 class="section-title">Performance Summary</h2>
+    <div class="performance">
+        <h2 class="section-title">Performance Engine</h2>
         <p>
-            This dashboard will connect to your live evaluation engine once the MetaTrader 5 / data bridge system is active.  
-            All metrics shown here will update automatically based on trade execution data.
+            This dashboard will connect to your MetaTrader 5 or TradingView data bridge once activated.
+            All metrics will update in real time based on executed trades, risk rules, and evaluation logic.
         </p>
+
+        <button class="login-btn" onclick="logout()">Logout</button>
     </div>
 
 </div>
 
 <footer>
-© 2026 Rebel Trading Group — Member Performance System
+© 2026 Rebel Trading Group — Execution-Based Evaluation System
 </footer>
 
 </body>
