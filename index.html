@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rebel Trading Group</title>
+<title>Rebel Trading Group | Crypto Prop Funding</title>
 
 <style>
 body {
@@ -56,6 +56,7 @@ header img {
     padding-top: 80px;
     transition: 0.3s;
     z-index: 999;
+    border-left: 1px solid #1a1a1a;
 }
 
 .menu a {
@@ -83,10 +84,14 @@ header img {
 .banner h1 {
     font-size: 4rem;
     color: #ff2a2a;
+    line-height: 1.1;
 }
 
 .banner p {
     color: #888;
+    font-size: 1.2rem;
+    letter-spacing: 1px;
+    margin-top: 10px;
 }
 
 /* SECTIONS */
@@ -98,6 +103,7 @@ header img {
 
 .section h2 {
     color: #ff2a2a;
+    font-size: 2.2rem;
 }
 
 /* GRID */
@@ -114,28 +120,69 @@ header img {
     border: 1px solid #1f1f1f;
     padding: 20px;
     border-radius: 10px;
+    transition: 0.2s;
 }
 
 .box:hover {
     border-color: #ff2a2a;
 }
 
+/* PACKAGE CONTAINER OVERRIDE FOR MULTI-TIER */
+.packages-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+    margin-top: 40px;
+}
+
 /* PACKAGE */
 .package {
     background: linear-gradient(145deg, #0c0c0c, #070707);
     border: 1px solid #1f1f1f;
-    padding: 25px;
+    padding: 30px 25px;
     border-radius: 14px;
     text-align: center;
+    transition: 0.3s;
+    position: relative;
+}
+
+.package:hover {
+    border-color: #ff2a2a;
+    transform: translateY(-5px);
 }
 
 .package h3 {
-    color: #ff2a2a;
+    color: #fff;
+    font-size: 1.5rem;
+    margin-top: 0;
 }
 
 .price {
-    font-size: 2rem;
-    color: #fff;
+    font-size: 2.5rem;
+    color: #ff2a2a;
+    font-weight: bold;
+    margin: 15px 0;
+}
+
+.price span {
+    font-size: 1rem;
+    color: #555;
+    text-decoration: line-through;
+    margin-right: 8px;
+}
+
+.package hr {
+    border: 0;
+    border-top: 1px solid #1f1f1f;
+    margin: 20px 0;
+}
+
+.package p {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin: 8px 0;
+    text-align: left;
+    padding-left: 15px;
 }
 
 /* BUTTON */
@@ -211,7 +258,7 @@ function toggleMenu() {
 <body>
 
 <header>
-    <img src="https://raw.githubusercontent.com/rebeltrading/rebeltrading/main/rebeltradinglogo.png">
+    <img src="https://raw.githubusercontent.com/rebeltrading/rebeltrading/main/rebeltradinglogo.png" alt="Rebel Trading Logo">
     <div class="hamburger" onclick="toggleMenu()">
         <div></div>
         <div></div>
@@ -223,201 +270,179 @@ function toggleMenu() {
     <a href="#who">Who</a>
     <a href="#howitworks">How It Works</a>
     <a href="#join">Join</a>
-    <a href="#package">Evaluation</a>
+    <a href="#package">Evaluation Tiers</a>
     <a href="#apply">Apply</a>
-    <a href="livetradedesk.html">Live Trade Desk</a>
+    <a href="simtrading.html" style="color: #ff2a2a;">Sim Trade Desk →</a>
     <a href="liveaccounts.html">Live Accounts</a>
     <a href="rebeluniversity.html">Rebel University</a>
-    <a href="membership.html">Membership</a>
 </div>
 
-<!-- HERO -->
 <div class="banner">
     <div>
         <h1>TRADE LIKE A REBEL</h1>
-        <p>Built for elite traders</p>
+        <p>Next-Gen Crypto Simulation Funding. Made Affordable.</p>
     </div>
 </div>
 
-<!-- WHO -->
 <section id="who" class="section">
 <h2>Who We Are</h2>
 <p>
-Rebel Trading Group is a private futures trading firm built around one principle: consistency over hype.
+Rebel Trading Group is a private crypto funding firm built to shatter the high costs of digital asset evaluation. The days of paying hundreds of dollars a month for heavily restricted futures data feeds are over. 
 </p>
 <p>
-We do not operate like traditional prop firms. There are no mass signups, no monthly fees, and no system designed for failure. We recruit and develop a small number of traders who already demonstrate edge and discipline.
+We specialize exclusively in high-frequency crypto perpetual simulation. We do not mass-onboard thousands of failing accounts to live off activation fees. Our objective is simple: scan the global retail market for disciplined scalpers, vet execution quality within a highly reliable ecosystem, and back successful simulated strategies.
 </p>
 <p>
-Our model is simple — identify strong traders, refine execution, and allocate capital only when probability is in our favor.
+We have optimized our simulation technology to run completely independent of legacy exchange pricing fees, allowing us to pass 100% of the cost savings straight back to our community.
 </p>
 </section>
 
-<!-- WHAT SEPARATES US -->
 <section id="separates" class="section">
-<h2>What Separates Us From The Rest</h2>
-
+<h2>Discipline-Driven Scaling</h2>
 <p>
-Rebel Trading has no upfront costs due to our strict vetting process, ensuring only serious and qualified traders reach the evaluation stage. Approved traders are placed into a 100K simulated funded account evaluation where discipline and consistency are measured under real market conditions. Those who pass then enter a 90-day training program with our internal team to refine execution, risk management, and performance consistency. After training, traders are transitioned to a $5,000 live account to begin trading real capital under structured oversight. As consistent profitability is demonstrated, traders may scale up to a $25,000 live account within the firm.
+Rebel Trading removes the hurdles engineered to make retail traders fail. Approved applicants enter an instant evaluation tier where risk criteria and mechanical execution are tracked in real-time under direct institutional guidelines. 
+</p>
+<p>
+Traders who achieve the objective benchmarks enter a comprehensive internal optimization track, refining account structure, leverage management, and volatility mechanics. Upon confirmation, strategy consistency is applied to live allocations starting at $5,000, with a fast, structured ramp up to $25,000 based on verified performance under real firm oversight.
 </p>
 </section>
-<!-- HOW -->
-<section id="how" class="section">
-<h2>How It Works</h2>
+
+<section id="howitworks" class="section">
+<h2>The Operational Blueprint</h2>
 
 <div class="box-container">
 
 <div class="box">
-<h3>Applications</h3>
-<p>Submit your trade journal + cover letter. We review performance, consistency, and risk profile.</p>
+<h3>1. Evaluation Application</h3>
+<p>Submit your verified trading history or metrics checklist. We look for controlled exposure parameters, volume speed, and loss preservation behavior.</p>
 </div>
 
 <div class="box">
-<h3>Recruitment</h3>
-<p>Top traders may be invited directly through referral or performance recognition.</p>
+<h3>2. Instant Setup Access</h3>
+<p>Deploy custom simulation capital across our specialized, ultra-fast perpetual network with immediate validation tracking.</p>
 </div>
 
 <div class="box">
-<h3>Evaluation</h3>
-<p>Approved traders enter a structured 100K futures simulation under strict rules.</p>
+<h3>3. Rules-Enforced Milestones</h3>
+<p>Verify consistency benchmarks using clear, unmoving static metrics. No complex math hurdles or dynamic goal shifting.</p>
 </div>
 
 <div class="box">
-<h3>Live Capital</h3>
-<p>Top performers are trained and placed on live accounts with an 80/20 profit split.</p>
+<h3>4. Live Firm Allocation</h3>
+<p>Transition verified performance to real-capital allocation environments with a professional 80/20 performance profit split.</p>
 </div>
 
 </div>
 </section>
 
-<!-- JOIN -->
 <section id="join" class="section">
-<h2>Applications & Selection</h2>
-
+<h2>Application Benchmarks</h2>
 <p>
-We only accept traders who demonstrate real edge. This is not open enrollment.
+We select traders who prioritize capital preservation. This is an elite workspace designed to build professional consistency.
 </p>
 
-<p><strong>Phase 1 Requirements:</strong></p>
-
+<p><strong>Evaluation Track Admission Minimums:</strong></p>
 <p>
-• Minimum 12 months trading history OR 300+ trades<br>
-• Minimum 60% win rate<br>
-• Max drawdown: 10–15%<br>
-• No single month > 80% of total profits<br>
-• Consistent, controlled risk behavior
+• Active digital asset or contract track record (Minimum 12 Months / 300+ entries)<br>
+• Demonstrated focus on maximum drawdowns under 10–15%<br>
+• Controlled allocation dispersion (No single windfall representing > 80% of gains)<br>
+• Proven capacity to execute mechanical rules consistently
 </p>
-
 <p>
-Only traders who meet these standards are offered access to our evaluation environment.
+Only applicants meeting our core metric baselines receive deployment clearance for active simulation tiers.
 </p>
-
 </section>
 
-<!-- PACKAGE -->
 <section id="package" class="section">
-<h2>No Cost Evaluation</h2>
-
+<h2>Low-Cost Crypto Perpetual Evaluations</h2>
 <p>
-We operate differently than traditional prop firms. There are no evaluation fees.
-Only approved traders are placed into a structured simulation environment.
+By removing old-school clearing networks and expensive data redistribution fees, we provide the lowest evaluation pricing points in the industry. Choose your starting stage size.
 </p>
 
-<div class="package">
+<div class="packages-grid">
 
-<h3>100K Futures Evaluation</h3>
-<div class="price">$0</div>
+    <div class="package">
+        <h3>$5,000 Allocation Tier</h3>
+        <div class="price"><span>$65</span>$39</div>
+        <p>• <strong>Simulated Balance:</strong> $5,000.00</p>
+        <p>• <strong>Supported Assets:</strong> BTC, ETH, SOL, XRP</p>
+        <p>• <strong>Leverage Engine:</strong> Crypto Perpetual Contracts</p>
+        <hr>
+        <p>• <strong>Profit Target (6%):</strong> $300.00</p>
+        <p>• <strong>Daily Loss Safeguard (5%):</strong> $250.00</p>
+        <p>• <strong>Max Drawdown (10%):</strong> $500.00 <strong>(STATIC)</strong></p>
+        <p>• <strong>Drawdown Calculation:</strong> Absolute No-Trailing Wall</p>
+    </div>
 
-<p>
-• $100,000 Sim Account<br>
-• Trade Futures (Indices, etc.)<br>
-• Max size: 8 Minis / 80 Micros<br>
-</p>
+    <div class="package" style="border-color: #333;">
+        <h3>$10,000 Allocation Tier</h3>
+        <div class="price"><span>$110</span>$69</div>
+        <p>• <strong>Simulated Balance:</strong> $10,000.00</p>
+        <p>• <strong>Supported Assets:</strong> BTC, ETH, SOL, XRP</p>
+        <p>• <strong>Leverage Engine:</strong> Crypto Perpetual Contracts</p>
+        <hr>
+        <p>• <strong>Profit Target (6%):</strong> $600.00</p>
+        <p>• <strong>Daily Loss Safeguard (5%):</strong> $500.00</p>
+        <p>• <strong>Max Drawdown (10%):</strong> $1,000.00 <strong>(STATIC)</strong></p>
+        <p>• <strong>Drawdown Calculation:</strong> Absolute No-Trailing Wall</p>
+    </div>
 
-<hr>
-
-<p>
-<strong>Profit Target:</strong><br>
-• $6,000 (6%)
-</p>
-
-<p>
-<strong>Drawdown:</strong><br>
-• Static: $3,000 (3%)<br>
-• Daily Loss: $1,000
-</p>
-
-<p>
-<strong>Consistency:</strong><br>
-• Minimum 40% score<br>
-• No single trade dominance
-</p>
+    <div class="package">
+        <h3>$25,000 Allocation Tier</h3>
+        <div class="price"><span>$240</span>$149</div>
+        <p>• <strong>Simulated Balance:</strong> $25,000.00</p>
+        <p>• <strong>Supported Assets:</strong> BTC, ETH, SOL, XRP</p>
+        <p>• <strong>Leverage Engine:</strong> Crypto Perpetual Contracts</p>
+        <hr>
+        <p>• <strong>Profit Target (6%):</strong> $1,500.00</p>
+        <p>• <strong>Daily Loss Safeguard (5%):</strong> $1,250.00</p>
+        <p>• <strong>Max Drawdown (10%):</strong> $2,500.00 <strong>(STATIC)</strong></p>
+        <p>• <strong>Drawdown Calculation:</strong> Absolute No-Trailing Wall</p>
+    </div>
 
 </div>
-<p style="text-align:center; margin-top:25px;">
-    <a href="liveaccounts.html" style="color:#ff2a2a; text-decoration:none;">
-        Live Account Levels →
-    </a>
+
+<p style="margin-top: 30px; text-align: center; font-size: 0.9rem; color: #ff2a2a; font-weight: bold; letter-spacing: 0.5px;">
+    ⚠️ NO TRAILING DRAWDOWN: All max loss thresholds are strictly locked to your initial account balance line.
 </p>
+</section>
 
-<!-- ACCEPTED BROKERS -->
 <section id="brokers" class="section">
-<h2>Accepted Platforms</h2>
-
+<h2>The Rebel Infrastructure</h2>
 <p>
-All Rebel Trading evaluations are conducted through approved simulation platforms. These environments are used to track performance, enforce discipline, and ensure consistency across all traders.
+We provide zero-delay streaming data pipelines straight to your browser window. No outside installation packages, no keys to generate, and no complex configuration parameters.
 </p>
 
 <div class="box-container">
 
 <div class="box">
-<h3>MetaTrader 5 (MT5)</h3>
+<h3>Rebel Web Workspace</h3>
 <p>
-We use MetaTrader 5 for structured futures simulation environments. Traders are provided access to a controlled demo account where performance is monitored in real time.
+Execute simulated positions directly via our upcoming core trading tab. Track tickers, manage open books, and adjust limits directly inside an isolated, high-performance web dashboard.
 <br><br>
-• Desktop & Web supported<br>
-• Real-time simulated execution<br>
-• Full trade history visibility<br>
+• Level 2 Order Book & Depth visualization<br>
+• Zero installation footprint (Runs on any standard web build)<br>
+• Monitored 24/7/365 across global digital asset timeframes<br>
 </p>
 </div>
 
 <div class="box">
-<h3>TradingView</h3>
+<h3>Focused Perp Environment</h3>
 <p>
-TradingView is used for chart execution and visual trade tracking within our evaluation system. Traders execute trades using a provided simulation login.
+We restrict active simulation pairs to the top-4 highest liquidity profiles in the asset class. This ensures tight spreads, realistic slippage modeling, and massive execution accuracy.
 <br><br>
-• Web-based execution<br>
-• Instant chart access<br>
-• Ideal for intraday futures analysis<br>
+• Bitcoin Perpetual (BTC/USDT)<br>
+• Ethereum Perpetual (ETH/USDT)<br>
+• Solana Perpetual (SOL/USDT)<br>
+• Ripple Perpetual (XRP/USDT)<br>
 </p>
 </div>
 
 </div>
-
-<p style="margin-top:20px;">
-All trader performance is tracked internally regardless of platform. Our focus is consistency, risk control, and execution quality — not the platform itself.
-</p>
 </section>
 
-<p style="margin-top:20px;">
-Our system is built to reduce failure rates. We do not mass-assign accounts. Only vetted traders are evaluated, allowing us to offer this at no cost.
-</p>
-
-<p>
-Traders who pass are placed into a 90-day training phase. Upon completion, traders are funded with a $5,000 live account and begin trading under an 80/20 profit split.
-</p>
-
-</section>
-    
-<p style="text-align:center; margin-bottom:20px;">
-<a href="requirements.html" style="color:#ff2a2a; text-decoration:none;">
-View Application Requirements →
-</a>
-</p>
-
-<!-- APPLICATION FORM -->
 <section id="apply" class="form-section">
-<h2>Submit Application</h2>
+<h2>Submit Evaluation Application</h2>
 
 <form action="https://formspree.io/f/mbdwdwqd" method="POST" enctype="multipart/form-data">
     
@@ -427,19 +452,18 @@ View Application Requirements →
     <label>Email</label>
     <input type="email" name="email" required>
 
-    <label>Trade Journal (CSV or PDF)</label>
+    <label>Historical Performance (CSV or PDF Journal)</label>
     <input type="file" name="file" accept=".csv,.pdf" required>
 
-    <label>Cover Letter</label>
-    <textarea name="message" rows="5" placeholder="Briefly explain your trading experience and strategy"></textarea>
+    <label>Strategy & Experience Statement</label>
+    <textarea name="message" rows="5" placeholder="Outline your favorite assets out of our 4 supported perps and your structural risk strategy..."></textarea>
 
     <button type="submit">Submit Application</button>
 </form>
-
 </section>
 
 <footer>
-© 2026 Rebel Trading Group — Private Futures Trading Firm
+© 2026 Rebel Trading Group — Private Crypto Evaluation & Asset Simulation Firm
 </footer>
 
 </body>
