@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rebel Trading Desk</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #000;
+    color: #bdbdbd;
+    overflow-x: hidden;
+}
+
+/* HEADER (Preserved from Main Site) */
+header {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    background: rgba(0,0,0,0.9);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 10px;
+    box-sizing: border-box;
+    border-bottom: 1px solid #1a1a1a;
+    z-index: 1000;
+    height: 70px;
+}
+
+header img {
+    height: 50px; /* Scaled down slightly to maximize screen real estate for trading */
+}
+
+/* HAMBURGER */
+.hamburger {
+    cursor: pointer;
+    width: 40px;
+}
+
+.hamburger div {
+    height: 3px;
+    background: #fff;
+    margin: 5px 0;
+}
+
+/* MENU */
+.menu {
+    position: fixed;
+    top: 0;
+    right: -260px;
+    width: 260px;
+    height: 100%;
+    background: #0a0a0a;
+    padding-top: 80px;
+    transition: 0.3s;
+    z-index: 999;
+    border-left: 1px solid #1a1a1a;
+}
+
+.menu a {
+    display: block;
+    padding: 15px 25px;
+    color: #aaa;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.menu a:hover {
+    color: #ff2a2a;
+}
+
+/* TRADING DESK LAYOUT CONTAINER */
+.desk-container {
+    margin-top: 70px; /* Accounts for fixed header */
+    padding: 10px;
+    box-sizing: border-box;
+    display: grid;
+    grid-template-columns: 1fr 340px 320px; /* 3-Column Layout: Chart | Order Book | Execution */
+    gap: 10px;
+    height: calc(100vh - 70px);
+    background: #050505;
+}
+
+@media (max-width: 1200px) {
+    .desk-container {
+        grid-template-columns: 1fr;
+        height: auto;
+        overflow-y: auto;
+    }
+}
+
+/* WORKSPACE PANELS */
+.panel {
+    background: #0b0b0b;
+    border: 1px solid #1f1f1f;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.panel-header {
+    background: #0e0e0e;
+    border-bottom: 1px solid #1f1f1f;
+    padding: 10px 15px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: #fff;
+    letter-spacing: 0.5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* ASSET TOGGLE BAR (Top of Left Panel) */
+.asset-bar {
+    display: flex;
+    background: #0e0e0e;
+    border-bottom: 1px solid #1f1f1f;
+    padding: 5px;
+    gap: 5px;
+}
+
+.asset-btn {
+    background: #151515;
+    border: 1px solid #222;
+    color: #888;
+    padding: 8px 16px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.asset-btn:hover {
+    border-color: #ff2a2a;
+    color: #fff;
+}
+
+.asset-btn.active {
+    background: #ff2a2a;
+    border-color: #ff2a2a;
+    color: #fff;
+}
+
+/* ACCOUNT STATS BAR */
+.stats-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    background: #0e0e0e;
+    border-bottom: 1px solid #1f1f1f;
+    padding: 10px;
+    gap: 10px;
+    text-align: center;
+}
+
+.stat-box {
+    background: #111;
+    border: 1px solid #1c1c1c;
+    padding: 6px;
+    border-radius: 4px;
+}
+
+.stat-label {
+    font-size: 0.65rem;
+    color: #666;
+    text-transform: uppercase;
+}
+
+.stat-value {
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #fff;
+    margin-top: 2px;
+}
+
+.stat-value.positive { color: #00ff66; }
+.stat-value.negative { color: #ff2a2a; }
+
+/* CHART AREA */
+.chart-wrapper {
+    flex-grow: 1;
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+/* ORDER BOOK (DOM) PLACEHOLDER UI */
+.dom-container {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    font-family: monospace;
+    font-size: 0.8rem;
+    padding: 5px;
+}
+
+.dom-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    padding: 4px 8px;
+    position: relative;
+    align-items: center;
+}
+
+.dom-row.ask { color: #ff2a2a; }
+.dom-row.bid { color: #00ff66; }
+.dom-row.spread {
+    background: #141414;
+    color: #888;
+    text-align: center;
+    font-size: 0.75rem;
+    padding: 8px;
+    font-weight: bold;
+    border-top: 1px solid #1f1f1f;
+    border-bottom: 1px solid #1f1f1f;
+    display: block;
+}
+
+.dom-bar {
+    position: absolute;
+    top: 2px;
+    bottom: 2px;
+    right: 0;
+    opacity: 0.12;
+    pointer-events: none;
+}
+
+.dom-row.ask .dom-bar { background: #ff2a2a; }
+.dom-row.bid .dom-bar { background: #00ff66; }
+
+/* TIME & SALES TAPE */
+.tape-container {
+    height: 180px;
+    border-top: 1px solid #1f1f1f;
+    overflow-y: hidden;
+    font-family: monospace;
+    font-size: 0.75rem;
+    padding: 5px;
+    background: #080808;
+}
+
+/* ORDER ENTRY PANEL */
+.order-panel {
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.account-selector select {
+    width: 100%;
+    padding: 10px;
+    background: #111;
+    border: 1px solid #222;
+    color: #fff;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+.order-tabs {
+    display: flex;
+    background: #141414;
+    padding: 3px;
+    border-radius: 4px;
+}
+
+.tab-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    color: #666;
+    padding: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+
+.tab-btn.active {
+    background: #222;
+    color: #fff;
+    border-radius: 4px;
+}
+
+.input-block {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.input-block label {
+    font-size: 0.7rem;
+    color: #666;
+    text-transform: uppercase;
+}
+
+.input-wrapper {
+    display: flex;
+    background: #111;
+    border: 1px solid #222;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.input-wrapper input {
+    width: 100%;
+    border: none;
+    background: transparent;
+    padding: 10px;
+    color: #fff;
+    text-align: center;
+    font-weight: bold;
+}
+
+.input-wrapper button {
+    background: #1c1c1c;
+    border: none;
+    color: #aaa;
+    width: 40px;
+    cursor: pointer;
+    font-size: 1.2rem;
+}
+
+.input-wrapper button:hover { background: #252525; color: #fff; }
+
+.execution-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.exec-btn {
+    padding: 14px;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    color: #fff;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: 0.2s;
+}
+
+.exec-btn.buy { background: #00ff66; color: #000; }
+.exec-btn.buy:hover { background: #00cc52; }
+.exec-btn.sell { background: #ff2a2a; }
+.exec-btn.sell:hover { background: #cc0000; }
+
+/* RULE VERIFICATION TRACKER CONTAINER */
+.rules-container {
+    padding: 15px;
+    background: #0e0e0e;
+    border-top: 1px solid #1f1f1f;
+    font-size: 0.75rem;
+}
+
+.rule-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    color: #888;
+}
+
+.rule-item span.pass { color: #00ff66; font-weight: bold; }
+
+</style>
+
+<script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+
+<script>
+function toggleMenu() {
+    const menu = document.getElementById("menu");
+    menu.style.right = (menu.style.right === "0px") ? "-260px" : "0px";
+}
+
+// Simple switcher logic for our 4 Perps to change the Chart Embed dynamically
+function switchAsset(symbol, element) {
+    // UI Button updates
+    document.querySelectorAll('.asset-btn').forEach(btn => btn.classList.remove('active'));
+    element.classList.add('active');
+    
+    // Refresh TradingView widget container dynamically with the correct active ticker
+    new TradingView.widget({
+        "width": "100%",
+        "height": "100%",
+        "symbol": "BYBIT:" + symbol + "PERP",
+        "interval": "1",
+        "timezone": "Etc/UTC",
+        "theme": "dark",
+        "style": "1",
+        "locale": "en",
+        "toolbar_bg": "#0b0b0b",
+        "enable_publishing": false,
+        "hide_side_toolbar": false,
+        "allow_symbol_change": false,
+        "container_id": "tv_chart_container",
+        "studies": [
+            "MASimple@tv-basicstudies"
+        ],
+        "colors": {
+            "canvas": "#0b0b0b",
+            "background": "#0b0b0b"
+        }
+    });
+}
+
+// Render chart on window load
+window.onload = function() {
+    switchAsset('BTCUSDT', document.getElementById('default-asset'));
+}
+</script>
+
+</head>
+
+<body>
+
+<header>
+    <img src="https://raw.githubusercontent.com/rebeltrading/rebeltrading/main/rebeltradinglogo.png" alt="Rebel Trading Logo">
+    <div class="hamburger" onclick="toggleMenu()">
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
+</header>
+
+<div id="menu" class="menu">
+    <a href="index.html">Home</a>
+    <a href="index.html#who">Who</a>
+    <a href="index.html#package">Evaluations</a>
+    <a href="#" style="color:#ff2a2a;">→ Sim Trade Desk</a>
+    <a href="liveaccounts.html">Live Accounts</a>
+    <a href="rebeluniversity.html">Rebel University</a>
+</div>
+
+<div class="desk-container">
+
+    <div class="panel">
+        <div class="asset-bar">
+            <button id="default-asset" class="asset-btn active" onclick="switchAsset('BTCUSDT', this)">BTC/USDT</button>
+            <button class="asset-btn" onclick="switchAsset('ETHUSDT', this)">ETH/USDT</button>
+            <button class="asset-btn" onclick="switchAsset('SOLUSDT', this)">SOL/USDT</button>
+            <button class="asset-btn" onclick="switchAsset('XRPUSDT', this)">XRP/USDT</button>
+        </div>
+        
+        <div class="stats-bar">
+            <div class="stat-box">
+                <div class="stat-label">Account Balance</div>
+                <div class="stat-value">$10,000.00</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Open P&L</div>
+                <div class="stat-value positive">+$142.50</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Daily Loss Used</div>
+                <div class="stat-value negative">$0.00 / $500</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Max Drawdown Left</div>
+                <div class="stat-value">$1,000.00</div>
+            </div>
+        </div>
+
+        <div class="chart-wrapper">
+            <div id="tv_chart_container" style="height: 100%; width: 100%;"></div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-header">
+            <span>ORDER BOOK (L2 DEPTH)</span>
+            <span style="color: #666; font-size: 0.7rem;">PERPETUAL FEED</span>
+        </div>
+        
+        <div class="dom-container">
+            <div class="dom-row ask"><span>63,420.50</span><span>1.42</span><div class="dom-bar" style="width: 65%;"></div></div>
+            <div class="dom-row ask"><span>63,419.00</span><span>0.88</span><div class="dom-bar" style="width: 40%;"></div></div>
+            <div class="dom-row ask"><span>63,418.50</span><span>2.15</span><div class="dom-bar" style="width: 90%;"></div></div>
+            <div class="dom-row ask"><span>63,417.00</span><span>0.31</span><div class="dom-bar" style="width: 15%;"></div></div>
+            
+            <div class="dom-row spread">SPREAD: $0.50</div>
+            
+            <div class="dom-row bid"><span>63,416.50</span><span>0.95</span><div class="dom-bar" style="width: 45%;"></div></div>
+            <div class="dom-row bid"><span>63,415.00</span><span>1.12</span><div class="dom-bar" style="width: 55%;"></div></div>
+            <div class="dom-row bid"><span>63,413.50</span><span>3.40</span><div class="dom-bar" style="width: 100%;"></div></div>
+            <div class="dom-row bid"><span>63,412.00</span><span>0.22</span><div class="dom-bar" style="width: 10%;"></div></div>
+        </div>
+
+        <div class="panel-header" style="border-top: 1px solid #1f1f1f;">
+            <span>RECENT TRANSFERS (TAPE)</span>
+        </div>
+        <div class="tape-container">
+            <div style="color:#00ff66; display:flex; justify-content:space-between; padding: 2px 5px;"><span>15:24:01</span><span>63,416.50</span><span>0.12 BTC</span></div>
+            <div style="color:#ff2a2a; display:flex; justify-content:space-between; padding: 2px 5px;"><span>15:24:01</span><span>63,417.00</span><span>0.05 BTC</span></div>
+            <div style="color:#00ff66; display:flex; justify-content:space-between; padding: 2px 5px;"><span>15:23:59</span><span>63,416.50</span><span>1.50 BTC</span></div>
+            <div style="color:#00ff66; display:flex; justify-content:space-between; padding: 2px 5px;"><span>15:23:58</span><span>63,416.50</span><span>0.84 BTC</span></div>
+            <div style="color:#ff2a2a; display:flex; justify-content:space-between; padding: 2px 5px;"><span>15:23:54</span><span>63,417.00</span><span>2.11 BTC</span></div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-header">
+            <span>REBEL EXECUTION ENGINE</span>
+        </div>
+        
+        <div class="order-panel">
+            <div class="account-selector">
+                <label style="font-size: 0.65rem; color:#666; display:block; margin-bottom:5px; text-transform:uppercase;">Simulation Stage Tier</label>
+                <select>
+                    <option value="5000">Rebel Vetting $5,000 Tier</option>
+                    <option value="10000" selected>Rebel Vetting $10,000 Tier</option>
+                    <option value="25000">Rebel Vetting $25,000 Tier</option>
+                </select>
+            </div>
+
+            <div class="order-tabs">
+                <button class="tab-btn active">MARKET</button>
+                <button class="tab-btn">LIMIT</button>
+            </div>
+
+            <div class="input-block">
+                <label>Order Execution Position Size</label>
+                <div class="input-wrapper">
+                    <button type="button" onclick="this.nextElementSibling.value = Math.max(0.1, parseFloat(this.nextElementSibling.value) - 0.1).toFixed(1)">-</button>
+                    <input type="text" value="1.0" readonly>
+                    <button type="button" onclick="this.nextElementSibling.previousElementSibling.value = (parseFloat(this.nextElementSibling.previousElementSibling.value) + 0.1).toFixed(1)">+</button>
+                </div>
+            </div>
+
+            <div class="execution-actions">
+                <button class="exec-btn buy">BUY / LONG</button>
+                <button class="exec-btn sell">SELL / SHORT</button>
+            </div>
+        </div>
+
+        <div style="flex-grow: 1;"></div>
+
+        <div class="panel-header" style="border-top: 1px solid #1f1f1f;">
+            <span>PROP FIRM OBJECTIVES</span>
+        </div>
+        <div class="rules-container">
+            <div class="rule-item"><span>Target Profit Verification ($600)</span><span style="color:#aaa;">$142.50 Left</span></div>
+            <div class="rule-item"><span>Daily Drawdown Safeguard</span><span class="pass">PASSED</span></div>
+            <div class="rule-item"><span>Max Allocation Volatility Guard</span><span class="pass">PASSED</span></div>
+            <div class="rule-item"><span>Minimum Trading Days Complete</span><span style="color:#fff;">2 / 4 Days</span></div>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>
