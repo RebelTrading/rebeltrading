@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rebel Trading Desk (Dev Sandbox)</title>
+<title>Rebel Trading Desk - Dev Simulation Sandbox</title>
 
 <style>
 body {
@@ -95,7 +95,6 @@ header img {
     text-decoration: none;
     font-weight: bold;
 }
-
 .menu a:hover { color: #ff2a2a; }
 
 /* LAYOUT CONTAINER */
@@ -153,7 +152,7 @@ header img {
 }
 .asset-btn.active { background: #ff2a2a; border-color: #ff2a2a; color: #fff; }
 
-/* LIVE STATS BAR */
+/* LIVE STATS TOP BAR */
 .stats-bar {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -349,11 +348,18 @@ header img {
 .position-display {
     background: #0e0e0e;
     border: 1px dashed #333;
-    padding: 8px;
+    padding: 10px;
     border-radius: 4px;
     font-size: 0.75rem;
     display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.position-row {
+    display: flex;
     justify-content: space-between;
+    align-items: center;
 }
 
 /* PROP VERIFICATION MODULE */
@@ -385,20 +391,19 @@ function toggleMenu() {
 // SIMULATED ENGINE CORE DATA STATES
 let CURRENT_ASSET = "BTC-USD";
 let CURRENT_PRICE = 0.0;
-let ORDER_TYPE = "MARKET"; // MARKET or LIMIT
+let ORDER_TYPE = "MARKET";
 
-// Starting Dev Sandbox Account Values
+// Starting Dev Balance Parameters
 let STARTING_BALANCE = 10000.00;
 let ACCOUNT_BALANCE = 10000.00;
 let FLOATING_PNL = 0.00;
 let REALIZED_PNL = 0.00;
 
-// Prop Metrics Threshold Rules
+// Prop Firm Objective Validation Configurations
 const PROFIT_TARGET = 600.00;
 const DAILY_LOSS_LIMIT = 500.00;
-const MAX_TRAILING_DRAWDOWN = 1000.00;
 
-// Active Live Position Object tracking
+// Active Position Tracking Engine
 let activePosition = {
     hasPosition: false,
     side: null,      // 'BUY' or 'SELL'
@@ -449,41 +454,38 @@ function setOrderType(type, element) {
         priceInput.value = "MARKET PRICE";
         priceInput.disabled = true;
     } else {
-        priceInput.value = CURRENT_PRICE > 0 ? CURRENT_PRICE : "0.00";
+        priceInput.value = CURRENT_PRICE > 0 ? CURRENT_PRICE.toFixed(2) : "0.00";
         priceInput.disabled = false;
     }
 }
 
 function setExecutionPrice(targetPrice) {
-    if (ORDER_TYPE === "MARKET") return; // Market mode locks pricing overrides
+    if (ORDER_TYPE === "MARKET") return;
     const priceInputField = document.getElementById('target-execution-price');
     if (priceInputField) {
         priceInputField.value = targetPrice;
     }
 }
 
-// Real-Time P&L Calculations and Metrics Update Loop
+// REAL-TIME MATHEMATICS & UI METRIC BINDINGS LOOP
 function updateAccountMetrics() {
-    // 1. Calculate open floating P&L if a dev position is active
+    // 1. Calculate running position delta calculations
     if (activePosition.hasPosition && activePosition.asset === CURRENT_ASSET) {
         let priceDiff = CURRENT_PRICE - activePosition.entryPrice;
         if (activePosition.side === 'SELL') {
             priceDiff = activePosition.entryPrice - CURRENT_PRICE;
         }
-        
-        // Dynamic multiplier scaling factors based on digital token class
-        let multiplier = 1; 
-        if (CURRENT_ASSET === "BTC-USD") multiplier = 1;
-        
-        FLOATING_PNL = priceDiff * activePosition.size * multiplier;
+        FLOATING_PNL = priceDiff * activePosition.size;
     } else {
         FLOATING_PNL = 0.00;
     }
 
+    // Comprehensive Balance Accumulations
     let netLiquidationValue = ACCOUNT_BALANCE + FLOATING_PNL;
     let accumulatedLoss = STARTING_BALANCE - netLiquidationValue;
+    let combinedTotalProfit = REALIZED_PNL + FLOATING_PNL;
 
-    // 2. Render Header Stats Bar
+    // 2. Map Metrics to Header Display Blocks
     document.getElementById('display-balance').innerText = `$${netLiquidationValue.toFixed(2)}`;
     
     const pnlDisplay = document.getElementById('display-pnl');
@@ -494,38 +496,55 @@ function updateAccountMetrics() {
     lossDisplay.innerText = `$${Math.max(0, accumulatedLoss).toFixed(2)} / $${DAILY_LOSS_LIMIT}`;
     lossDisplay.className = accumulatedLoss >= DAILY_LOSS_LIMIT ? "stat-value negative" : "stat-value";
 
-    // 3. Render Sandbox Action/Position Feedback window
+    // 3. Map Content Directly Inside the Execution Panel Space
     const positionPanel = document.getElementById('live-position-status');
     if (activePosition.hasPosition) {
+        const sideColor = activePosition.side === 'BUY' ? '#00ff66' : '#ff2a2a';
+        const sideLabel = activePosition.side === 'BUY' ? 'LONG' : 'SHORT';
+        const displayTicker = activePosition.asset.split('-')[0];
+        
         positionPanel.innerHTML = `
-            <span style="color:${activePosition.side === 'BUY' ? '#00ff66' : '#ff2a2a'}">${activePosition.side} ${activePosition.size} ${activePosition.asset.split('-')[0]}</span>
-            <span>Entry: $${activePosition.entryPrice.toFixed(2)}</span>
-            <button style="background:#222; border:1px solid #44; color:#fff; font-size:0.65rem; padding:2px 6px; cursor:pointer;" onclick="closeActivePosition()">CLOSE</button>
+            <div class="position-row">
+                <span style="color:${sideColor}; font-weight:bold;">${sideLabel} ${activePosition.size} ${displayTicker}</span>
+                <button style="background:#ff2a2a; border:none; color:#fff; font-size:0.7rem; padding:4px 8px; font-weight:bold; border-radius:2px; cursor:pointer;" onclick="closeActivePosition()">CLOSE POSITION</button>
+            </div>
+            <div class="position-row" style="margin-top: 4px; color:#aaa;">
+                <span>Entry: $${activePosition.entryPrice.toFixed(2)}</span>
+                <span>Live P&L: <strong style="color:${FLOATING_PNL >= 0 ? '#00ff66' : '#ff2a2a'}">${FLOATING_PNL >= 0 ? '+' : ''}$${FLOATING_PNL.toFixed(2)}</strong></span>
+            </div>
         `;
     } else {
-        positionPanel.innerHTML = `<span>No Active Dev Positions Open</span><span>--</span>`;
+        positionPanel.innerHTML = `
+            <div class="position-row"><span>No Active Dev Positions Open</span><span>--</span></div>
+        `;
     }
 
-    // 4. Update Objective Verification Runners (Bottom Right Panel)
-    const targetLeft = PROFIT_TARGET - REALIZED_PNL;
-    document.getElementById('metric-target').innerText = targetLeft <= 0 ? "TARGET MET!" : `$${targetLeft.toFixed(2)} Left`;
-    if (targetLeft <= 0) document.getElementById('metric-target').style.color = '#00ff66';
+    // 4. Map Live Metrics into the Objective Verification Panel (Bottom Right)
+    const targetLeft = PROFIT_TARGET - combinedTotalProfit;
+    const targetField = document.getElementById('metric-target');
+    if (targetLeft <= 0) {
+        targetField.innerText = "TARGET MET! (PASSED)";
+        targetField.className = "pass";
+    } else {
+        targetField.innerText = `$${targetLeft.toFixed(2)} Left`;
+        targetField.className = "";
+        targetField.style.color = "#fff";
+    }
 
     const dailyLossGuard = document.getElementById('metric-daily-loss');
     if (accumulatedLoss >= DAILY_LOSS_LIMIT) {
-        dailyLossGuard.innerText = "VIOLATION";
+        dailyLossGuard.innerText = `VIOLATED (-$${accumulatedLoss.toFixed(2)})`;
         dailyLossGuard.className = "fail";
     } else {
-        dailyLossGuard.innerText = "PASSED";
+        dailyLossGuard.innerText = `PASSED (-$${Math.max(0, accumulatedLoss).toFixed(2)} / $${DAILY_LOSS_LIMIT})`;
         dailyLossGuard.className = "pass";
     }
 }
 
-// Dev Sandbox Order Execution Logic
 function executeDevOrder(side) {
     const contractSize = parseFloat(document.getElementById('position-contract-size').value);
     
-    // If they already have an active position, close it out first to simulate simple flat trading
+    // Auto-flat ongoing exposures before initiating inverted orders
     if (activePosition.hasPosition) {
         closeActivePosition();
     }
@@ -543,17 +562,18 @@ function executeDevOrder(side) {
         asset: CURRENT_ASSET
     };
 
-    console.log(`[DEV POSITION OPENED] ${side} ${contractSize} contracts at ${executionPrice}`);
+    console.log(`[SANDBOX EXECUTION] ${side} ${contractSize} ${CURRENT_ASSET} filled at ${executionPrice}`);
     updateAccountMetrics();
 }
 
 function closeActivePosition() {
     if (!activePosition.hasPosition) return;
 
-    REALIZED_PNL += FLOATING_PNL;
+    // Lock running floating deltas into account values
     ACCOUNT_BALANCE += FLOATING_PNL;
+    REALIZED_PNL += FLOATING_PNL;
     
-    console.log(`[DEV POSITION CLOSED] Realized P&L: $${FLOATING_PNL.toFixed(2)}. New Account Balance: $${ACCOUNT_BALANCE.toFixed(2)}`);
+    console.log(`[SANDBOX CLOSED] Realized: $${FLOATING_PNL.toFixed(2)}. Account Balance: $${ACCOUNT_BALANCE.toFixed(2)}`);
 
     activePosition = { hasPosition: false, side: null, entryPrice: 0.0, size: 0.0, asset: null };
     FLOATING_PNL = 0.00;
@@ -595,7 +615,7 @@ function renderSyntheticOrderBook(basePrice) {
     
     domContainer.innerHTML = askHtml + spreadHtml + bidHtml;
     
-    // Add prints down the Time & Sales tape
+    // Feed running prints down tape tracker panels
     const now = new Date();
     const timestamp = now.toTimeString().split(' ')[0];
     const isBuy = Math.random() > 0.48;
@@ -614,22 +634,22 @@ async function fetchRebelEnginePrices() {
     try {
         const response = await fetch("http://192.168.0.66:8000/api/prices");
         const priceMatrix = await response.json();
-        
         CURRENT_PRICE = priceMatrix[CURRENT_ASSET];
-        
-        if (CURRENT_PRICE && CURRENT_PRICE > 0) {
-            const precision = CURRENT_ASSET === "XRP-USD" ? 4 : 2;
-            const formattedPrice = CURRENT_PRICE.toLocaleString('en-US', { minimumFractionDigits: precision, maximumFractionDigits: precision });
-            
-            document.getElementById('live-index-val').innerText = `$${formattedPrice}`;
-            document.getElementById('live-mark-val').innerText = `$${formattedPrice}`;
-            
-            renderSyntheticOrderBook(CURRENT_PRICE);
-            updateAccountMetrics(); // Keep calculations tracking streaming assets
-        }
     } catch (err) {
-        // Fallback for standalone visual testing when local server isn't running
-        CURRENT_PRICE = CURRENT_ASSET === "BTC-USD" ? 64250.00 + (Math.random() * 10 - 5) : 3450.00 + (Math.random() * 2 - 1);
+        // High-fidelity fallback loops to test standalone configurations offline
+        if (CURRENT_PRICE === 0) {
+            CURRENT_PRICE = CURRENT_ASSET === "BTC-USD" ? 79130.00 : 3450.00;
+        }
+        CURRENT_PRICE += (Math.random() * 6 - 3);
+    }
+
+    if (CURRENT_PRICE && CURRENT_PRICE > 0) {
+        const precision = CURRENT_ASSET === "XRP-USD" ? 4 : 2;
+        const formattedPrice = CURRENT_PRICE.toLocaleString('en-US', { minimumFractionDigits: precision, maximumFractionDigits: precision });
+        
+        document.getElementById('live-index-val').innerText = `$${formattedPrice}`;
+        document.getElementById('live-mark-val').innerText = `$${formattedPrice}`;
+        
         renderSyntheticOrderBook(CURRENT_PRICE);
         updateAccountMetrics();
     }
@@ -722,7 +742,7 @@ window.onload = function() {
 
             <label style="font-size: 0.65rem; color: #555; text-transform: uppercase; margin-top: 5px;">Active Position State</label>
             <div id="live-position-status" class="position-display">
-                <span>No Active Dev Positions Open</span><span>--</span>
+                <div class="position-row"><span>No Active Dev Positions Open</span><span>--</span></div>
             </div>
         </div>
 
