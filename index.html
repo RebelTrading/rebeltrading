@@ -46,6 +46,31 @@ header img {
     margin: 5px 0;
 }
 
+/* GAMIFIED SIM CHALLENGE HEADER CTA */
+.sim-challenge-btn {
+    background: linear-gradient(135deg, #ff2a2a 0%, #990000 100%);
+    color: #fff;
+    text-decoration: none;
+    font-family: monospace;
+    font-size: 0.7rem;
+    font-weight: bold;
+    letter-spacing: 1px;
+    padding: 8px 16px;
+    border-radius: 4px;
+    border: 1px solid #ff5555;
+    text-transform: uppercase;
+    box-shadow: 0 0 10px rgba(255, 42, 42, 0.4);
+    transition: all 0.2s ease-in-out;
+    display: inline-block;
+}
+
+.sim-challenge-btn:hover {
+    background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
+    box-shadow: 0 0 18px rgba(255, 42, 42, 0.7);
+    transform: scale(1.02);
+    border-color: #fff;
+}
+
 /* MENU */
 .menu {
     position: fixed;
@@ -622,6 +647,9 @@ function updateInteractiveCalculator(val) {
 
 <header>
     <img src="https://raw.githubusercontent.com/rebeltrading/rebeltrading/main/rebeltradinglogo.png" alt="Rebel Trading Logo">
+    
+    <a href="#packages" class="sim-challenge-btn">🎮 GET SIM CHALLENGE →</a>
+    
     <div class="hamburger" onclick="toggleMenu()">
         <div></div>
         <div></div>
