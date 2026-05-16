@@ -72,27 +72,42 @@ header img {
     color: #ff2a2a;
 }
 
-/* LIVE NETWORK STATUS BAR (OPTION 1 FLARE) */
+/* LIVE NETWORK STATUS BAR TERMINAL GRID */
 .network-status-bar {
     position: fixed;
-    top: 105px; /* Positions it below the main header */
+    top: 105px;
     width: 100%;
     background: #050505;
-    padding: 6px 15px;
+    padding: 12px 24px;
     box-sizing: border-box;
-    border-bottom: 1px solid #111;
-    display: flex;
+    border-bottom: 1px solid #141414;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
     align-items: center;
-    gap: 8px;
     z-index: 998;
     font-family: monospace;
-    font-size: 0.65rem;
-    letter-spacing: 1px;
+    font-size: 0.7rem;
+    letter-spacing: 0.5px;
     color: #666;
 }
 
 .network-status-bar strong {
     color: #fff;
+}
+
+.terminal-node {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.terminal-node.center {
+    justify-content: center;
+}
+
+.terminal-node.right {
+    justify-content: flex-end;
 }
 
 .ping-dot {
@@ -105,9 +120,35 @@ header img {
     animation: network-ping 1.2s infinite alternate;
 }
 
+.terminal-tag {
+    background: rgba(255, 42, 42, 0.1);
+    color: #ff2a2a;
+    padding: 2px 6px;
+    border-radius: 3px;
+    border: 1px solid rgba(255, 42, 42, 0.2);
+    font-size: 0.6rem;
+    font-weight: bold;
+}
+
 @keyframes network-ping {
     0% { transform: scale(0.9); opacity: 0.4; box-shadow: 0 0 2px #00ff66; }
     100% { transform: scale(1.1); opacity: 1; box-shadow: 0 0 10px #00ff66; }
+}
+
+/* ADJUST TICKER POSITION DOWN TO MAKE ROOM FOR BIGGER BLOCK */
+.ticker-wrap {
+    position: fixed;
+    top: 147px; /* Shifted down further to prevent overlapping the expanded terminal */
+    width: 100%;
+    overflow: hidden;
+    height: 32px;
+    background-color: rgba(6, 6, 6, 0.8);
+    backdrop-filter: blur(5px);
+    border-top: 1px solid #141414;
+    border-bottom: 1px solid #141414;
+    z-index: 997;
+    display: flex;
+    align-items: center;
 }
 
 /* LIVE TICKER MARQUEE */
@@ -167,10 +208,9 @@ header img {
     justify-content: center;
     text-align: center;
     background: radial-gradient(circle at center, #150303 0%, #000 70%);
-    padding-top: 180px;
+    padding-top: 210px; /* Pushed down extra to handle the chunkier layout block */
     box-sizing: border-box;
 }
-
 .banner h1 {
     font-size: 4.5rem;
     color: #ff2a2a;
@@ -597,8 +637,19 @@ function updateInteractiveCalculator(val) {
 </div>
 
 <div class="network-status-bar">
-    <span class="ping-dot"></span>
-    <span>NETWORK MONITOR // <strong>ACTIVE SANDBOX SERVERS</strong> &nbsp;&bull;&nbsp; [ REGION: GLOBAL_MAINNET // PROTOCOL: v2.4 ]</span>
+    <div class="terminal-node">
+        <span class="ping-dot"></span>
+        <span>CONSOLE // <span style="color: #00ff66; font-weight:bold;">LIVE_MAINNET</span></span>
+        <span class="terminal-tag">v2.4 SECURE</span>
+    </div>
+    
+    <div class="terminal-node center">
+        <span>FEED: <strong style="color: #ffb703;">NASDAQ_X7 // REBEL_BOX_ARENA</strong></span>
+    </div>
+    
+    <div class="terminal-node right">
+        <span>PING: <strong style="color: #00ff66;">12ms</strong> &nbsp;&bull;&nbsp; LATENCY: <strong>OPTIMAL</strong></span>
+    </div>
 </div>
 
 <div class="ticker-wrap">
