@@ -394,18 +394,32 @@ function toggleMenu() {
     menu.style.right = (menu.style.right === "0px") ? "-260px" : "0px";
 }
 
-// Switches asset and updates the hardcoded ticker info context placeholder text
-function switchAsset(symbol, displayName, element) {
+// Global active engine states
+let CURRENT_ASSET = "BTC-USD";
+let CURRENT_PRICE = 0.0;
+
+// Configuration matrix mapping buttons to API keys and native chart symbols
+const assetMap = {
+    'BTC': { api: 'BTC-USD', tv: 'COINBASE:BTCUSD', display: 'BTC/USD Perpetual' },
+    'ETH': { api: 'ETH-USD', tv: 'COINBASE:ETHUSD', display: 'ETH/USD Perpetual' },
+    'SOL': { api: 'SOL-USD', tv: 'COINBASE:SOLUSD', display: 'SOL/USD Perpetual' },
+    'XRP': { api: 'XRP-USD', tv: 'COINBASE:XRPUSD', display: 'XRP/USD Perpetual' }
+};
+
+function switchAsset(assetKey, element) {
     document.querySelectorAll('.asset-btn').forEach(btn => btn.classList.remove('active'));
     element.classList.add('active');
     
-    // Dynamically update asset string names inside the top center data tape placeholder
-    document.getElementById('active-ticker-label').innerText = displayName + " Perpetual";
+    const config = assetMap[assetKey];
+    CURRENT_ASSET = config.api;
     
+    document.getElementById('active-ticker-label').innerText = config.display;
+    
+    // Instantiate a matching TradingView candle feed mapping Coinbase indices
     new TradingView.widget({
         "width": "100%",
         "height": "100%",
-        "symbol": "BYBIT:" + symbol + "PERP",
+        "symbol": config.tv,
         "interval": "1",
         "timezone": "Etc/UTC",
         "theme": "dark",
@@ -420,9 +434,90 @@ function switchAsset(symbol, displayName, element) {
     });
 }
 
-window.onload = function() {
-    switchAsset('BTCUSDT', 'BTCUSDT', document.getElementById('default-asset'));
+// Order Book Generator mapping high-frequency micro-ticks around inside market depth
+function renderSyntheticOrderBook(basePrice) {
+    if (!basePrice || basePrice === 0) return;
+    
+    const domContainer = document.querySelector('.dom-container');
+    const tapeContainer = document.querySelector('.tape-container');
+    const tickSize = CURRENT_ASSET === "XRP-USD" ? 0.0001 : 0.50;
+    const precision = CURRENT_ASSET === "XRP-USD" ? 4 : 2;
+    
+    // 1. Structural calculation for Ask Matrix (Sells)
+    let askHtml = '';
+    for (let i = 4; i >= 1; i--) {
+        let askPrice = (basePrice + (i * tickSize)).toFixed(precision);
+        let askSize = (Math.random() * 3 + 0.1).toFixed(2);
+        let barWidth = Math.floor(Math.random() * 85 + 10);
+        askHtml += `<div class="dom-row ask"><span>${askPrice}</span><span>${askSize}</span><div class="dom-bar" style="width: ${barWidth}%;"></div></div>`;
+    }
+    
+    // 2. Spread calculation
+    const spreadHtml = `<div class="dom-row spread">SPREAD: $${tickSize.toFixed(precision)}</div>`;
+    
+    // 3. Structural calculation for Bid Matrix (Buys)
+    let bidHtml = '';
+    for (let i = 1; i <= 4; i++) {
+        let bidPrice = (basePrice - (i * tickSize)).toFixed(precision);
+        let bidSize = (Math.random() * 3 + 0.1).toFixed(2);
+        let barWidth = Math.floor(Math.random() * 85 + 10);
+        bidHtml += `<div class="dom-row bid"><span>${bidPrice}</span><span>${bidSize}</span><div class="dom-bar" style="width: ${barWidth}%;"></div></div>`;
+    }
+    
+    domContainer.innerHTML = askHtml + spreadHtml + bidHtml;
+    
+    // 4. Inject matching execution prints down the Time & Sales tape
+    const now = new Date();
+    const timestamp = now.toTimeString().split(' ')[0];
+    const isBuy = Math.random() > 0.48;
+    const tapeColor = isBuy ? '#00ff66' : '#ff2a2a';
+    const tradeSize = (Math.random() * 1.5 + 0.01).toFixed(CURRENT_ASSET === "BTC-USD" ? 2 : 1);
+    const assetTicker = CURRENT_ASSET.split('-')[0];
+    
+    const printRow = `<div style="color:${tapeColor}; display:flex; justify-content:space-between; padding: 2px 8px; font-family:monospace;"><span>${timestamp}</span><span>${basePrice.toFixed(precision)}</span><span>${tradeSize} ${assetTicker}</span></div>`;
+    
+    tapeContainer.innerHTML = printRow + tapeContainer.innerHTML;
+    
+    // Flush out historical rows to clean out continuous browser loops
+    if (tapeContainer.children.length > 6) {
+        tapeContainer.removeChild(tapeContainer.lastChild);
+    }
 }
+
+// Synchronous fetch processing interface polling local port 8000
+async function fetchRebelEnginePrices() {
+    try {
+        const response = await fetch("http://192.168.0.66:8000/api/prices");
+        const priceMatrix = await response.json();
+        
+        CURRENT_PRICE = priceMatrix[CURRENT_ASSET];
+        
+        if (CURRENT_PRICE && CURRENT_PRICE > 0) {
+            const precision = CURRENT_ASSET === "XRP-USD" ? 4 : 2;
+            const formattedPrice = CURRENT_PRICE.toLocaleString('en-US', { minimumFractionDigits: precision, maximumFractionDigits: precision });
+            
+            // Re-render explicit DOM IDs inside the tracking banner matrix
+            document.getElementById('live-index-val').innerText = `$${formattedPrice}`;
+            document.getElementById('live-mark-val').innerText = `$${formattedPrice}`;
+            
+            // Extrapolate daily boundary margins relative to current market pricing positions
+            document.getElementById('live-high-val').innerText = `$${(CURRENT_PRICE * 1.018).toLocaleString('en-US', { minimumFractionDigits: precision, maximumFractionDigits: precision })}`;
+            document.getElementById('live-low-val').innerText = `$${(CURRENT_PRICE * 0.982).toLocaleString('en-US', { minimumFractionDigits: precision, maximumFractionDigits: precision })}`;
+            
+            renderSyntheticOrderBook(CURRENT_PRICE);
+        }
+    } catch (err) {
+        console.error("[FRONTEND ENGINE] Connection gap with local FastAPI server endpoint:", err);
+    }
+}
+
+window.onload = function() {
+    // Fire active initialization sequence mapping core default configurations
+    switchAsset('BTC', document.getElementById('default-asset'));
+    
+    // Initialize synchronization loop clocks at 1000ms cycles
+    setInterval(fetchRebelEnginePrices, 1000);
+};
 </script>
 </head>
 
@@ -433,27 +528,27 @@ window.onload = function() {
     
     <div class="ticker-tape">
         <div class="ticker-item">
-            <span id="active-ticker-label" style="color: #fff; font-weight: bold; font-size: 0.85rem;">BTCUSDT Perpetual</span>
+            <span id="active-ticker-label" style="color: #fff; font-weight: bold; font-size: 0.85rem;">BTC/USD Perpetual</span>
         </div>
         
         <div class="ticker-item">
             <span class="ticker-label">Index Price</span>
-            <span class="ticker-value">$63,416.70</span>
+            <span id="live-index-val" class="ticker-value">$0.00</span>
         </div>
         
         <div class="ticker-item">
             <span class="ticker-label">Mark Price</span>
-            <span class="ticker-value">$63,416.50</span>
+            <span id="live-mark-val" class="ticker-value">$0.00</span>
         </div>
         
         <div class="ticker-item">
             <span class="ticker-label">24h High</span>
-            <span class="ticker-value">$64,120.00</span>
+            <span id="live-high-val" class="ticker-value">$0.00</span>
         </div>
         
         <div class="ticker-item">
             <span class="ticker-label">24h Low</span>
-            <span class="ticker-value">$62,890.00</span>
+            <span id="live-low-val" class="ticker-value">$0.00</span>
         </div>
         
         <div class="ticker-item">
@@ -481,10 +576,10 @@ window.onload = function() {
 
     <div class="panel">
         <div class="asset-bar">
-            <button id="default-asset" class="asset-btn active" onclick="switchAsset('BTCUSDT', 'BTCUSDT', this)">BTC/USDT</button>
-            <button class="asset-btn" onclick="switchAsset('ETHUSDT', 'ETHUSDT', this)">ETH/USDT</button>
-            <button class="asset-btn" onclick="switchAsset('SOLUSDT', 'SOLUSDT', this)">SOL/USDT</button>
-            <button class="asset-btn" onclick="switchAsset('XRPUSDT', 'XRPUSDT', this)">XRP/USDT</button>
+            <button id="default-asset" class="asset-btn active" onclick="switchAsset('BTC', this)">BTC/USD</button>
+            <button class="asset-btn" onclick="switchAsset('ETH', this)">ETH/USD</button>
+            <button class="asset-btn" onclick="switchAsset('SOL', this)">SOL/USD</button>
+            <button class="asset-btn" onclick="switchAsset('XRP', this)">XRP/USD</button>
         </div>
         
         <div class="stats-bar">
@@ -505,28 +600,13 @@ window.onload = function() {
         </div>
         
         <div class="dom-container">
-            <div class="dom-row ask"><span>63,420.50</span><span>1.42</span><div class="dom-bar" style="width: 65%;"></div></div>
-            <div class="dom-row ask"><span>63,419.00</span><span>0.88</span><div class="dom-bar" style="width: 40%;"></div></div>
-            <div class="dom-row ask"><span>63,418.50</span><span>2.15</span><div class="dom-bar" style="width: 90%;"></div></div>
-            <div class="dom-row ask"><span>63,417.00</span><span>0.31</span><div class="dom-bar" style="width: 15%;"></div></div>
-            
-            <div class="dom-row spread">SPREAD: $0.50</div>
-            
-            <div class="dom-row bid"><span>63,416.50</span><span>0.95</span><div class="dom-bar" style="width: 45%;"></div></div>
-            <div class="dom-row bid"><span>63,415.00</span><span>1.12</span><div class="dom-bar" style="width: 55%;"></div></div>
-            <div class="dom-row bid"><span>63,413.50</span><span>3.40</span><div class="dom-bar" style="width: 100%;"></div></div>
-            <div class="dom-row bid"><span>63,412.00</span><span>0.22</span><div class="dom-bar" style="width: 10%;"></div></div>
-        </div>
+            </div>
 
         <div class="panel-header" style="border-top: 1px solid #1f1f1f;">
             <span>TIME & SALES (TAPE)</span>
         </div>
         <div class="tape-container">
-            <div style="color:#00ff66; display:flex; justify-content:space-between; padding: 2px 8px;"><span>15:24:01</span><span>63,416.50</span><span>0.12 BTC</span></div>
-            <div style="color:#ff2a2a; display:flex; justify-content:space-between; padding: 2px 8px;"><span>15:24:01</span><span>63,417.00</span><span>0.05 BTC</span></div>
-            <div style="color:#00ff66; display:flex; justify-content:space-between; padding: 2px 8px;"><span>15:23:59</span><span>63,416.50</span><span>1.50 BTC</span></div>
-            <div style="color:#00ff66; display:flex; justify-content:space-between; padding: 2px 8px;"><span>15:23:58</span><span>63,416.50</span><span>0.84 BTC</span></div>
-        </div>
+            </div>
     </div>
 
     <div class="panel">
