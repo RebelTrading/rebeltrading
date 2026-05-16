@@ -235,9 +235,15 @@ header img {
     padding: 4px 8px;
     position: relative;
     align-items: center;
+    transition: background 0.1s ease;
 }
-.dom-row.ask { color: #ff2a2a; }
-.dom-row.bid { color: #00ff66; }
+/* Visual indicator that order book rows are interactive links */
+.dom-row.ask { color: #ff2a2a; cursor: pointer; }
+.dom-row.bid { color: #00ff66; cursor: pointer; }
+
+.dom-row.ask:hover { background: rgba(255, 42, 42, 0.15); }
+.dom-row.bid:hover { background: rgba(0, 255, 102, 0.15); }
+
 .dom-row.spread {
     background: #121212;
     color: #666;
@@ -343,6 +349,14 @@ header img {
     font-weight: bold;
 }
 
+/* Target style modifications specifically for price display overrides */
+.input-wrapper input#target-execution-price {
+    background: #161616;
+    color: #00ff66;
+    font-family: monospace;
+    letter-spacing: 0.5px;
+}
+
 .input-wrapper button {
     background: #1a1a1a;
     border: none;
@@ -351,6 +365,7 @@ header img {
     cursor: pointer;
     font-size: 1.1rem;
 }
+.input-wrapper button:hover { color: #fff; background: #222; }
 
 .execution-actions {
     display: grid;
@@ -365,7 +380,9 @@ header img {
     font-weight: bold;
     cursor: pointer;
     font-size: 0.85rem;
+    transition: transform 0.05s ease;
 }
+.exec-btn:active { transform: scale(0.98); }
 .exec-btn.buy { background: #00ff66; color: #000; }
 .exec-btn.sell { background: #ff2a2a; color: #fff; }
 
@@ -398,7 +415,6 @@ function toggleMenu() {
 let CURRENT_ASSET = "BTC-USD";
 let CURRENT_PRICE = 0.0;
 
-// Configuration matrix mapping buttons to API keys and native chart symbols
 const assetMap = {
     'BTC': { api: 'BTC-USD', tv: 'COINBASE:BTCUSD', display: 'BTC/USD Perpetual' },
     'ETH': { api: 'ETH-USD', tv: 'COINBASE:ETHUSD', display: 'ETH/USD Perpetual' },
@@ -415,7 +431,6 @@ function switchAsset(assetKey, element) {
     
     document.getElementById('active-ticker-label').innerText = config.display;
     
-    // Instantiate a matching TradingView candle feed mapping Coinbase indices
     new TradingView.widget({
         "width": "100%",
         "height": "100%",
@@ -434,7 +449,15 @@ function switchAsset(assetKey, element) {
     });
 }
 
-// Order Book Generator mapping high-frequency micro-ticks around inside market depth
+// Global hook updating execution panel target configurations
+function setExecutionPrice(targetPrice) {
+    const priceInputField = document.getElementById('target-execution-price');
+    if (priceInputField) {
+        priceInputField.value = targetPrice;
+    }
+}
+
+// Order Book Generator layout with built-in sandbox order form binding links
 function renderSyntheticOrderBook(basePrice) {
     if (!basePrice || basePrice === 0) return;
     
@@ -443,30 +466,36 @@ function renderSyntheticOrderBook(basePrice) {
     const tickSize = CURRENT_ASSET === "XRP-USD" ? 0.0001 : 0.50;
     const precision = CURRENT_ASSET === "XRP-USD" ? 4 : 2;
     
-    // 1. Structural calculation for Ask Matrix (Sells)
+    // 1. Structural rendering for Asks (Offers above market)
     let askHtml = '';
     for (let i = 4; i >= 1; i--) {
         let askPrice = (basePrice + (i * tickSize)).toFixed(precision);
         let askSize = (Math.random() * 3 + 0.1).toFixed(2);
         let barWidth = Math.floor(Math.random() * 85 + 10);
-        askHtml += `<div class="dom-row ask"><span>${askPrice}</span><span>${askSize}</span><div class="dom-bar" style="width: ${barWidth}%;"></div></div>`;
+        askHtml += `
+            <div class="dom-row ask" onclick="setExecutionPrice('${askPrice}')">
+                <span>${askPrice}</span><span>${askSize}</span><div class="dom-bar" style="width: ${barWidth}%;"></div>
+            </div>`;
     }
     
     // 2. Spread calculation
     const spreadHtml = `<div class="dom-row spread">SPREAD: $${tickSize.toFixed(precision)}</div>`;
     
-    // 3. Structural calculation for Bid Matrix (Buys)
+    // 3. Structural rendering for Bids (Orders below market)
     let bidHtml = '';
     for (let i = 1; i <= 4; i++) {
         let bidPrice = (basePrice - (i * tickSize)).toFixed(precision);
         let bidSize = (Math.random() * 3 + 0.1).toFixed(2);
         let barWidth = Math.floor(Math.random() * 85 + 10);
-        bidHtml += `<div class="dom-row bid"><span>${bidPrice}</span><span>${bidSize}</span><div class="dom-bar" style="width: ${barWidth}%;"></div></div>`;
+        bidHtml += `
+            <div class="dom-row bid" onclick="setExecutionPrice('${bidPrice}')">
+                <span>${bidPrice}</span><span>${bidSize}</span><div class="dom-bar" style="width: ${barWidth}%;"></div>
+            </div>`;
     }
     
     domContainer.innerHTML = askHtml + spreadHtml + bidHtml;
     
-    // 4. Inject matching execution prints down the Time & Sales tape
+    // 4. Inject matching prints down the Time & Sales tape
     const now = new Date();
     const timestamp = now.toTimeString().split(' ')[0];
     const isBuy = Math.random() > 0.48;
@@ -478,13 +507,43 @@ function renderSyntheticOrderBook(basePrice) {
     
     tapeContainer.innerHTML = printRow + tapeContainer.innerHTML;
     
-    // Flush out historical rows to clean out continuous browser loops
     if (tapeContainer.children.length > 6) {
         tapeContainer.removeChild(tapeContainer.lastChild);
     }
 }
 
-// Synchronous fetch processing interface polling local port 8000
+// Route direct action payloads straight into the backend API architecture
+async function transmitOrder(side) {
+    const priceVal = document.getElementById('target-execution-price').value;
+    const sizeVal = document.getElementById('position-contract-size').value;
+    
+    const payload = {
+        asset: CURRENT_ASSET,
+        side: side,
+        price: parseFloat(priceVal),
+        size: parseFloat(sizeVal),
+        timestamp: new Date().toISOString()
+    };
+    
+    console.log("[ORDER ROUTER] Transmitting order packet to local endpoint:", payload);
+    
+    try {
+        const response = await fetch("http://192.168.0.66:8000/api/orders", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            console.log("[ORDER ROUTER] Execution acknowledgment confirmed:", data);
+            // Update balance and P&L readouts here post-execution
+        }
+    } catch (err) {
+        console.error("[ORDER ROUTER] Failed to reach local FastAPI order pipeline:", err);
+    }
+}
+
 async function fetchRebelEnginePrices() {
     try {
         const response = await fetch("http://192.168.0.66:8000/api/prices");
@@ -496,11 +555,9 @@ async function fetchRebelEnginePrices() {
             const precision = CURRENT_ASSET === "XRP-USD" ? 4 : 2;
             const formattedPrice = CURRENT_PRICE.toLocaleString('en-US', { minimumFractionDigits: precision, maximumFractionDigits: precision });
             
-            // Re-render explicit DOM IDs inside the tracking banner matrix
             document.getElementById('live-index-val').innerText = `$${formattedPrice}`;
             document.getElementById('live-mark-val').innerText = `$${formattedPrice}`;
             
-            // Extrapolate daily boundary margins relative to current market pricing positions
             document.getElementById('live-high-val').innerText = `$${(CURRENT_PRICE * 1.018).toLocaleString('en-US', { minimumFractionDigits: precision, maximumFractionDigits: precision })}`;
             document.getElementById('live-low-val').innerText = `$${(CURRENT_PRICE * 0.982).toLocaleString('en-US', { minimumFractionDigits: precision, maximumFractionDigits: precision })}`;
             
@@ -512,10 +569,7 @@ async function fetchRebelEnginePrices() {
 }
 
 window.onload = function() {
-    // Fire active initialization sequence mapping core default configurations
     switchAsset('BTC', document.getElementById('default-asset'));
-    
-    // Initialize synchronization loop clocks at 1000ms cycles
     setInterval(fetchRebelEnginePrices, 1000);
 };
 </script>
@@ -629,17 +683,24 @@ window.onload = function() {
             </div>
 
             <div class="input-block">
+                <label>Target Entry Price ($)</label>
+                <div class="input-wrapper">
+                    <input type="text" id="target-execution-price" value="0.00">
+                </div>
+            </div>
+
+            <div class="input-block">
                 <label>Position Contract Size</label>
                 <div class="input-wrapper">
-                    <button type="button" onclick="this.nextElementSibling.value = Math.max(0.1, parseFloat(this.nextElementSibling.value) - 0.1).toFixed(1)">-</button>
-                    <input type="text" value="1.0" readonly>
-                    <button type="button" onclick="this.nextElementSibling.previousElementSibling.value = (parseFloat(this.nextElementSibling.previousElementSibling.value) + 0.1).toFixed(1)">+</button>
+                    <button type="button" onclick="const i = document.getElementById('position-contract-size'); i.value = Math.max(0.1, parseFloat(i.value) - 0.1).toFixed(1)">-</button>
+                    <input type="text" id="position-contract-size" value="1.0" readonly>
+                    <button type="button" onclick="const i = document.getElementById('position-contract-size'); i.value = (parseFloat(i.value) + 0.1).toFixed(1)">+</button>
                 </div>
             </div>
 
             <div class="execution-actions">
-                <button class="exec-btn buy">BUY / LONG</button>
-                <button class="exec-btn sell">SELL / SHORT</button>
+                <button class="exec-btn buy" onclick="transmitOrder('BUY')">BUY / LONG</button>
+                <button class="exec-btn sell" onclick="transmitOrder('SELL')">SELL / SHORT</button>
             </div>
         </div>
 
