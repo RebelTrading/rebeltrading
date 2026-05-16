@@ -755,14 +755,15 @@ function updateAccountMetrics() {
     document.getElementById('live-mark-val').innerText = `$${(currentPrice + spec.delta).toFixed(spec.precision)}`;
 
     if (activePosition.hasPosition && activePosition.asset === CURRENT_ASSET) {
-        // 2. Calculate P&L off Notional Contract Value instead of raw price change
-        let priceRatio = currentPrice / activePosition.entryPrice;
-        let initialNotional = activePosition.entryPrice * activePosition.size * spec.multiplier;
+        // 1. Direct tick/point calculation: (Current Price - Entry Price)
+        let priceDelta = currentPrice - activePosition.entryPrice;
         
+        // 2. Drive P&L linearly off contract size and underlying asset value multiplier
         if (activePosition.side === 'BUY') {
-            FLOATING_PNL = initialNotional * (priceRatio - 1);
+            FLOATING_PNL = priceDelta * activePosition.size * spec.multiplier;
         } else {
-            FLOATING_PNL = initialNotional * (1 - priceRatio);
+            // Invert the price delta for short positions so P&L gains when price drops
+            FLOATING_PNL = (-priceDelta) * activePosition.size * spec.multiplier;
         }
         
         if (FLOATING_PNL > activePosition.largestTradeProfit) {
