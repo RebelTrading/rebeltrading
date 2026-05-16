@@ -72,6 +72,61 @@ header img {
     color: #ff2a2a;
 }
 
+/* LIVE NETWORK STATUS BAR */
+.network-status-bar {
+    position: fixed;
+    top: 105px; /* Sits perfectly below header bottom */
+    width: 100%;
+    background: #050505;
+    padding: 6px 15px;
+    box-sizing: border-box;
+    border-bottom: 1px solid #111;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 998;
+    font-family: monospace;
+    font-size: 0.65rem;
+    letter-spacing: 1px;
+    color: #666;
+}
+
+.network-status-bar strong {
+    color: #fff;
+}
+
+.ping-dot {
+    width: 6px;
+    height: 6px;
+    background-color: #00ff66;
+    border-radius: 50%;
+    display: inline-block;
+    box-shadow: 0 0 8px #00ff66;
+    animation: network-ping 1.2s infinite alternate;
+}
+
+@keyframes network-ping {
+    0% { transform: scale(0.9); opacity: 0.4; box-shadow: 0 0 2px #00ff66; }
+    100% { transform: scale(1.1); opacity: 1; box-shadow: 0 0 10px #00ff66; }
+}
+
+/* ADJUST MARQUEE TICKER WRAPPER POSITION TO STACK BELOW NEW STATUS BAR */
+.ticker-wrap {
+    position: fixed;
+    top: 132px; /* Shifted down to accommodate the status bar */
+    width: 100%;
+    overflow: hidden;
+    height: 32px;
+    background-color: rgba(6, 6, 6, 0.8);
+    backdrop-filter: blur(5px);
+    border-top: 1px solid #141414;
+    border-bottom: 1px solid #141414;
+    z-index: 997;
+    display: flex;
+    align-items: center;
+}
+</style>
+
 /* LIVE TICKER MARQUEE */
 .ticker-wrap {
     position: fixed;
