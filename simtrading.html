@@ -1,3 +1,5 @@
+tradesim.html
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -539,14 +541,15 @@ let PROFIT_TARGET = 400.00;
 let DAILY_LOSS_LIMIT = 250.00;
 let EOD_TRAILING_LIMIT = 400.00;
 
-// Corrected Multipliers to align realistic contract sizes to asset scale movements
+// High-Fidelity Crypto Perp Multipliers & Fixed Decimals Configurations
 const assetMap = {
-    'BTC': { api: 'BTC-USD', tv: 'COINBASE:BTCUSD', display: 'BTC/USD Perpetual', multiplier: 1.0, precision: 2, tickSize: 0.50, delta: 1.50 },
+    'BTC': { api: 'BTC-USD', tv: 'COINBASE:BTCUSD', display: 'BTC/USD Perpetual', multiplier: 0.1, precision: 2, tickSize: 0.50, delta: 1.50 },
     'ETH': { api: 'ETH-USD', tv: 'COINBASE:ETHUSD', display: 'ETH/USD Perpetual', multiplier: 1.0, precision: 2, tickSize: 0.10, delta: 0.50 },
-    'SOL': { api: 'SOL-USD', tv: 'COINBASE:SOLUSD', display: 'SOL/USD Perpetual', multiplier: 1.0, precision: 2, tickSize: 0.05, delta: 0.10 },
-    'XRP': { api: 'XRP-USD', tv: 'COINBASE:XRPUSD', display: 'XRP/USD Perpetual', multiplier: 1.0, precision: 4, tickSize: 0.0001, delta: 0.0005 }
+    'SOL': { api: 'SOL-USD', tv: 'COINBASE:SOLUSD', display: 'SOL/USD Perpetual', multiplier: 10.0, precision: 2, tickSize: 0.05, delta: 0.10 },
+    'XRP': { api: 'XRP-USD', tv: 'COINBASE:XRPUSD', display: 'XRP/USD Perpetual', multiplier: 1000.0, precision: 4, tickSize: 0.0001, delta: 0.0005 }
 };
 
+// Dynamically track decoupled live memory caches per asset to completely prevent cross-contamination
 let localAssetPrices = {
     "BTC-USD": 79130.00,
     "ETH-USD": 3450.00,
@@ -583,7 +586,7 @@ function changeSimAccountTier(selectElement) {
 }
 
 function switchAsset(assetKey, element) {
-    document.querySelectorAll('.asset-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.asset-bar').forEach(btn => btn.classList.remove('active'));
     if (element) element.classList.add('active');
     
     const config = assetMap[assetKey];
@@ -618,6 +621,7 @@ function switchAsset(assetKey, element) {
         });
     }
     
+    fetchRebelEnginePrices();
     setTimeout(recalculateSpecInterface, 100);
 }
 
@@ -814,7 +818,7 @@ function updateAccountMetrics() {
 
     // UPDATE HEADER CHALLENGE LEVEL 1 PROGRESS BAR WITH CURRENT METRICS
     let challengePct = (combinedTotalProfit / PROFIT_TARGET) * 100;
-    challengePct = Math.max(0, Math.min(100, challengePct));
+    challengePct = Math.max(0, Math.min(100, challengePct)); // Bounds check limit
     document.getElementById('header-progress-fill').style.width = `${challengePct.toFixed(1)}%`;
     document.getElementById('header-progress-pct').innerText = `${challengePct.toFixed(0)}%`;
 
@@ -977,7 +981,6 @@ function renderSyntheticOrderBook(basePrice) {
     
     const domContainer = document.querySelector('.dom-container');
     const tapeContainer = document.querySelector('.tape-container');
-    if (!domContainer || !tapeContainer) return;
     
     const currentAssetKey = Object.keys(assetMap).find(key => assetMap[key].api === CURRENT_ASSET);
     const assetConfig = assetMap[currentAssetKey];
@@ -1017,51 +1020,77 @@ function renderSyntheticOrderBook(basePrice) {
     const tapeColor = isBuy ? '#00ff66' : '#ff2a2a';
     const tradeSize = (Math.random() * 1.5 + 0.01).toFixed(2);
     
-    const newRow = `<div style="color: ${tapeColor}; padding: 2px 5px; display: flex; justify-content: space-between;">
-        <span>${timestamp}</span><span>$${basePrice.toFixed(precision)}</span><span>${tradeSize}</span>
-    </div>`;
-    tapeContainer.innerHTML = newRow + tapeContainer.innerHTML;
-    if (tapeContainer.children.length > 30) tapeContainer.removeChild(tapeContainer.lastChild);
+    const printRow = `<div style="color:${tapeColor}; display:flex; justify-content:space-between; padding: 2px 8px; font-family:monospace;"><span>${timestamp}</span><span>${basePrice.toFixed(precision)}</span><span>${tradeSize}</span></div>`;
+    tapeContainer.innerHTML = printRow + tapeContainer.innerHTML;
+    
+    if (tapeContainer.children.length > 5) {
+        tapeContainer.removeChild(tapeContainer.lastChild);
+    }
 }
 
-// Tick-by-tick simulation loop execution engine
-function startSimulationLoop() {
-    setInterval(() => {
+async function fetchRebelEnginePrices() {
+    try {
+        const response = await fetch("/api/prices");
+        const priceMatrix = await response.json();
+        if(priceMatrix && priceMatrix[CURRENT_ASSET]) {
+            localAssetPrices[CURRENT_ASSET] = priceMatrix[CURRENT_ASSET];
+        }
+    } catch (err) {
         const currentAssetKey = Object.keys(assetMap).find(key => assetMap[key].api === CURRENT_ASSET);
         const config = assetMap[currentAssetKey];
+        let tickDelta = config.delta;
+        localAssetPrices[CURRENT_ASSET] += (Math.random() * (tickDelta * 2) - tickDelta);
+    }
+
+    const currentPrice = getCurrentPrice();
+    if (currentPrice && currentPrice > 0) {
+        const currentAssetKey = Object.keys(assetMap).find(key => assetMap[key].api === CURRENT_ASSET);
+        const precision = assetMap[currentAssetKey].precision;
+        const formattedPrice = currentPrice.toLocaleString('en-US', { minimumFractionDigits: precision, maximumFractionDigits: precision });
         
-        // Random drift generation
-        const drift = (Math.random() - 0.5) * config.delta;
-        localAssetPrices[CURRENT_ASSET] += drift;
+        // Dynamic alignment inside modern interactive top navigation headers
+        const indexEl = document.getElementById('live-index-val');
+        const markEl = document.getElementById('live-mark-val');
+        if (indexEl) indexEl.innerText = `$${formattedPrice}`;
+        if (markEl) markEl.innerText = `$${formattedPrice}`;
         
+        renderSyntheticOrderBook(currentPrice);
         checkAutomatedRulesAndExits();
         updateAccountMetrics();
-        renderSyntheticOrderBook(getCurrentPrice());
-    }, 400);
+    }
 }
 
-window.onload = () => {
-    switchAsset('BTC', null);
-    startSimulationLoop();
-};
+window.addEventListener('DOMContentLoaded', function() {
+    switchAsset('BTC', document.getElementById('default-asset'));
+    setInterval(fetchRebelEnginePrices, 1000);
+    setInterval(recalculateSpecInterface, 1000);
+});
 </script>
 </head>
+
 <body>
 
 <header>
-    <div style="font-weight: bold; font-size: 1.1rem; color: #ff2a2a; display: flex; align-items: center; gap: 8px;">
-        <span style="background: #ff2a2a; color: #000; padding: 2px 6px; border-radius: 3px;">REBEL</span> DESK
-    </div>
+    <img src="https://raw.githubusercontent.com/rebeltrading/rebeltrading/main/rebeltradinglogo.png" alt="Rebel Trading Logo">
+    
     <div class="ticker-tape">
         <div class="ticker-metrics-wrapper">
             <div class="ticker-item">
-                <span class="ticker-label">Active Sandbox Target</span>
-                <span class="ticker-value" id="active-ticker-label">BTC/USD Perpetual</span>
+                <span class="ticker-label" id="active-ticker-label">BTC/USD Perpetual</span>
+            </div>
+            <div class="ticker-item">
+                <span class="ticker-label">Index Price</span>
+                <span class="ticker-value" id="live-index-val">$0.00</span>
+            </div>
+            <div class="ticker-item">
+                <span class="ticker-label">Mark Price</span>
+                <span class="ticker-value" id="live-mark-val">$0.00</span>
             </div>
         </div>
+
         <div class="progress-container">
             <div class="progress-labels">
-                <span class="level-title">Arcade Phase 1</span>
+                <span class="level-title">Level 1 Challenge</span>
                 <span class="percentage-track" id="header-progress-pct">0%</span>
             </div>
             <div class="progress-bar-track">
@@ -1069,139 +1098,158 @@ window.onload = () => {
             </div>
         </div>
     </div>
+
     <div class="hamburger" onclick="toggleMenu()">
         <div></div><div></div><div></div>
     </div>
 </header>
 
 <div class="menu" id="menu">
-    <a href="#" onclick="toggleMenu()">Close Workspace</a>
+    <a href="#" onclick="toggleMenu()">Close Panel</a>
+    <a href="#">Sim Accounts</a>
+    <a href="#">Performance Analyzer</a>
+    <a href="#">Risk Control Center</a>
 </div>
 
 <div class="desk-container">
+    
     <div class="panel">
         <div class="asset-bar">
-            <button class="asset-btn active" onclick="switchAsset('BTC', this)">BTC-USD</button>
-            <button class="asset-btn" onclick="switchAsset('ETH', this)">ETH-USD</button>
-            <button class="asset-btn" onclick="switchAsset('SOL', this)">SOL-USD</button>
-            <button class="asset-btn" onclick="switchAsset('XRP', this)">XRP-USD</button>
+            <button class="asset-btn active" id="default-asset" onclick="switchAsset('BTC', this)">BTC/USD</button>
+            <button class="asset-btn" onclick="switchAsset('ETH', this)">ETH/USD</button>
+            <button class="asset-btn" onclick="switchAsset('SOL', this)">SOL/USD</button>
+            <button class="asset-btn" onclick="switchAsset('XRP', this)">XRP/USD</button>
         </div>
-        <div class="chart-wrapper">
-            <div id="limit-order-line" class="chart-line-overlay">
-                <span id="limit-line-badge" class="chart-overlay-tag">WORKING LIMIT TARGET</span>
-            </div>
-            <div id="active-position-line" class="chart-line-overlay">
-                <span id="active-position-badge" class="chart-overlay-tag">ACTIVE PERP POSITION</span>
-            </div>
-            <div id="tv-target-line" class="chart-line-overlay">
-                <span id="tp-line-badge" class="chart-overlay-tag">TAKE PROFIT</span>
-            </div>
-            <div id="sl-risk-line" class="chart-line-overlay">
-                <span id="sl-line-badge" class="chart-overlay-tag">STOP LOSS</span>
-            </div>
-            
-            <div id="tv_chart_container" style="width: 100%; height: 100%;"></div>
-        </div>
-    </div>
-
-    <div class="panel">
-        <div class="panel-header">DEPTH OF MARKET (DOM) <span>SPREAD SCALPER</span></div>
-        <div class="dom-container"></div>
-        <div class="panel-header" style="border-top: 1px solid #1f1f1f;">TIME & SALES</div>
-        <div class="tape-container"></div>
-    </div>
-
-    <div class="panel">
+        
         <div class="stats-bar">
             <div class="stat-box">
-                <div class="stat-label">Net Liq Value</div>
-                <div class="stat-value" id="display-balance">$5000.00</div>
+                <div class="stat-label">Net Liquidation</div>
+                <div class="stat-value" id="display-balance">$5,000.00</div>
             </div>
             <div class="stat-box">
-                <div class="stat-label">Floating P&L</div>
-                <div class="stat-value" id="display-pnl">+$0.00</div>
+                <div class="stat-label">Open Floating P&L</div>
+                <div class="stat-value positive" id="display-pnl">+$0.00</div>
             </div>
             <div class="stat-box">
-                <div class="stat-label">Max Day Draw</div>
+                <div class="stat-label">Daily Accum Loss</div>
                 <div class="stat-value" id="display-daily-loss">$0.00 / $250</div>
             </div>
+            <div class="stat-box">
+                <div class="stat-label">Max Leverage Engine</div>
+                <div class="stat-value" style="color: #ffb703;">1:50 CROSS</div>
+            </div>
         </div>
+        
+        <div class="chart-wrapper">
+            <div id="limit-order-line" class="chart-line-overlay">
+                <div id="limit-line-badge" class="chart-overlay-tag">WORKING LIMIT TARGET: $0.00</div>
+            </div>
+            <div id="active-position-line" class="chart-line-overlay">
+                <div id="active-position-badge" class="chart-overlay-tag">LONG 1 Cont. | Entry: $0.00 | P&L: +$0.00</div>
+            </div>
+            <div id="tv-target-line" class="chart-line-overlay">
+                <div id="tp-line-badge" class="chart-overlay-tag">TAKE PROFIT TARGET: $0.00</div>
+            </div>
+            <div id="sl-risk-line" class="chart-line-overlay">
+                <div id="sl-line-badge" class="chart-overlay-tag">STOP LOSS SAFEGUARD: $0.00</div>
+            </div>
 
+            <div id="tv_chart_container" style="width:100%; height:100%;"></div>
+        </div>
+    </div>
+    
+    <div class="panel">
+        <div class="panel-header">
+            <span>ORDER BOOK (LEVEL 2 DEPTH)</span>
+            <span style="font-family: monospace; font-size: 0.7rem; color: #777;">TICK FEED ACTIVE</span>
+        </div>
+        
+        <div class="dom-container">
+            </div>
+        
+        <div class="panel-header" style="border-top: 1px solid #1f1f1f; border-bottom: none;">
+            <span>TIME & SALES (TAPE)</span>
+        </div>
+        <div class="tape-container">
+            </div>
+    </div>
+    
+    <div class="panel">
+        <div class="panel-header">REBEL DEV ARCADE PANEL</div>
         <div class="order-panel">
-            <div class="account-selector">
-                <label style="font-size: 0.6rem; color:#555; text-transform:uppercase; display:block; margin-bottom:4px;">Funding Sim Desk Account</label>
+            
+            <div class="account-selector input-block">
+                <label>Select Matrix Account</label>
                 <select onchange="changeSimAccountTier(this)">
                     <option value="T3">Rebel Arcade: $5,000 Sim Box ($50 Ticket)</option>
                     <option value="T2">Raider Arcade: $2,500 Sim Box ($25 Ticket)</option>
                     <option value="T1">Recruit Arcade: $1,000 Sim Box ($10 Ticket)</option>
                 </select>
             </div>
-
+            
             <div class="order-tabs">
                 <button class="tab-btn active" onclick="setOrderType('MARKET', this)">MARKET</button>
                 <button class="tab-btn" onclick="setOrderType('LIMIT', this)">LIMIT</button>
             </div>
-
+            
             <div class="input-block">
-                <label>Execution Target Price</label>
+                <label>Target Execution Price ($)</label>
                 <div class="input-wrapper">
-                    <input type="text" id="target-execution-price" value="MARKET PRICE" disabled>
+                    <input type="text" id="target-execution-price" value="MARKET PRICE" disabled oninput="triggerLimitWorkingLine()">
                 </div>
             </div>
-
+            
             <div class="input-block">
-                <label>Contract Position Size</label>
+                <label>Position Contract Size</label>
                 <div class="input-wrapper">
                     <button onclick="changeContractSizeValue(-0.1)">-</button>
-                    <input type="text" id="position-contract-size" value="1.0">
+                    <input type="text" id="position-contract-size" value="1.0" oninput="recalculateSpecInterface()">
                     <button onclick="changeContractSizeValue(0.1)">+</button>
                 </div>
             </div>
-
+            
+            <div class="spec-metrics-display">
+                <div class="spec-row">Notional Contract Value:<strong id="spec-calc-notional">$0.00</strong></div>
+                <div class="spec-row">Margin Allocated (1:50):<strong id="spec-calc-margin">$0.00</strong></div>
+                <div class="spec-row">Remaining Buying Power:<strong id="spec-calc-buyingpower">$5,000.00</strong></div>
+            </div>
+            
             <div class="bracket-toggle-container">
                 <input type="checkbox" id="bracket-toggle-check" onchange="toggleBracketInputBlock()">
-                <label Kakao="bracket-toggle-check" style="cursor:pointer;">Attach Auto-Bracket Exits (ATM)</label>
+                <label for="bracket-toggle-check" style="cursor:pointer;">Attach TP / SL Bracket Order Parameters</label>
             </div>
-
+            
             <div class="bracket-inputs-grid" id="bracket-input-box-wrapper">
                 <div class="input-block">
-                    <label style="color:#00ff66;">Profit Target ($)</label>
-                    <div class="input-wrapper" style="border-color: rgba(0,255,102,0.2);">
-                        <input type="number" id="bracket-tp-input" placeholder="Price Target">
-                    </div>
+                    <label>Take Profit Price</label>
+                    <div class="input-wrapper"><input type="number" step="any" id="bracket-tp-input" value="0.00"></div>
                 </div>
                 <div class="input-block">
-                    <label style="color:#ff2a2a;">Stop Loss ($)</label>
-                    <div class="input-wrapper" style="border-color: rgba(255,42,42,0.2);">
-                        <input type="number" id="bracket-sl-input" placeholder="Price Stop">
-                    </div>
+                    <label>Stop Loss Price</label>
+                    <div class="input-wrapper"><input type="number" step="any" id="bracket-sl-input" value="0.00"></div>
                 </div>
             </div>
-
-            <div class="spec-metrics-display">
-                <div class="spec-row"><span>Nominal Position Value:</span><strong id="spec-calc-notional">$0.00</strong></div>
-                <div class="spec-row"><span>Margin Capital Allocation (50x):</span><strong id="spec-calc-margin">$0.00</strong></div>
-                <div class="spec-row"><span>Unallocated Buying Power:</span><strong id="spec-calc-buyingpower">$0.00</strong></div>
-            </div>
-
+            
             <div class="execution-actions">
-                <button class="exec-btn buy" onclick="executeDevOrder('BUY')">BUY LONG</button>
-                <button class="exec-btn sell" onclick="executeDevOrder('SELL')">SELL SHORT</button>
+                <button class="exec-btn buy" onclick="executeDevOrder('BUY')">BUY / LONG</button>
+                <button class="exec-btn sell" onclick="executeDevOrder('SELL')">SELL / SHORT</button>
             </div>
-
+            
             <div class="position-display" id="live-position-status">
-                <div class="position-row"><span>No Active Dev Positions Open</span><span>--</span></div>
+                <div class="position-row"><span>No Active Open Positions</span><span>--</span></div>
             </div>
+            
         </div>
-
+        
         <div class="rules-container">
-            <div style="font-size:0.65rem; color:#444; text-transform:uppercase; font-weight:bold; margin-bottom:8px; letter-spacing:0.5px;">Prop Verification System</div>
-            <div class="rule-item"><span>Arcade Profit Target (Pass Check)</span><span id="metric-target">$400.00 Left</span></div>
-            <div class="rule-item"><span>Intraday Hard Loss Threshold</span><span id="metric-daily-loss" class="pass">PASSED</span></div>
-            <div class="rule-item"><span>Trailing Drawdown Cap (EOD Peak)</span><span id="metric-trailing" class="pass">PASSED</span></div>
-            <div class="rule-item"><span>35% Single Trade Consistency Rule</span><span id="metric-consistency" class="pass">COMPLIANT</span></div>
+            <div style="font-weight:bold; color:#fff; margin-bottom:8px; text-transform:uppercase; font-size:0.65rem; letter-spacing:0.5px;">Objective Verification Runners</div>
+            <div class="rule-item">Target Threshold Baseline: <span id="metric-target">$400.00 Left</span></div>
+            <div class="rule-item">Daily Drawdown Safeguard: <span id="metric-daily-loss" class="pass">PASSED (-$0.00 / $250)</span></div>
+            <div class="rule-item">EOD Trailing Profit Guard: <span id="metric-trailing" class="pass">PASSED ($0.00 / $400)</span></div>
+            <div class="rule-item">35% Consistency Constraint: <span id="metric-consistency" class="pass">COMPLIANT ($140.00 Cap Per Trade)</span></div>
         </div>
     </div>
+    
 </div>
 
 </body>
