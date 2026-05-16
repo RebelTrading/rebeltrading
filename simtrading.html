@@ -217,7 +217,7 @@ header img {
     box-shadow: 0 2px 4px rgba(0,0,0,0.6);
 }
 
-/* 1. LIMIT WORKING ORDER LINE STYLE */
+/* LIMIT WORKING ORDER LINE STYLE */
 #limit-order-line {
     border-top: 2px dashed #ffb703;
 }
@@ -226,7 +226,7 @@ header img {
     color: #000;
 }
 
-/* 2. ACTIVE EXECUTION TRACKING LINE STYLE */
+/* ACTIVE EXECUTION TRACKING LINE STYLE */
 #active-position-line {
     background: #00ff66;
     box-shadow: 0 0 6px rgba(0, 255, 102, 0.3);
@@ -244,16 +244,16 @@ header img {
     color: #fff;
 }
 
-/* 3. TAKE PROFIT TARGET LINE STYLE */
-#tp-target-line {
+/* TAKE PROFIT TARGET LINE STYLE */
+#tv-target-line {
     border-top: 2px dashed #00ff66;
 }
-#tp-target-line .chart-overlay-tag {
+#tv-target-line .chart-overlay-tag {
     background: #00ff66;
     color: #000;
 }
 
-/* 4. STOP LOSS RISK LINE STYLE */
+/* STOP LOSS RISK LINE STYLE */
 #sl-risk-line {
     border-top: 2px dashed #ff2a2a;
 }
@@ -561,6 +561,12 @@ function switchAsset(assetKey, element) {
     CURRENT_ASSET = config.api;
     document.getElementById('active-ticker-label').innerText = config.display;
     
+    // Clear and match inputs instantly when switching assets
+    const priceInput = document.getElementById('target-execution-price');
+    if (ORDER_TYPE === "LIMIT") {
+        priceInput.value = "0.00";
+    }
+
     cancelPendingLimit();
     clearAllChartOverlays();
 
@@ -593,7 +599,8 @@ function setOrderType(type, element) {
         priceInput.value = "MARKET PRICE";
         priceInput.disabled = true;
     } else {
-        priceInput.value = CURRENT_PRICE > 0 ? CURRENT_PRICE.toFixed(2) : "0.00";
+        const precision = CURRENT_ASSET === "XRP-USD" ? 4 : 2;
+        priceInput.value = CURRENT_PRICE > 0 ? CURRENT_PRICE.toFixed(precision) : "0.00";
         priceInput.disabled = false;
     }
     cancelPendingLimit();
@@ -641,7 +648,6 @@ function recalculateSpecInterface() {
 // BACKGROUND WATCHER ENGINE WITH HYBRID EXITS & RULE VERIFICATIONS
 function checkAutomatedRulesAndExits() {
     if (!CURRENT_PRICE || CURRENT_PRICE === 0) return;
-    const precision = CURRENT_ASSET === "XRP-USD" ? 4 : 2;
 
     // 1. Process Pending Limit Orders
     if (pendingLimitOrder.isSet) {
@@ -672,7 +678,7 @@ function checkAutomatedRulesAndExits() {
 
         if (activePosition.tpPrice > 0) {
             if (activePosition.side === 'BUY' && CURRENT_PRICE >= activePosition.tpPrice) { shouldClose = true; finalExitPrice = activePosition.tpPrice; }
-            if (activePosition.side === 'SELL' && CURRENT_PRICE <= activePosition.tpPrice) { shouldClose = true; exitReason = "TP"; finalExitPrice = activePosition.tpPrice; }
+            if (activePosition.side === 'SELL' && CURRENT_PRICE <= activePosition.tpPrice) { shouldClose = true; finalExitPrice = activePosition.tpPrice; }
         }
 
         if (activePosition.slPrice > 0) {
@@ -690,6 +696,7 @@ function checkAutomatedRulesAndExits() {
 function updateAccountMetrics() {
     const currentAssetKey = Object.keys(assetMap).find(key => assetMap[key].api === CURRENT_ASSET);
     const spec = assetMap[currentAssetKey];
+    const precision = CURRENT_ASSET === "XRP-USD" ? 4 : 2;
 
     if (activePosition.hasPosition && activePosition.asset === CURRENT_ASSET) {
         let priceDiff = CURRENT_PRICE - activePosition.entryPrice;
@@ -705,7 +712,7 @@ function updateAccountMetrics() {
     } else {
         FLOATING_PNL = 0.00;
         document.getElementById('active-position-line').style.display = 'none';
-        document.getElementById('tp-target-line').style.display = 'none';
+        document.getElementById('tv-target-line').style.display = 'none';
         document.getElementById('sl-risk-line').style.display = 'none';
     }
 
@@ -737,6 +744,7 @@ function updateAccountMetrics() {
         const sideColor = activePosition.side === 'BUY' ? '#00ff66' : '#ff2a2a';
         const sideLabel = activePosition.side === 'BUY' ? 'LONG' : 'SHORT';
         const displayTicker = activePosition.asset.split('-')[0];
+        const posPrecision = activePosition.asset === "XRP-USD" ? 4 : 2;
         
         positionPanel.innerHTML = `
             <div class="position-row">
@@ -744,7 +752,7 @@ function updateAccountMetrics() {
                 <button style="background:#ff2a2a; border:none; color:#fff; font-size:0.7rem; padding:4px 8px; font-weight:bold; border-radius:2px; cursor:pointer;" onclick="closeActivePosition()">CLOSE POSITION</button>
             </div>
             <div class="position-row" style="margin-top: 4px; color:#aaa;">
-                <span>Entry: $${activePosition.entryPrice.toFixed(2)}</span>
+                <span>Entry: $${activePosition.entryPrice.toFixed(posPrecision)}</span>
                 <span>Live P&L: <strong style="color:${FLOATING_PNL >= 0 ? '#00ff66' : '#ff2a2a'}">${FLOATING_PNL >= 0 ? '+' : ''}$${FLOATING_PNL.toFixed(2)}</strong></span>
             </div>
         `;
@@ -805,11 +813,12 @@ function triggerLimitWorkingLine() {
     const overlay = document.getElementById('limit-order-line');
     const badge = document.getElementById('limit-line-badge');
     const inputVal = parseFloat(document.getElementById('target-execution-price').value);
+    const precision = CURRENT_ASSET === "XRP-USD" ? 4 : 2;
     
     if (overlay && badge && !isNaN(inputVal) && inputVal > 0) {
         overlay.style.display = 'block';
         overlay.style.top = '35%';
-        badge.innerText = `WORKING LIMIT TARGET: $${inputVal.toFixed(2)}`;
+        badge.innerText = `WORKING LIMIT TARGET: $${inputVal.toFixed(precision)}`;
     }
 }
 
@@ -819,6 +828,7 @@ function cancelPendingLimit() {
 }
 
 function showActivePositionOverlays() {
+    const precision = CURRENT_ASSET === "XRP-USD" ? 4 : 2;
     document.getElementById('active-position-line').style.display = 'block';
     document.getElementById('active-position-line').style.top = '50%';
     
@@ -826,13 +836,13 @@ function showActivePositionOverlays() {
         const tpOverlay = document.getElementById('tv-target-line');
         tpOverlay.style.display = 'block';
         tpOverlay.style.top = activePosition.side === 'BUY' ? '20%' : '80%';
-        document.getElementById('tp-line-badge').innerText = `TAKE PROFIT TARGET: $${activePosition.tpPrice.toFixed(2)}`;
+        document.getElementById('tp-line-badge').innerText = `TAKE PROFIT TARGET: $${activePosition.tpPrice.toFixed(precision)}`;
     }
     if (activePosition.slPrice > 0) {
         const slOverlay = document.getElementById('sl-risk-line');
         slOverlay.style.display = 'block';
         slOverlay.style.top = activePosition.side === 'BUY' ? '80%' : '20%';
-        document.getElementById('sl-line-badge').innerText = `STOP LOSS SAFEGUARD: $${activePosition.slPrice.toFixed(2)}`;
+        document.getElementById('sl-line-badge').innerText = `STOP LOSS SAFEGUARD: $${activePosition.slPrice.toFixed(precision)}`;
     }
 }
 
@@ -968,12 +978,14 @@ function renderSyntheticOrderBook(basePrice) {
 
 async function fetchRebelEnginePrices() {
     try {
-        const response = await fetch("http://192.168.0.66:8000/api/prices");
+        // Dynamic relative endpoint mapping so deployment location doesn't break tracking rules
+        const response = await fetch("/api/prices");
         const priceMatrix = await response.json();
         CURRENT_PRICE = priceMatrix[CURRENT_ASSET];
     } catch (err) {
+        // Multi-asset local simulation routing configuration
         if (CURRENT_PRICE === 0) {
-            CURRENT_PRICE = CURRENT_ASSET === "BTC-USD" ? 79130.00 : (CURRENT_ASSET === "ETH-USD" ? 3450.00 : (CURRENT_ASSET === "SOL-USD" ? 145.00 : 0.5850));
+            CURRENT_PRICE = CURRENT_ASSET === "BTC-USD" ? 79130.00 : (CURRENT_ASSET === "ETH-USD" ? 3450.00 : (CURRENT_ASSET === "SOL-USD" ? 145.00 : 1.4350));
         }
         let tickDelta = CURRENT_ASSET === "XRP-USD" ? 0.0005 : 1.50;
         CURRENT_PRICE += (Math.random() * (tickDelta * 2) - tickDelta);
@@ -1012,10 +1024,11 @@ window.onload = function() {
     <div class="hamburger" onclick="toggleMenu()"><div></div><div></div><div></div></div>
 </header>
 
-<div id="menu" class="menu">
-    <a href="#home">Home</a>
-    <a href="#evaluations">Evaluations</a>
-</div>
+<nav id="menu" class="menu">
+    <a href="#" onclick="toggleMenu()">Close Workspace</a>
+    <a href="#">Clear Session Statistics</a>
+    <a href="#">Audit Risk Parameters</a>
+</nav>
 
 <div class="desk-container">
     <div class="panel">
@@ -1025,50 +1038,47 @@ window.onload = function() {
             <button class="asset-btn" onclick="switchAsset('SOL', this)">SOL/USD</button>
             <button class="asset-btn" onclick="switchAsset('XRP', this)">XRP/USD</button>
         </div>
-        
-        <div class="stats-bar">
-            <div class="stat-box"><div class="stat-label">Net Liquidation</div><div id="display-balance" class="stat-value">$5,000.00</div></div>
-            <div class="stat-box"><div class="stat-label">Open Floating P&L</div><div id="display-pnl" class="stat-value">+$0.00</div></div>
-            <div class="stat-box"><div class="stat-label">Daily Accum Loss</div><div id="display-daily-loss" class="stat-value">$0.00 / $250</div></div>
-            <div class="stat-box"><div class="stat-label">Max Leverage Engine</div><div class="stat-value" style="color: #ffb703;">1:50 CROSS</div></div>
-        </div>
-
         <div class="chart-wrapper">
             <div id="limit-order-line" class="chart-line-overlay">
-                <div id="limit-line-badge" class="chart-overlay-tag">WORKING LIMIT...</div>
+                <span id="limit-line-badge" class="chart-overlay-tag">WORKING LIMIT TARGET: $0.00</span>
             </div>
-
             <div id="active-position-line" class="chart-line-overlay">
-                <div id="active-position-badge" class="chart-overlay-tag">POSITION LOAD...</div>
+                <span id="active-position-badge" class="chart-overlay-tag">POSITION: LONG 0.00</span>
             </div>
-
             <div id="tv-target-line" class="chart-line-overlay">
-                <div id="tp-line-badge" class="chart-overlay-tag">TAKE PROFIT...</div>
+                <span id="tp-line-badge" class="chart-overlay-tag">TAKE PROFIT TARGET: $0.00</span>
             </div>
-
             <div id="sl-risk-line" class="chart-line-overlay">
-                <div id="sl-line-badge" class="chart-overlay-tag">STOP LOSS...</div>
+                <span id="sl-line-badge" class="chart-overlay-tag">STOP LOSS SAFEGUARD: $0.00</span>
             </div>
-            
-            <div id="tv_chart_container" style="height: 100%; width: 100%;"></div>
+            <div id="tv_chart_container" style="width:100%; height:100%;"></div>
         </div>
     </div>
 
     <div class="panel">
-        <div class="panel-header"><span>ORDER BOOK (LEVEL 2 DEPTH)</span></div>
-        <div class="dom-container"></div>
-        <div class="panel-header" style="border-top: 1px solid #1f1f1f;"><span>TIME & SALES (TAPE)</span></div>
-        <div class="tape-container"></div>
+        <div class="panel-header">ORDER BOOK (LEVEL 2 DEPTH)</div>
+        <div class="dom-container">
+            </div>
+        <div class="panel-header" style="border-top: 1px solid #1f1f1f;">TIME & SALES (TAPE)</div>
+        <div class="tape-container">
+            </div>
     </div>
 
     <div class="panel">
-        <div class="panel-header"><span>REBEL DEV ARCADE PANEL</span></div>
+        <div class="stats-bar">
+            <div class="stat-box"><div class="stat-label">Net Liq Value</div><div id="display-balance" class="stat-value">$5,000.00</div></div>
+            <div class="stat-box"><div class="stat-label">Open Float P&L</div><div id="display-pnl" class="stat-value">+$0.00</div></div>
+            <div class="stat-box"><div class="stat-label">Accum Daily Loss</div><div id="display-daily-loss" class="stat-value">$0.00 / $250</div></div>
+            <div class="stat-box"><div class="stat-label">Max Leverage</div><div class="stat-value" style="color:#ffb703;">1:50 CROSS</div></div>
+        </div>
+
         <div class="order-panel">
-            <div class="account-selector">
+            <div class="input-block account-selector">
+                <label>Active Sandbox Account Matrix</label>
                 <select onchange="changeSimAccountTier(this)">
-                    <option value="T3">Rebel Box: $5,000 Sim Arena ($30 Ticket)</option>
-                    <option value="T2">Raider Box: $2,500 Sim Arena ($15 Ticket)</option>
-                    <option value="T1">Recruit Box: $1,000 Sim Arena ($5 Ticket)</option>
+                    <option value="T1">Recruit Arcade: $1,000 Sim Box ($10 Ticket)</option>
+                    <option value="T2">Raider Arcade: $2,500 Sim Box ($25 Ticket)</option>
+                    <option value="T3" selected>Rebel Arcade: $5,000 Sim Box ($50 Ticket)</option>
                 </select>
             </div>
 
@@ -1080,42 +1090,38 @@ window.onload = function() {
             <div class="input-block">
                 <label>Target Execution Price ($)</label>
                 <div class="input-wrapper">
-                    <input type="text" id="target-execution-price" value="MARKET PRICE" oninput="recalculateSpecInterface(); triggerLimitWorkingLine();" disabled>
+                    <input type="text" id="target-execution-price" value="MARKET PRICE" disabled>
                 </div>
             </div>
 
             <div class="input-block">
                 <label>Position Contract Size</label>
                 <div class="input-wrapper">
-                    <button type="button" onclick="const i = document.getElementById('position-contract-size'); i.value = Math.max(0.1, parseFloat(i.value) - 0.1).toFixed(1); recalculateSpecInterface();">-</button>
-                    <input type="text" id="position-contract-size" value="1.0" readonly>
-                    <button type="button" onclick="const i = document.getElementById('position-contract-size'); i.value = (parseFloat(i.value) + 0.1).toFixed(1); recalculateSpecInterface();">+</button>
+                    <button onclick="document.getElementById('position-contract-size').value = Math.max(0.1, (parseFloat(document.getElementById('position-contract-size').value)||0)-0.1).toFixed(1); recalculateSpecInterface();">-</button>
+                    <input type="text" id="position-contract-size" value="1.0" oninput="recalculateSpecInterface()">
+                    <button onclick="document.getElementById('position-contract-size').value = ((parseFloat(document.getElementById('position-contract-size').value)||0)+0.1).toFixed(1); recalculateSpecInterface();">+</button>
                 </div>
             </div>
 
             <div class="spec-metrics-display">
-                <div class="spec-row"><span>Notional Contract Value:</span><strong id="spec-calc-notional">$0.00</strong></div>
-                <div class="spec-row"><span>Margin Allocated (1:50):</span><strong id="spec-calc-margin">$0.00</strong></div>
-                <div class="spec-row"><span>Remaining Buying Power:</span><strong id="spec-calc-buyingpower">$5,000.00</strong></div>
+                <div class="spec-row">Notional Contract Value: <strong id="spec-calc-notional">$0.00</strong></div>
+                <div class="spec-row">Margin Allocated (1:50): <strong id="spec-calc-margin">$0.00</strong></div>
+                <div class="spec-row">Remaining Buying Power: <strong id="spec-calc-buyingpower">$5,000.00</strong></div>
             </div>
 
             <div class="bracket-toggle-container">
-                <input type="checkbox" id="bracket-toggle-check" onclick="toggleBracketInputBlock()">
-                <label for="bracket-toggle-check" style="cursor:pointer; font-weight:bold;">Attach TP / SL Bracket Order</label>
+                <input type="checkbox" id="bracket-toggle-check" onchange="toggleBracketInputBlock()">
+                <label style="cursor:pointer;" for="bracket-toggle-check">Attach TP / SL Bracket Order Parameters</label>
             </div>
 
             <div id="bracket-input-box-wrapper" class="bracket-inputs-grid">
                 <div class="input-block">
-                    <label style="color:#00ff66;">Take Profit ($)</label>
-                    <div class="input-wrapper" style="border-color: rgba(0,255,102,0.3);">
-                        <input type="number" id="bracket-tp-input" placeholder="Target Price" oninput="checkAutomatedRulesAndExits()">
-                    </div>
+                    <label>Take Profit Trigger ($)</label>
+                    <div class="input-wrapper"><input type="number" id="bracket-tp-input" placeholder="Price Target" step="any"></div>
                 </div>
                 <div class="input-block">
-                    <label style="color:#ff2a2a;">Stop Loss ($)</label>
-                    <div class="input-wrapper" style="border-color: rgba(255,42,42,0.3);">
-                        <input type="number" id="bracket-sl-input" placeholder="Risk Price" oninput="checkAutomatedRulesAndExits()">
-                    </div>
+                    <label>Stop Loss Safeguard ($)</label>
+                    <div class="input-wrapper"><input type="number" id="bracket-sl-input" placeholder="Risk Cut" step="any"></div>
                 </div>
             </div>
 
@@ -1124,20 +1130,17 @@ window.onload = function() {
                 <button class="exec-btn sell" onclick="executeDevOrder('SELL')">SELL / SHORT</button>
             </div>
 
-            <label style="font-size: 0.65rem; color: #555; text-transform: uppercase; margin-top: 2px;">Active Position State</label>
             <div id="live-position-status" class="position-display">
                 <div class="position-row"><span>No Active Dev Positions Open</span><span>--</span></div>
             </div>
         </div>
 
-        <div style="flex-grow: 1;"></div>
-
-        <div class="panel-header" style="border-top: 1px solid #1f1f1f;"><span>OBJECTIVE VERIFICATION RUNNERS</span></div>
         <div class="rules-container">
-            <div class="rule-item"><span>Target Threshold Baseline</span><span id="metric-target" style="color:#fff;">$400.00 Left</span></div>
-            <div class="rule-item"><span>Daily Drawdown Safeguard</span><span id="metric-daily-loss" class="pass">PASSED</span></div>
-            <div class="rule-item"><span>EOD Trailing Profit Guard</span><span id="metric-trailing" class="pass">PASSED</span></div>
-            <div class="rule-item"><span>35% Consistency Constraint</span><span id="metric-consistency" class="pass">COMPLIANT</span></div>
+            <div style="font-weight:bold; color:#fff; margin-bottom:8px; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.5px;">Objective Verification Runners</div>
+            <div class="rule-item">Target Threshold Baseline: <span id="metric-target">$400.00 Left</span></div>
+            <div class="rule-item">Daily Drawdown Safeguard: <span id="metric-daily-loss" class="pass">PASSED</span></div>
+            <div class="rule-item">EOD Trailing Profit Guard: <span id="metric-trailing" class="pass">PASSED</span></div>
+            <div class="rule-item">35% Consistency Constraint: <span id="metric-consistency" class="pass">COMPLIANT</span></div>
         </div>
     </div>
 </div>
