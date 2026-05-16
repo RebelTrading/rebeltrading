@@ -185,16 +185,53 @@ header img {
 .stat-value.positive { color: #00ff66; }
 .stat-value.negative { color: #ff2a2a; }
 
-/* CHART AREA */
+/* CHART AREA WITH INTERACTIVE HTML OVERLAY CONTROLS */
 .chart-wrapper {
     flex-grow: 1;
     width: 100%;
     height: 100%;
-    position: relative;
+    position: relative; /* Lock absolute overlay metrics inside wrapper */
 }
-#tv_chart_container {
+
+/* SMART SIMULATION SANDBOX OVERLAY LINE SYSTEM */
+.chart-order-overlay {
+    position: absolute;
+    left: 0;
     width: 100%;
-    height: 100%;
+    height: 2px;
+    background: #00ff66;
+    z-index: 10;
+    display: none; /* Auto-cloak by default when flatted */
+    pointer-events: none; /* Ensures mouse clicks pass directly into chart underneath */
+    box-shadow: 0 0 8px rgba(0, 255, 102, 0.4);
+    transition: background 0.1s ease, box-shadow 0.1s ease;
+}
+
+.chart-order-overlay.negative-state {
+    background: #ff2a2a;
+    box-shadow: 0 0 8px rgba(255, 42, 42, 0.4);
+}
+
+/* SMART REAL-TIME LABELS SNAPPED TO THE RIGHT SCALE EDGE */
+.chart-overlay-badge {
+    position: absolute;
+    right: 55px; /* Offset to float right next to price axis labels */
+    top: -11px;
+    background: #00ff66;
+    color: #000;
+    font-family: monospace;
+    font-size: 0.7rem;
+    font-weight: bold;
+    padding: 4px 8px;
+    border-radius: 3px;
+    white-space: nowrap;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+    transition: background 0.1s ease, color 0.1s ease;
+}
+
+.chart-order-overlay.negative-state .chart-overlay-badge {
+    background: #ff2a2a;
+    color: #fff;
 }
 
 /* ORDER BOOK (DOM) */
@@ -385,7 +422,7 @@ header img {
 .rule-item span.fail { color: #ff2a2a; font-weight: bold; }
 </style>
 
-<script type="text/javascript" src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+<script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
 
 <script>
 function toggleMenu() {
@@ -398,25 +435,17 @@ let CURRENT_ASSET = "BTC-USD";
 let CURRENT_PRICE = 0.0;
 let ORDER_TYPE = "MARKET";
 
-// Chart Reference Engine Variables
-let nativeChartInstance = null;
-let candleSeriesInstance = null;
-let chartHistoryData = [];
-
-// Dynamic Price Line Object References
-let entryPriceLine = null;
-let tpPriceLine = null;
-let slPriceLine = null;
-
 // Starting Dev Balance Parameters
 let STARTING_BALANCE = 10000.00;
 let ACCOUNT_BALANCE = 10000.00;
 let FLOATING_PNL = 0.00;
 let REALIZED_PNL = 0.00;
 
+// Prop Firm Objective Validation Configurations
 const PROFIT_TARGET = 600.00;
 const DAILY_LOSS_LIMIT = 500.00;
 
+// Active Position Tracking Engine
 let activePosition = {
     hasPosition: false,
     side: null,      // 'BUY' or 'SELL'
@@ -426,99 +455,38 @@ let activePosition = {
 };
 
 const assetMap = {
-    'BTC': { api: 'BTC-USD', display: 'BTC/USD Perpetual', baseline: 79130.00 },
-    'ETH': { api: 'ETH-USD', display: 'ETH/USD Perpetual', baseline: 3450.00 },
-    'SOL': { api: 'SOL-USD', display: 'SOL/USD Perpetual', baseline: 145.00 },
-    'XRP': { api: 'XRP-USD', display: 'XRP/USD Perpetual', baseline: 0.5850 }
+    'BTC': { api: 'BTC-USD', tv: 'COINBASE:BTCUSD', display: 'BTC/USD Perpetual' },
+    'ETH': { api: 'ETH-USD', tv: 'COINBASE:ETHUSD', display: 'ETH/USD Perpetual' },
+    'SOL': { api: 'SOL-USD', tv: 'COINBASE:SOLUSD', display: 'SOL/USD Perpetual' },
+    'XRP': { api: 'XRP-USD', tv: 'COINBASE:XRPUSD', display: 'XRP/USD Perpetual' }
 };
-
-// INITIALIZE LIGHTWEIGHT CANVAS INSTANCE
-function initLightweightChart() {
-    const container = document.getElementById('tv_chart_container');
-    container.innerHTML = ''; // Fresh DOM allocation
-    
-    nativeChartInstance = LightweightCharts.createChart(container, {
-        layout: {
-            background: { type: 'solid', color: '#0b0b0b' },
-            textColor: '#bdbdbd',
-        },
-        grid: {
-            vertLines: { color: '#1a1a1a' },
-            horzLines: { color: '#1a1a1a' },
-        },
-        crosshair: {
-            mode: LightweightCharts.CrosshairMode.Normal,
-        },
-        priceScale: {
-            borderColor: '#222',
-        },
-        timeScale: {
-            borderColor: '#222',
-            timeVisible: true,
-            secondsVisible: false
-        },
-    });
-
-    candleSeriesInstance = nativeChartInstance.addCandlestickSeries({
-        upColor: '#00ff66',
-        downColor: '#ff2a2a',
-        borderDownColor: '#ff2a2a',
-        borderUpColor: '#00ff66',
-        wickDownColor: '#ff2a2a',
-        wickUpColor: '#00ff66',
-    });
-
-    // Auto resize canvas container
-    window.addEventListener('resize', () => {
-        if(nativeChartInstance) {
-            nativeChartInstance.applyOptions({ width: container.clientWidth, height: container.clientHeight });
-        }
-    });
-}
-
-// SIMULATE BACKEND HISTORY ARRAY GENERATOR
-function seedHistoricalCandles(basePrice) {
-    chartHistoryData = [];
-    let currentTime = Math.floor(Date.now() / 1000) - (200 * 60); // 200 bars back
-    let trackingPrice = basePrice - 120; 
-
-    for (let i = 0; i < 200; i++) {
-        let open = trackingPrice;
-        let close = trackingPrice + (Math.random() * 40 - 20);
-        let high = Math.max(open, close) + (Math.random() * 15);
-        let low = Math.min(open, close) - (Math.random() * 15);
-        
-        chartHistoryData.push({
-            time: currentTime,
-            open: open,
-            high: high,
-            low: low,
-            close: close
-        });
-        
-        trackingPrice = close;
-        currentTime += 60; // Next minute bar
-    }
-    
-    candleSeriesInstance.setData(chartHistoryData);
-    nativeChartInstance.timeScale().fitContent();
-}
 
 function switchAsset(assetKey, element) {
     document.querySelectorAll('.asset-btn').forEach(btn => btn.classList.remove('active'));
     element.classList.add('active');
     
-    // Clean down older structural lines
-    clearChartOrderLines();
-    
     const config = assetMap[assetKey];
     CURRENT_ASSET = config.api;
     document.getElementById('active-ticker-label').innerText = config.display;
     
-    // Force a fresh canvas instantiation loop
-    initLightweightChart();
-    seedHistoricalCandles(config.baseline);
-    CURRENT_PRICE = config.baseline;
+    // Auto-flat or hide lines across unexpected cross-asset swaps
+    hideChartOrderOverlay();
+
+    new TradingView.widget({
+        "width": "100%",
+        "height": "100%",
+        "symbol": config.tv,
+        "interval": "1",
+        "timezone": "Etc/UTC",
+        "theme": "dark",
+        "style": "1",
+        "locale": "en",
+        "toolbar_bg": "#0b0b0b",
+        "enable_publishing": false,
+        "hide_side_toolbar": false,
+        "allow_symbol_change": false,
+        "container_id": "tv_chart_container"
+    });
 }
 
 function setOrderType(type, element) {
@@ -546,6 +514,7 @@ function setExecutionPrice(targetPrice) {
 
 // REAL-TIME MATHEMATICS & UI METRIC BINDINGS LOOP
 function updateAccountMetrics() {
+    // 1. Calculate running position delta calculations
     if (activePosition.hasPosition && activePosition.asset === CURRENT_ASSET) {
         let priceDiff = CURRENT_PRICE - activePosition.entryPrice;
         if (activePosition.side === 'SELL') {
@@ -553,22 +522,19 @@ function updateAccountMetrics() {
         }
         FLOATING_PNL = priceDiff * activePosition.size;
         
-        // DYNAMICALLY RE-RENDER THE TEXT LABELS ON THE CHART PERFORMANCE LINES
-        if (entryPriceLine) {
-            const sideStr = activePosition.side === 'BUY' ? 'LONG' : 'SHORT';
-            const pnlStr = FLOATING_PNL >= 0 ? `+$${FLOATING_PNL.toFixed(2)}` : `-$${Math.abs(FLOATING_PNL).toFixed(2)}`;
-            entryPriceLine.applyOptions({
-                title: `${sideStr} ${activePosition.size} Contract: ${pnlStr}`
-            });
-        }
+        // INTERACTIVE OVERLAY RE-CALCULATION BLOCK
+        updateChartOrderOverlay();
     } else {
         FLOATING_PNL = 0.00;
+        hideChartOrderOverlay();
     }
 
+    // Comprehensive Balance Accumulations
     let netLiquidationValue = ACCOUNT_BALANCE + FLOATING_PNL;
     let accumulatedLoss = STARTING_BALANCE - netLiquidationValue;
     let combinedTotalProfit = REALIZED_PNL + FLOATING_PNL;
 
+    // 2. Map Metrics to Header Display Blocks
     document.getElementById('display-balance').innerText = `$${netLiquidationValue.toFixed(2)}`;
     
     const pnlDisplay = document.getElementById('display-pnl');
@@ -579,6 +545,7 @@ function updateAccountMetrics() {
     lossDisplay.innerText = `$${Math.max(0, accumulatedLoss).toFixed(2)} / $${DAILY_LOSS_LIMIT}`;
     lossDisplay.className = accumulatedLoss >= DAILY_LOSS_LIMIT ? "stat-value negative" : "stat-value";
 
+    // 3. Map Content Directly Inside the Execution Panel Space
     const positionPanel = document.getElementById('live-position-status');
     if (activePosition.hasPosition) {
         const sideColor = activePosition.side === 'BUY' ? '#00ff66' : '#ff2a2a';
@@ -601,6 +568,7 @@ function updateAccountMetrics() {
         `;
     }
 
+    // 4. Map Live Metrics into the Objective Verification Panel (Bottom Right)
     const targetLeft = PROFIT_TARGET - combinedTotalProfit;
     const targetField = document.getElementById('metric-target');
     if (targetLeft <= 0) {
@@ -622,63 +590,47 @@ function updateAccountMetrics() {
     }
 }
 
-// INJECT VISUAL CHART POSITION HORIZONTALS
-function drawChartOrderLines(side, entryPrice) {
-    clearChartOrderLines(); // Wipe previous instances out
-
-    const lineStyleDashed = 2;
-    const lineStyleSolid = 0;
-    const precision = CURRENT_ASSET === "XRP-USD" ? 4 : 2;
-
-    // Calculate simulated Bracket Values (BTC spreads vs XRP micro spreads)
-    let bracketOffset = CURRENT_ASSET === "BTC-USD" ? 450.00 : (CURRENT_ASSET === "ETH-USD" ? 35.00 : 2.50);
-    if(CURRENT_ASSET === "XRP-USD") bracketOffset = 0.0150;
-
-    let targetProfitPrice = side === 'BUY' ? entryPrice + bracketOffset : entryPrice - bracketOffset;
-    let stopLossPrice = side === 'BUY' ? entryPrice - bracketOffset : entryPrice + bracketOffset;
-
-    // 1. Core Entry Marker
-    entryPriceLine = candleSeriesInstance.createPriceLine({
-        price: entryPrice,
-        color: side === 'BUY' ? '#00ff66' : '#ff2a2a',
-        lineWidth: 2,
-        lineStyle: lineStyleSolid,
-        axisLabelVisible: true,
-        title: `${side === 'BUY' ? 'LONG' : 'SHORT'} ${activePosition.size} Fill: $${entryPrice.toFixed(precision)}`
-    });
-
-    // 2. Take Profit Bracket Marker
-    tpPriceLine = candleSeriesInstance.createPriceLine({
-        price: targetProfitPrice,
-        color: '#00ff66',
-        lineWidth: 1,
-        lineStyle: lineStyleDashed,
-        axisLabelVisible: true,
-        title: `TAKE PROFIT (TP): $${targetProfitPrice.toFixed(precision)}`
-    });
-
-    // 3. Stop Loss Bracket Marker
-    slPriceLine = candleSeriesInstance.createPriceLine({
-        price: stopLossPrice,
-        color: '#ff2a2a',
-        lineWidth: 1,
-        lineStyle: lineStyleDashed,
-        axisLabelVisible: true,
-        title: `STOP LOSS (SL): $${stopLossPrice.toFixed(precision)}`
-    });
+// MANAGEMENT SUITE FOR DYNAMIC OVERLAY SYSTEMS
+function showChartOrderOverlay() {
+    const overlay = document.getElementById('visual-order-overlay');
+    if (overlay) {
+        overlay.style.display = 'block';
+        // Center the visualization track vertically directly on initialization inside wrapper box
+        overlay.style.top = '50%'; 
+    }
 }
 
-function clearChartOrderLines() {
-    if (candleSeriesInstance) {
-        if (entryPriceLine) { candleSeriesInstance.removePriceLine(entryPriceLine); entryPriceLine = null; }
-        if (tpPriceLine) { candleSeriesInstance.removePriceLine(tpPriceLine); tpPriceLine = null; }
-        if (slPriceLine) { candleSeriesInstance.removePriceLine(slPriceLine); slPriceLine = null; }
+function updateChartOrderOverlay() {
+    const overlay = document.getElementById('visual-order-overlay');
+    const badge = document.getElementById('visual-overlay-badge');
+    if (!overlay || !badge || !activePosition.hasPosition) return;
+
+    const sideLabel = activePosition.side === 'BUY' ? 'LONG' : 'SHORT';
+    const pnlSign = FLOATING_PNL >= 0 ? '+' : '';
+    const precision = CURRENT_ASSET === "XRP-USD" ? 4 : 2;
+
+    // Direct String State Evaluation
+    badge.innerText = `${sideLabel} ${activePosition.size} Contract | Entry: $${activePosition.entryPrice.toFixed(precision)} | P&L: ${pnlSign}$${FLOATING_PNL.toFixed(2)}`;
+
+    // Adaptive Style Adjustments
+    if (FLOATING_PNL >= 0) {
+        overlay.classList.remove('negative-state');
+    } else {
+        overlay.classList.add('negative-state');
+    }
+}
+
+function hideChartOrderOverlay() {
+    const overlay = document.getElementById('visual-order-overlay');
+    if (overlay) {
+        overlay.style.display = 'none';
     }
 }
 
 function executeDevOrder(side) {
     const contractSize = parseFloat(document.getElementById('position-contract-size').value);
     
+    // Auto-flat ongoing exposures before initiating inverted orders
     if (activePosition.hasPosition) {
         closeActivePosition();
     }
@@ -696,23 +648,27 @@ function executeDevOrder(side) {
         asset: CURRENT_ASSET
     };
 
-    // Render lines instantly onto canvas coordinates
-    drawChartOrderLines(side, executionPrice);
+    console.log(`[SANDBOX EXECUTION] ${side} ${contractSize} ${CURRENT_ASSET} filled at ${executionPrice}`);
+    
+    // Snap overlay open instantly
+    showChartOrderOverlay();
     updateAccountMetrics();
 }
 
 function closeActivePosition() {
     if (!activePosition.hasPosition) return;
 
+    // Lock running floating deltas into account values
     ACCOUNT_BALANCE += FLOATING_PNL;
     REALIZED_PNL += FLOATING_PNL;
     
-    // Clear lines off canvas view screen
-    clearChartOrderLines();
+    console.log(`[SANDBOX CLOSED] Realized: $${FLOATING_PNL.toFixed(2)}. Account Balance: $${ACCOUNT_BALANCE.toFixed(2)}`);
 
     activePosition = { hasPosition: false, side: null, entryPrice: 0.0, size: 0.0, asset: null };
     FLOATING_PNL = 0.00;
     
+    // Clear display structures cleanly
+    hideChartOrderOverlay();
     updateAccountMetrics();
 }
 
@@ -750,6 +706,7 @@ function renderSyntheticOrderBook(basePrice) {
     
     domContainer.innerHTML = askHtml + spreadHtml + bidHtml;
     
+    // Feed running prints down tape tracker panels
     const now = new Date();
     const timestamp = now.toTimeString().split(' ')[0];
     const isBuy = Math.random() > 0.48;
@@ -770,11 +727,10 @@ async function fetchRebelEnginePrices() {
         const priceMatrix = await response.json();
         CURRENT_PRICE = priceMatrix[CURRENT_ASSET];
     } catch (err) {
+        // High-fidelity fallback loops to test standalone configurations offline
         if (CURRENT_PRICE === 0) {
-            const config = assetMap[CURRENT_ASSET === "BTC-USD" ? 'BTC' : (CURRENT_ASSET === "ETH-USD" ? 'ETH' : (CURRENT_ASSET === "SOL-USD" ? 'SOL' : 'XRP'))];
-            CURRENT_PRICE = config.baseline;
+            CURRENT_PRICE = CURRENT_ASSET === "BTC-USD" ? 79130.00 : (CURRENT_ASSET === "ETH-USD" ? 3450.00 : (CURRENT_ASSET === "SOL-USD" ? 145.00 : 0.5850));
         }
-        // Micro oscillation loop
         let tickDelta = CURRENT_ASSET === "XRP-USD" ? 0.0005 : 1.50;
         CURRENT_PRICE += (Math.random() * (tickDelta * 2) - tickDelta);
     }
@@ -786,32 +742,6 @@ async function fetchRebelEnginePrices() {
         document.getElementById('live-index-val').innerText = `$${formattedPrice}`;
         document.getElementById('live-mark-val').innerText = `$${formattedPrice}`;
         
-        // Dynamically append the incoming price tick directly to the active candle on canvas
-        if (candleSeriesInstance && chartHistoryData.length > 0) {
-            let lastBar = chartHistoryData[chartHistoryData.length - 1];
-            let timestampNow = Math.floor(Date.now() / 1000);
-            
-            // If we are in the same minute window, update the active bar
-            if (timestampNow - lastBar.time < 60) {
-                lastBar.close = CURRENT_PRICE;
-                lastBar.high = Math.max(lastBar.high, CURRENT_PRICE);
-                lastBar.low = Math.min(lastBar.low, CURRENT_PRICE);
-                candleSeriesInstance.update(lastBar);
-            } else {
-                // Spawn a fresh minute candle
-                let newBar = {
-                    time: Math.floor(timestampNow / 60) * 60,
-                    open: lastBar.close,
-                    high: CURRENT_PRICE,
-                    low: CURRENT_PRICE,
-                    close: CURRENT_PRICE
-                };
-                chartHistoryData.push(newBar);
-                candleSeriesInstance.update(newBar);
-                if(chartHistoryData.length > 300) chartHistoryData.shift();
-            }
-        }
-
         renderSyntheticOrderBook(CURRENT_PRICE);
         updateAccountMetrics();
     }
@@ -858,7 +788,11 @@ window.onload = function() {
         </div>
 
         <div class="chart-wrapper">
-            <div id="tv_chart_container"></div>
+            <div id="visual-order-overlay" class="chart-order-overlay">
+                <div id="visual-overlay-badge" class="chart-overlay-badge">POSITION DATA LOAD...</div>
+            </div>
+            
+            <div id="tv_chart_container" style="height: 100%; width: 100%;"></div>
         </div>
     </div>
 
