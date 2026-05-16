@@ -34,14 +34,22 @@ header img {
     height: 45px;
 }
 
-/* LIVE TICKER TAPE */
+/* LIVE TICKER TAPE & CHALLENGE PROGRESS AREA */
 .ticker-tape {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 25px;
     padding-left: 20px;
+    padding-right: 20px;
     font-size: 0.75rem;
     color: #888;
+}
+
+.ticker-metrics-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 25px;
 }
 
 .ticker-item {
@@ -61,6 +69,51 @@ header img {
     color: #fff;
     font-weight: bold;
     font-family: monospace;
+    font-size: 0.85rem;
+}
+
+/* CHALLENGE LEVEL 1 PROGRESS BAR */
+.progress-container {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 280px;
+}
+
+.progress-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.65rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.progress-labels .level-title {
+    color: #ffb703;
+}
+
+.progress-labels .percentage-track {
+    color: #00ff66;
+    font-family: monospace;
+}
+
+.progress-bar-track {
+    width: 100%;
+    height: 6px;
+    background: #141414;
+    border: 1px solid #222;
+    border-radius: 3px;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #00ff66, #baff00);
+    box-shadow: 0 0 8px rgba(0, 255, 102, 0.6);
+    transition: width 0.3s ease;
 }
 
 /* HAMBURGER & MENU */
@@ -531,8 +584,8 @@ function changeSimAccountTier(selectElement) {
 }
 
 function switchAsset(assetKey, element) {
-    document.querySelectorAll('.asset-btn').forEach(btn => btn.classList.remove('active'));
-    element.classList.add('active');
+    document.querySelectorAll('.asset-bar').forEach(btn => btn.classList.remove('active'));
+    if (element) element.classList.add('active');
     
     const config = assetMap[assetKey];
     CURRENT_ASSET = config.api;
@@ -548,23 +601,24 @@ function switchAsset(assetKey, element) {
     cancelPendingLimit();
     clearAllChartOverlays();
 
-    new TradingView.widget({
-        "width": "100%",
-        "height": "100%",
-        "symbol": config.tv,
-        "interval": "1",
-        "timezone": "Etc/UTC",
-        "theme": "dark",
-        "style": "1",
-        "locale": "en",
-        "toolbar_bg": "#0b0b0b",
-        "enable_publishing": false,
-        "hide_side_toolbar": false,
-        "allow_symbol_change": false,
-        "container_id": "tv_chart_container"
-    });
+    if (typeof TradingView !== 'undefined') {
+        new TradingView.widget({
+            "width": "100%",
+            "height": "100%",
+            "symbol": config.tv,
+            "interval": "1",
+            "timezone": "Etc/UTC",
+            "theme": "dark",
+            "style": "1",
+            "locale": "en",
+            "toolbar_bg": "#0b0b0b",
+            "enable_publishing": false,
+            "hide_side_toolbar": false,
+            "allow_symbol_change": false,
+            "container_id": "tv_chart_container"
+        });
+    }
     
-    // Clear and execute immediate calculation to eliminate past latency states
     fetchRebelEnginePrices();
     setTimeout(recalculateSpecInterface, 100);
 }
@@ -759,6 +813,12 @@ function updateAccountMetrics() {
         targetField.className = "";
         targetField.style.color = "#fff";
     }
+
+    // UPDATE HEADER CHALLENGE LEVEL 1 PROGRESS BAR WITH CURRENT METRICS
+    let challengePct = (combinedTotalProfit / PROFIT_TARGET) * 100;
+    challengePct = Math.max(0, Math.min(100, challengePct)); // Bounds check limit
+    document.getElementById('header-progress-fill').style.width = `${challengePct.toFixed(1)}%`;
+    document.getElementById('header-progress-pct').innerText = `${challengePct.toFixed(0)}%`;
 
     const dailyLossGuard = document.getElementById('metric-daily-loss');
     if (accumulatedLoss >= DAILY_LOSS_LIMIT) {
@@ -970,16 +1030,13 @@ async function fetchRebelEnginePrices() {
     try {
         const response = await fetch("/api/prices");
         const priceMatrix = await response.json();
-        // Fallback updates decoupled local states if endpoints return values
         if(priceMatrix && priceMatrix[CURRENT_ASSET]) {
             localAssetPrices[CURRENT_ASSET] = priceMatrix[CURRENT_ASSET];
         }
     } catch (err) {
-        // Safe relative price noise modifications without overlapping active states
         const currentAssetKey = Object.keys(assetMap).find(key => assetMap[key].api === CURRENT_ASSET);
         const config = assetMap[currentAssetKey];
         let tickDelta = config.delta;
-        
         localAssetPrices[CURRENT_ASSET] += (Math.random() * (tickDelta * 2) - tickDelta);
     }
 
@@ -989,8 +1046,11 @@ async function fetchRebelEnginePrices() {
         const precision = assetMap[currentAssetKey].precision;
         const formattedPrice = currentPrice.toLocaleString('en-US', { minimumFractionDigits: precision, maximumFractionDigits: precision });
         
-        document.getElementById('live-index-val').innerText = `$${formattedPrice}`;
-        document.getElementById('live-mark-val').innerText = `$${formattedPrice}`;
+        // Dynamic alignment inside modern interactive top navigation headers
+        const indexEl = document.getElementById('live-index-val');
+        const markEl = document.getElementById('live-mark-val');
+        if (indexEl) indexEl.innerText = `$${formattedPrice}`;
+        if (markEl) markEl.innerText = `$${formattedPrice}`;
         
         renderSyntheticOrderBook(currentPrice);
         checkAutomatedRulesAndExits();
@@ -998,11 +1058,11 @@ async function fetchRebelEnginePrices() {
     }
 }
 
-window.onload = function() {
+window.addEventListener('DOMContentLoaded', function() {
     switchAsset('BTC', document.getElementById('default-asset'));
     setInterval(fetchRebelEnginePrices, 1000);
     setInterval(recalculateSpecInterface, 1000);
-};
+});
 </script>
 </head>
 
@@ -1010,9 +1070,33 @@ window.onload = function() {
 
 <header>
     <img src="https://raw.githubusercontent.com/rebeltrading/rebeltrading/main/rebeltradinglogo.png" alt="Rebel Trading Logo">
+    
     <div class="ticker-tape">
-        <div class="ticker-item"><span id="active-ticker-label" style="color: #fff; font-weight: bold; font-size: 0.85rem;">BTC/USD Perpetual</span></div>
+        <div class="ticker-metrics-wrapper">
+            <div class="ticker-item">
+                <span class="ticker-label" id="active-ticker-label">BTC/USD Perpetual</span>
+            </div>
+            <div class="ticker-item">
+                <span class="ticker-label">Index Price</span>
+                <span class="ticker-value" id="live-index-val">$0.00</span>
+            </div>
+            <div class="ticker-item">
+                <span class="ticker-label">Mark Price</span>
+                <span class="ticker-value" id="live-mark-val">$0.00</span>
+            </div>
+        </div>
+
+        <div class="progress-container">
+            <div class="progress-labels">
+                <span class="level-title">Level 1 Challenge</span>
+                <span class="percentage-track" id="header-progress-pct">0%</span>
+            </div>
+            <div class="progress-bar-track">
+                <div class="progress-bar-fill" id="header-progress-fill"></div>
+            </div>
+        </div>
     </div>
+
     <div class="hamburger" onclick="toggleMenu()">
         <div></div><div></div><div></div>
     </div>
@@ -1038,11 +1122,11 @@ window.onload = function() {
         <div class="stats-bar">
             <div class="stat-box">
                 <div class="stat-label">Net Liquidation</div>
-                <div class="stat-value" id="display-balance">$5,000.07</div>
+                <div class="stat-value" id="display-balance">$5,000.00</div>
             </div>
             <div class="stat-box">
                 <div class="stat-label">Open Floating P&L</div>
-                <div class="stat-value positive" id="display-pnl">+$0.07</div>
+                <div class="stat-value positive" id="display-pnl">+$0.00</div>
             </div>
             <div class="stat-box">
                 <div class="stat-label">Daily Accum Loss</div>
@@ -1150,7 +1234,7 @@ window.onload = function() {
             </div>
             
             <div class="position-display" id="live-position-status">
-                <div class="position-row"><span>No Active Dev Positions Open</span><span>--</span></div>
+                <div class="position-row"><span>No Active Open Positions</span><span>--</span></div>
             </div>
             
         </div>
@@ -1161,11 +1245,6 @@ window.onload = function() {
             <div class="rule-item">Daily Drawdown Safeguard: <span id="metric-daily-loss" class="pass">PASSED (-$0.00 / $250)</span></div>
             <div class="rule-item">EOD Trailing Profit Guard: <span id="metric-trailing" class="pass">PASSED ($0.00 / $400)</span></div>
             <div class="rule-item">35% Consistency Constraint: <span id="metric-consistency" class="pass">COMPLIANT ($140.00 Cap Per Trade)</span></div>
-        </div>
-        
-        <div style="display:none;">
-            <span id="live-index-val">0.00</span>
-            <span id="live-mark-val">0.00</span>
         </div>
     </div>
     
