@@ -513,6 +513,41 @@ header img {
 <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
 
 <script>
+// ENGINE UPDATER PIPELINE - Hooks directly into your uvicorn main.py background stream
+async function fetchRebelEnginePrices() {
+    const currentAssetKey = Object.keys(assetMap).find(key => assetMap[key].api === CURRENT_ASSET);
+    const spec = assetMap[currentAssetKey];
+
+    try {
+        const response = await fetch("http://127.0.0.1:8000/api/prices");
+        const priceMatrix = await response.json();
+        
+        if (priceMatrix && priceMatrix[CURRENT_ASSET]) {
+            localAssetPrices[CURRENT_ASSET] = parseFloat(priceMatrix[CURRENT_ASSET]);
+        }
+    } catch (err) {
+        let tickDelta = spec.delta * 0.1;
+        localAssetPrices[CURRENT_ASSET] += (Math.random() * (tickDelta * 2) - tickDelta);
+    }
+
+    const currentPrice = getCurrentPrice();
+    if (currentPrice && currentPrice > 0) {
+        const precision = spec.precision;
+        
+        const spotEl = document.getElementById('header-spot-price');
+        const indexEl = document.getElementById('live-index-val');
+        const markEl = document.getElementById('live-mark-val');
+        
+        if (spotEl) spotEl.innerText = `$${currentPrice.toFixed(precision)}`;
+        if (indexEl) indexEl.innerText = `$${currentPrice.toFixed(precision)}`;
+        if (markEl) markEl.innerText = `$${(currentPrice + spec.delta).toFixed(precision)}`;
+
+        renderSyntheticOrderBook(currentPrice);
+        checkAutomatedRulesAndExits();
+        updateAccountMetrics();
+    }
+}
+
 function toggleMenu() {
     const menu = document.getElementById("menu");
     menu.style.right = (menu.style.right === "0px") ? "-260px" : "0px";
