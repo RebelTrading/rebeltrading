@@ -1,5 +1,3 @@
-tradesim.html
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -592,6 +590,13 @@ function switchAsset(assetKey, element) {
     const config = assetMap[assetKey];
     CURRENT_ASSET = config.api;
     document.getElementById('active-ticker-label').innerText = config.display;
+    // Instantly pull out the live price from memory cache using the precise API string
+    const currentLivePrice = localAssetPrices[CURRENT_ASSET];
+    
+    // Update the Spot Price and break up Index vs Mark duplicates with synthetic delta variance
+    document.getElementById('header-spot-price').innerText = `$${currentLivePrice.toFixed(config.precision)}`;
+    document.getElementById('live-index-val').innerText = `$${currentLivePrice.toFixed(config.precision)}`;
+    document.getElementById('live-mark-val').innerText = `$${(currentLivePrice + config.delta).toFixed(config.precision)}`;
     
     const priceInput = document.getElementById('target-execution-price');
     if (ORDER_TYPE === "LIMIT") {
@@ -744,12 +749,21 @@ function updateAccountMetrics() {
     const spec = assetMap[currentAssetKey];
     const currentPrice = getCurrentPrice();
 
+    // 1. Update the header elements every time the price ticks
+    document.getElementById('header-spot-price').innerText = `$${currentPrice.toFixed(spec.precision)}`;
+    document.getElementById('live-index-val').innerText = `$${currentPrice.toFixed(spec.precision)}`;
+    document.getElementById('live-mark-val').innerText = `$${(currentPrice + spec.delta).toFixed(spec.precision)}`;
+
     if (activePosition.hasPosition && activePosition.asset === CURRENT_ASSET) {
-        let priceDiff = currentPrice - activePosition.entryPrice;
-        if (activePosition.side === 'SELL') {
-            priceDiff = activePosition.entryPrice - currentPrice;
+        // 2. Calculate P&L off Notional Contract Value instead of raw price change
+        let priceRatio = currentPrice / activePosition.entryPrice;
+        let initialNotional = activePosition.entryPrice * activePosition.size * spec.multiplier;
+        
+        if (activePosition.side === 'BUY') {
+            FLOATING_PNL = initialNotional * (priceRatio - 1);
+        } else {
+            FLOATING_PNL = initialNotional * (1 - priceRatio);
         }
-        FLOATING_PNL = priceDiff * activePosition.size * spec.multiplier;
         
         if (FLOATING_PNL > activePosition.largestTradeProfit) {
             activePosition.largestTradeProfit = FLOATING_PNL;
