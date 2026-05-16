@@ -1045,30 +1045,57 @@ function renderSyntheticOrderBook(basePrice) {
 
 async function fetchRebelEnginePrices() {
     try {
+        // 1. Fetch the raw live data dictionary from your Python backend core
         const response = await fetch("/api/prices");
         const priceMatrix = await response.json();
-        if(priceMatrix && priceMatrix[CURRENT_ASSET]) {
-            localAssetPrices[CURRENT_ASSET] = priceMatrix[CURRENT_ASSET];
+        
+        if (priceMatrix) {
+            // Find the underlying asset configuration to grab its api string name (e.g., "BTC-USD")
+            const currentAssetKey = Object.keys(assetMap).find(key => assetMap[key].api === CURRENT_ASSET);
+            const spec = assetMap[currentAssetKey];
+            
+            // Check if the server's Coinbase key exists inside the API response matrix
+            if (priceMatrix[spec.api]) {
+                localAssetPrices[CURRENT_ASSET] = parseFloat(priceMatrix[spec.api]);
+            }
         }
     } catch (err) {
+        // Fallback random generation loop ONLY triggers if the python server goes down
         const currentAssetKey = Object.keys(assetMap).find(key => assetMap[key].api === CURRENT_ASSET);
         const config = assetMap[currentAssetKey];
         let tickDelta = config.delta;
         localAssetPrices[CURRENT_ASSET] += (Math.random() * (tickDelta * 2) - tickDelta);
     }
 
-    const currentPrice = getCurrentPrice();
+    // 2. Derive calculations and update UI layout fields from the unified cache value
+    const currentPrice = localAssetPrices[CURRENT_ASSET];
+    
     if (currentPrice && currentPrice > 0) {
         const currentAssetKey = Object.keys(assetMap).find(key => assetMap[key].api === CURRENT_ASSET);
-        const precision = assetMap[currentAssetKey].precision;
-        const formattedPrice = currentPrice.toLocaleString('en-US', { minimumFractionDigits: precision, maximumFractionDigits: precision });
+        const spec = assetMap[currentAssetKey];
+        const precision = spec.precision;
         
-        // Dynamic alignment inside modern interactive top navigation headers
+        // Format to standard localized currency notation
+        const formattedPrice = currentPrice.toLocaleString('en-US', { 
+            minimumFractionDigits: precision, 
+            maximumFractionDigits: precision 
+        });
+        
+        // Target all the interactive layout elements across the top header bar
+        const spotEl = document.getElementById('header-spot-price');
         const indexEl = document.getElementById('live-index-val');
         const markEl = document.getElementById('live-mark-val');
-        if (indexEl) indexEl.innerText = `$${formattedPrice}`;
-        if (markEl) markEl.innerText = `$${formattedPrice}`;
         
+        // Synchronize elements instantly to kill the visual drift
+        if (spotEl) spotEl.innerText = `$${formattedPrice}`;
+        if (indexEl) indexEl.innerText = `$${formattedPrice}`;
+        if (markEl) {
+            // Calculate Mark Price dynamically using your asset map delta spacing rule
+            const markPriceVal = currentPrice + spec.delta;
+            markEl.innerText = `$${markPriceVal.toLocaleString('en-US', { minimumFractionDigits: precision, maximumFractionDigits: precision })}`;
+        }
+        
+        // 3. Fire layout refresh sub-runners in lockstep with the websocket heartbeat
         renderSyntheticOrderBook(currentPrice);
         checkAutomatedRulesAndExits();
         updateAccountMetrics();
