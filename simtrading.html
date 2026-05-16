@@ -434,7 +434,7 @@ header img {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 8px;
-    display: none; /* Controlled dynamically by toggle setup */
+    display: none;
 }
 
 .execution-actions {
@@ -501,24 +501,26 @@ function toggleMenu() {
 let CURRENT_ASSET = "BTC-USD";
 let CURRENT_PRICE = 0.0;
 let ORDER_TYPE = "MARKET";
-const LEVERAGE_FACTOR = 50.0; // Locked Arcade Multiplier Engine 1:50
+const LEVERAGE_FACTOR = 50.0; // Locked Micro Arcade Multiplier 1:50
 
-// Micro Arcade Simulation Matrix Configurations
+// Micro Arcade Challenge Parameter Matrix
 const accountTiers = {
-    "T1": { name: "Micro Tier 1: $2,500 Sim Account", start: 2500.00, target: 150.00, limit: 125.00 },
-    "T2": { name: "Micro Tier 2: $5,000 Sim Account", start: 5000.00, target: 300.00, limit: 250.00 },
-    "T3": { name: "Micro Tier 3: $10,000 Sim Account", start: 10000.00, target: 600.00, limit: 500.00 }
+    "T1": { name: "Recruit Arcade: $1,000 Sim Box ($5 Ticket)", start: 1000.00, target: 80.00, dailyLimit: 50.00, eodLimit: 80.00 },
+    "T2": { name: "Raider Arcade: $2,500 Sim Box ($15 Ticket)", start: 2500.00, target: 200.00, dailyLimit: 125.00, eodLimit: 200.00 },
+    "T3": { name: "Rebel Arcade: $5,000 Sim Box ($30 Ticket)", start: 5000.00, target: 400.00, dailyLimit: 250.00, eodLimit: 400.00 }
 };
 
 let activeTierKey = "T3";
-let STARTING_BALANCE = 10000.00;
-let ACCOUNT_BALANCE = 10000.00;
+let STARTING_BALANCE = 5000.00;
+let ACCOUNT_BALANCE = 5000.00;
+let PEAK_BALANCE = 5000.00; // Tracks highest end-of-session peak for EOD trailing margin
 let FLOATING_PNL = 0.00;
 let REALIZED_PNL = 0.00;
-let PROFIT_TARGET = 600.00;
-let DAILY_LOSS_LIMIT = 500.00;
+let PROFIT_TARGET = 400.00;
+let DAILY_LOSS_LIMIT = 250.00;
+let EOD_TRAILING_LIMIT = 400.00;
 
-// High-Fidelity Asset Specifications (Linear Multipliers)
+// High-Fidelity Crypto Perp Multipliers (Linear Contracts)
 const assetMap = {
     'BTC': { api: 'BTC-USD', tv: 'COINBASE:BTCUSD', display: 'BTC/USD Perpetual', multiplier: 0.1 },
     'ETH': { api: 'ETH-USD', tv: 'COINBASE:ETHUSD', display: 'ETH/USD Perpetual', multiplier: 1.0 },
@@ -528,7 +530,7 @@ const assetMap = {
 
 // Advanced Order & Bracket Management Architecture
 let pendingLimitOrder = { isSet: false, side: null, limitPrice: 0.0, size: 0.0, tpPrice: 0.0, slPrice: 0.0 };
-let activePosition = { hasPosition: false, side: null, entryPrice: 0.0, size: 0.0, asset: null, tpPrice: 0.0, slPrice: 0.0 };
+let activePosition = { hasPosition: false, side: null, entryPrice: 0.0, size: 0.0, asset: null, tpPrice: 0.0, slPrice: 0.0, largestTradeProfit: 0.0 };
 
 function changeSimAccountTier(selectElement) {
     activeTierKey = selectElement.value;
@@ -536,14 +538,15 @@ function changeSimAccountTier(selectElement) {
     
     STARTING_BALANCE = config.start;
     ACCOUNT_BALANCE = config.start;
+    PEAK_BALANCE = config.start;
     REALIZED_PNL = 0.00;
     FLOATING_PNL = 0.00;
     PROFIT_TARGET = config.target;
-    DAILY_LOSS_LIMIT = config.limit;
+    DAILY_LOSS_LIMIT = config.dailyLimit;
+    EOD_TRAILING_LIMIT = config.eodLimit;
     
-    // Auto-flat and wipe lines completely on structural tier switches
     cancelPendingLimit();
-    activePosition = { hasPosition: false, side: null, entryPrice: 0.0, size: 0.0, asset: null, tpPrice: 0.0, slPrice: 0.0 };
+    activePosition = { hasPosition: false, side: null, entryPrice: 0.0, size: 0.0, asset: null, tpPrice: 0.0, slPrice: 0.0, largestTradeProfit: 0.0 };
     
     clearAllChartOverlays();
     updateAccountMetrics();
@@ -558,7 +561,6 @@ function switchAsset(assetKey, element) {
     CURRENT_ASSET = config.api;
     document.getElementById('active-ticker-label').innerText = config.display;
     
-    // Clear unexpected cross-asset visualization states safely
     cancelPendingLimit();
     clearAllChartOverlays();
 
@@ -636,12 +638,12 @@ function recalculateSpecInterface() {
     document.getElementById('spec-calc-buyingpower').innerText = `$${freeMarginAvailable.toFixed(2)}`;
 }
 
-// AUTOMATED EVALUATION BACKGROUND SWEEP ENGINE LOOP
+// BACKGROUND WATCHER ENGINE WITH HYBRID EXITS & RULE VERIFICATIONS
 function checkAutomatedRulesAndExits() {
     if (!CURRENT_PRICE || CURRENT_PRICE === 0) return;
     const precision = CURRENT_ASSET === "XRP-USD" ? 4 : 2;
 
-    // 1. Process Pending Limit Orders Target Crossings
+    // 1. Process Pending Limit Orders
     if (pendingLimitOrder.isSet) {
         let isStruck = false;
         if (pendingLimitOrder.side === 'BUY' && CURRENT_PRICE <= pendingLimitOrder.limitPrice) isStruck = true;
@@ -655,37 +657,32 @@ function checkAutomatedRulesAndExits() {
                 size: pendingLimitOrder.size,
                 asset: CURRENT_ASSET,
                 tpPrice: pendingLimitOrder.tpPrice,
-                slPrice: pendingLimitOrder.slPrice
+                slPrice: pendingLimitOrder.slPrice,
+                largestTradeProfit: 0.0
             };
-            console.log(`[ARCADE FILLED] Limit order triggered at ${pendingLimitOrder.limitPrice}`);
             cancelPendingLimit();
             showActivePositionOverlays();
         }
     }
 
-    // 2. Process Active Position Brackets Exits (SL/TP)
+    // 2. Process Active Position Brackets (SL / TP)
     if (activePosition.hasPosition && activePosition.asset === CURRENT_ASSET) {
         let shouldClose = false;
-        let exitReason = "";
         let finalExitPrice = CURRENT_PRICE;
 
-        // Take Profit Triggers Evaluation
         if (activePosition.tpPrice > 0) {
-            if (activePosition.side === 'BUY' && CURRENT_PRICE >= activePosition.tpPrice) { shouldClose = true; exitReason = "TAKE PROFIT (WIN)"; finalExitPrice = activePosition.tpPrice; }
-            if (activePosition.side === 'SELL' && CURRENT_PRICE <= activePosition.tpPrice) { shouldClose = true; exitReason = "TAKE PROFIT (WIN)"; finalExitPrice = activePosition.tpPrice; }
+            if (activePosition.side === 'BUY' && CURRENT_PRICE >= activePosition.tpPrice) { shouldClose = true; finalExitPrice = activePosition.tpPrice; }
+            if (activePosition.side === 'SELL' && CURRENT_PRICE <= activePosition.tpPrice) { shouldClose = true; exitReason = "TP"; finalExitPrice = activePosition.tpPrice; }
         }
 
-        // Stop Loss Triggers Evaluation
         if (activePosition.slPrice > 0) {
-            if (activePosition.side === 'BUY' && CURRENT_PRICE <= activePosition.slPrice) { shouldClose = true; exitReason = "STOP LOSS (RISK)"; finalExitPrice = activePosition.slPrice; }
-            if (activePosition.side === 'SELL' && CURRENT_PRICE >= activePosition.slPrice) { shouldClose = true; exitReason = "STOP LOSS (RISK)"; finalExitPrice = activePosition.slPrice; }
+            if (activePosition.side === 'BUY' && CURRENT_PRICE <= activePosition.slPrice) { shouldClose = true; finalExitPrice = activePosition.slPrice; }
+            if (activePosition.side === 'SELL' && CURRENT_PRICE >= activePosition.slPrice) { shouldClose = true; finalExitPrice = activePosition.slPrice; }
         }
 
         if (shouldClose) {
-            console.log(`[ARCADE EXIT TRIPPED] Auto exit via ${exitReason} at price ${finalExitPrice.toFixed(precision)}`);
-            CURRENT_PRICE = finalExitPrice; // Enforce perfect target boundaries filling
+            CURRENT_PRICE = finalExitPrice;
             closeActivePosition();
-            return;
         }
     }
 }
@@ -694,7 +691,6 @@ function updateAccountMetrics() {
     const currentAssetKey = Object.keys(assetMap).find(key => assetMap[key].api === CURRENT_ASSET);
     const spec = assetMap[currentAssetKey];
 
-    // 1. Calculate running position delta calculations based on contract sizes
     if (activePosition.hasPosition && activePosition.asset === CURRENT_ASSET) {
         let priceDiff = CURRENT_PRICE - activePosition.entryPrice;
         if (activePosition.side === 'SELL') {
@@ -702,7 +698,9 @@ function updateAccountMetrics() {
         }
         FLOATING_PNL = priceDiff * activePosition.size * spec.multiplier;
         
-        // Sync positional overlay text
+        if (FLOATING_PNL > activePosition.largestTradeProfit) {
+            activePosition.largestTradeProfit = FLOATING_PNL;
+        }
         updatePositionOverlayLines();
     } else {
         FLOATING_PNL = 0.00;
@@ -711,12 +709,18 @@ function updateAccountMetrics() {
         document.getElementById('sl-risk-line').style.display = 'none';
     }
 
-    // Comprehensive Balance Accumulations
     let netLiquidationValue = ACCOUNT_BALANCE + FLOATING_PNL;
+    
+    // Dynamically update peak account valuations for trailing EOD margin calculations
+    if (netLiquidationValue > PEAK_BALANCE) {
+        PEAK_BALANCE = netLiquidationValue;
+    }
+
     let accumulatedLoss = STARTING_BALANCE - netLiquidationValue;
+    let currentTrailingDrawdown = PEAK_BALANCE - netLiquidationValue;
     let combinedTotalProfit = REALIZED_PNL + FLOATING_PNL;
 
-    // 2. Map Metrics to Header Display Blocks
+    // Header Blocks Mapping
     document.getElementById('display-balance').innerText = `$${netLiquidationValue.toFixed(2)}`;
     
     const pnlDisplay = document.getElementById('display-pnl');
@@ -727,7 +731,7 @@ function updateAccountMetrics() {
     lossDisplay.innerText = `$${Math.max(0, accumulatedLoss).toFixed(2)} / $${DAILY_LOSS_LIMIT}`;
     lossDisplay.className = accumulatedLoss >= DAILY_LOSS_LIMIT ? "stat-value negative" : "stat-value";
 
-    // 3. Map Content Directly Inside the Execution Panel Space
+    // Panel Position Renderings
     const positionPanel = document.getElementById('live-position-status');
     if (activePosition.hasPosition) {
         const sideColor = activePosition.side === 'BUY' ? '#00ff66' : '#ff2a2a';
@@ -750,7 +754,7 @@ function updateAccountMetrics() {
         `;
     }
 
-    // 4. Map Live Metrics into the Objective Verification Panel (Bottom Right)
+    // Hybrid Evaluation Verification Rules Checks
     const targetLeft = PROFIT_TARGET - combinedTotalProfit;
     const targetField = document.getElementById('metric-target');
     if (targetLeft <= 0) {
@@ -770,9 +774,32 @@ function updateAccountMetrics() {
         dailyLossGuard.innerText = `PASSED (-$${Math.max(0, accumulatedLoss).toFixed(2)} / $${DAILY_LOSS_LIMIT})`;
         dailyLossGuard.className = "pass";
     }
+
+    // Trailing EOD Rule Field Syncing
+    const trailingGuard = document.getElementById('metric-trailing');
+    if (currentTrailingDrawdown >= EOD_TRAILING_LIMIT) {
+        trailingGuard.innerText = `VIOLATED ($${currentTrailingDrawdown.toFixed(2)} / $${EOD_TRAILING_LIMIT})`;
+        trailingGuard.className = "fail";
+    } else {
+        trailingGuard.innerText = `PASSED ($${currentTrailingDrawdown.toFixed(2)} / $${EOD_TRAILING_LIMIT})`;
+        trailingGuard.className = "pass";
+    }
+
+    // 35% Consistency Rule Tracking
+    const maxAllowedSingleTradeProfit = PROFIT_TARGET * 0.35;
+    const consistencyField = document.getElementById('metric-consistency');
+    let historicalHighProfit = activePosition.hasPosition ? activePosition.largestTradeProfit : 0.0;
+    
+    if (historicalHighProfit > maxAllowedSingleTradeProfit) {
+        consistencyField.innerText = `OVER CAP ($${historicalHighProfit.toFixed(2)} > $${maxAllowedSingleTradeProfit.toFixed(2)} Max)`;
+        consistencyField.className = "fail";
+    } else {
+        consistencyField.innerText = `COMPLIANT ($${maxAllowedSingleTradeProfit.toFixed(2)} Cap Per Trade)`;
+        consistencyField.className = "pass";
+    }
 }
 
-// TRIPLE CANVAS HIGH-FIDELITY OVERLAY LINE MANAGER
+// CANVAS TRIPLE OVERLAY MANAGEMENT OVERRIDES
 function triggerLimitWorkingLine() {
     if (ORDER_TYPE !== "LIMIT") return;
     const overlay = document.getElementById('limit-order-line');
@@ -781,7 +808,7 @@ function triggerLimitWorkingLine() {
     
     if (overlay && badge && !isNaN(inputVal) && inputVal > 0) {
         overlay.style.display = 'block';
-        overlay.style.top = '35%'; // Distinct visual tier
+        overlay.style.top = '35%';
         badge.innerText = `WORKING LIMIT TARGET: $${inputVal.toFixed(2)}`;
     }
 }
@@ -793,11 +820,10 @@ function cancelPendingLimit() {
 
 function showActivePositionOverlays() {
     document.getElementById('active-position-line').style.display = 'block';
-    document.getElementById('active-position-line').style.top = '50%'; // Snapped Center
+    document.getElementById('active-position-line').style.top = '50%';
     
-    // Position Bracket Targets Conditioning
     if (activePosition.tpPrice > 0) {
-        const tpOverlay = document.getElementById('tp-target-line');
+        const tpOverlay = document.getElementById('tv-target-line');
         tpOverlay.style.display = 'block';
         tpOverlay.style.top = activePosition.side === 'BUY' ? '20%' : '80%';
         document.getElementById('tp-line-badge').innerText = `TAKE PROFIT TARGET: $${activePosition.tpPrice.toFixed(2)}`;
@@ -831,14 +857,13 @@ function updatePositionOverlayLines() {
 function clearAllChartOverlays() {
     document.getElementById('limit-order-line').style.display = 'none';
     document.getElementById('active-position-line').style.display = 'none';
-    document.getElementById('tp-target-line').style.display = 'none';
+    document.getElementById('tv-target-line').style.display = 'none';
     document.getElementById('sl-risk-line').style.display = 'none';
 }
 
 function executeDevOrder(side) {
     const contractSize = parseFloat(document.getElementById('position-contract-size').value);
     
-    // Extract user bracket parameters if selected
     let targetTP = 0.0;
     let targetSL = 0.0;
     if (document.getElementById('bracket-toggle-check').checked) {
@@ -858,12 +883,11 @@ function executeDevOrder(side) {
             size: contractSize,
             asset: CURRENT_ASSET,
             tpPrice: targetTP,
-            slPrice: targetSL
+            slPrice: targetSL,
+            largestTradeProfit: 0.0
         };
-        console.log(`[ARCADE MARKET FILLED] Filled ${side} ${contractSize} contracts at ${CURRENT_PRICE}`);
         showActivePositionOverlays();
     } else {
-        // Enforce Working Limit Orders Pipeline
         const limitPriceVal = parseFloat(document.getElementById('target-execution-price').value);
         pendingLimitOrder = {
             isSet: true,
@@ -874,7 +898,6 @@ function executeDevOrder(side) {
             slPrice: targetSL
         };
         triggerLimitWorkingLine();
-        console.log(`[ARCADE LIMIT PLACED] Working order set at ${limitPriceVal}`);
     }
 
     updateAccountMetrics();
@@ -887,9 +910,7 @@ function closeActivePosition() {
     ACCOUNT_BALANCE += FLOATING_PNL;
     REALIZED_PNL += FLOATING_PNL;
     
-    console.log(`[ARCADE FLAT] Position Closed. Realized: $${FLOATING_PNL.toFixed(2)}`);
-
-    activePosition = { hasPosition: false, side: null, entryPrice: 0.0, size: 0.0, asset: null, tpPrice: 0.0, slPrice: 0.0 };
+    activePosition = { hasPosition: false, side: null, entryPrice: 0.0, size: 0.0, asset: null, tpPrice: 0.0, slPrice: 0.0, largestTradeProfit: 0.0 };
     FLOATING_PNL = 0.00;
     
     clearAllChartOverlays();
@@ -1006,9 +1027,9 @@ window.onload = function() {
         </div>
         
         <div class="stats-bar">
-            <div class="stat-box"><div class="stat-label">Net Liquidation</div><div id="display-balance" class="stat-value">$10,000.00</div></div>
+            <div class="stat-box"><div class="stat-label">Net Liquidation</div><div id="display-balance" class="stat-value">$5,000.00</div></div>
             <div class="stat-box"><div class="stat-label">Open Floating P&L</div><div id="display-pnl" class="stat-value">+$0.00</div></div>
-            <div class="stat-box"><div class="stat-label">Daily Accum Loss</div><div id="display-daily-loss" class="stat-value">$0.00 / $500</div></div>
+            <div class="stat-box"><div class="stat-label">Daily Accum Loss</div><div id="display-daily-loss" class="stat-value">$0.00 / $250</div></div>
             <div class="stat-box"><div class="stat-label">Max Leverage Engine</div><div class="stat-value" style="color: #ffb703;">1:50 CROSS</div></div>
         </div>
 
@@ -1021,7 +1042,7 @@ window.onload = function() {
                 <div id="active-position-badge" class="chart-overlay-tag">POSITION LOAD...</div>
             </div>
 
-            <div id="tp-target-line" class="chart-line-overlay">
+            <div id="tv-target-line" class="chart-line-overlay">
                 <div id="tp-line-badge" class="chart-overlay-tag">TAKE PROFIT...</div>
             </div>
 
@@ -1045,9 +1066,9 @@ window.onload = function() {
         <div class="order-panel">
             <div class="account-selector">
                 <select onchange="changeSimAccountTier(this)">
-                    <option value="T3">Rebel Arcade: $10,000 Sim Box ($50 Ticket)</option>
-                    <option value="T2">Raider Arcade: $5,000 Sim Box ($25 Ticket)</option>
-                    <option value="T1">Recruit Arcade: $2,500 Sim Box ($10 Ticket)</option>
+                    <option value="T3">Rebel Box: $5,000 Sim Arena ($30 Ticket)</option>
+                    <option value="T2">Raider Box: $2,500 Sim Arena ($15 Ticket)</option>
+                    <option value="T1">Recruit Box: $1,000 Sim Arena ($5 Ticket)</option>
                 </select>
             </div>
 
@@ -1075,25 +1096,25 @@ window.onload = function() {
             <div class="spec-metrics-display">
                 <div class="spec-row"><span>Notional Contract Value:</span><strong id="spec-calc-notional">$0.00</strong></div>
                 <div class="spec-row"><span>Margin Allocated (1:50):</span><strong id="spec-calc-margin">$0.00</strong></div>
-                <div class="spec-row"><span>Remaining Buying Power:</span><strong id="spec-calc-buyingpower">$10,000.00</strong></div>
+                <div class="spec-row"><span>Remaining Buying Power:</span><strong id="spec-calc-buyingpower">$5,000.00</strong></div>
             </div>
 
             <div class="bracket-toggle-container">
                 <input type="checkbox" id="bracket-toggle-check" onclick="toggleBracketInputBlock()">
-                <label hospitals labels for="bracket-toggle-check" style="cursor:pointer; font-weight:bold;">Attach TP / SL Bracket Order</label>
+                <label for="bracket-toggle-check" style="cursor:pointer; font-weight:bold;">Attach TP / SL Bracket Order</label>
             </div>
 
             <div id="bracket-input-box-wrapper" class="bracket-inputs-grid">
                 <div class="input-block">
                     <label style="color:#00ff66;">Take Profit ($)</label>
                     <div class="input-wrapper" style="border-color: rgba(0,255,102,0.3);">
-                        <input type="number" id="bracket-tp-input" placeholder="Target Price">
+                        <input type="number" id="bracket-tp-input" placeholder="Target Price" oninput="checkAutomatedRulesAndExits()">
                     </div>
                 </div>
                 <div class="input-block">
                     <label style="color:#ff2a2a;">Stop Loss ($)</label>
                     <div class="input-wrapper" style="border-color: rgba(255,42,42,0.3);">
-                        <input type="number" id="bracket-sl-input" placeholder="Risk Price">
+                        <input type="number" id="bracket-sl-input" placeholder="Risk Price" oninput="checkAutomatedRulesAndExits()">
                     </div>
                 </div>
             </div>
@@ -1113,10 +1134,10 @@ window.onload = function() {
 
         <div class="panel-header" style="border-top: 1px solid #1f1f1f;"><span>OBJECTIVE VERIFICATION RUNNERS</span></div>
         <div class="rules-container">
-            <div class="rule-item"><span>Target Threshold Baseline</span><span id="metric-target" style="color:#fff;">$600.00 Left</span></div>
+            <div class="rule-item"><span>Target Threshold Baseline</span><span id="metric-target" style="color:#fff;">$400.00 Left</span></div>
             <div class="rule-item"><span>Daily Drawdown Safeguard</span><span id="metric-daily-loss" class="pass">PASSED</span></div>
-            <div class="rule-item"><span>Max Trailing Volatility Guard</span><span class="pass">PASSED</span></div>
-            <div class="rule-item"><span>Minimum Trading Duration Loop</span><span style="color:#fff;">2 / 4 Days</span></div>
+            <div class="rule-item"><span>EOD Trailing Profit Guard</span><span id="metric-trailing" class="pass">PASSED</span></div>
+            <div class="rule-item"><span>35% Consistency Constraint</span><span id="metric-consistency" class="pass">COMPLIANT</span></div>
         </div>
     </div>
 </div>
