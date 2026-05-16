@@ -1074,19 +1074,26 @@ window.addEventListener('DOMContentLoaded', function() {
     <img src="https://raw.githubusercontent.com/rebeltrading/rebeltrading/main/rebeltradinglogo.png" alt="Rebel Trading Logo">
     
     <div class="ticker-tape">
-        <div class="ticker-metrics-wrapper">
-            <div class="ticker-item">
-                <span class="ticker-label" id="active-ticker-label">BTC/USD Perpetual</span>
-            </div>
-            <div class="ticker-item">
-                <span class="ticker-label">Index Price</span>
-                <span class="ticker-value" id="live-index-val">$0.00</span>
-            </div>
-            <div class="ticker-item">
-                <span class="ticker-label">Mark Price</span>
-                <span class="ticker-value" id="live-mark-val">$0.00</span>
-            </div>
+    <div class="ticker-metrics-wrapper">
+        <div class="ticker-item">
+            <span class="ticker-label" style="margin-bottom: 2px;">Active Asset</span>
+            <span class="ticker-value" id="active-ticker-label">BTC/USD Perpetual</span>
         </div>
+        
+        <div class="ticker-item">
+            <span class="ticker-label">Spot Price</span>
+            <span class="ticker-value" id="header-spot-price" style="color: #00ff66;">$0.00</span>
+        </div>
+
+        <div class="ticker-item">
+            <span class="ticker-label">Index Price</span>
+            <span class="ticker-value" id="live-index-val">$0.00</span>
+        </div>
+        <div class="ticker-item">
+            <span class="ticker-label">Mark Price</span>
+            <span class="ticker-value" id="live-mark-val">$0.00</span>
+        </div>
+    </div>
 
         <div class="progress-container">
             <div class="progress-labels">
