@@ -1071,3 +1071,105 @@ window.onload = function() {
             <div id="tv_chart_container" style="width:100%; height:100%;"></div>
         </div>
     </div>
+    
+    <div class="panel">
+        <div class="panel-header">
+            <span>ORDER BOOK (LEVEL 2 DEPTH)</span>
+            <span style="font-family: monospace; font-size: 0.7rem; color: #777;">TICK FEED ACTIVE</span>
+        </div>
+        
+        <div class="dom-container">
+            </div>
+        
+        <div class="panel-header" style="border-top: 1px solid #1f1f1f; border-bottom: none;">
+            <span>TIME & SALES (TAPE)</span>
+        </div>
+        <div class="tape-container">
+            </div>
+    </div>
+    
+    <div class="panel">
+        <div class="panel-header">REBEL DEV ARCADE PANEL</div>
+        <div class="order-panel">
+            
+            <div class="account-selector input-block">
+                <label>Select Matrix Account</label>
+                <select onchange="changeSimAccountTier(this)">
+                    <option value="T3">Rebel Arcade: $5,000 Sim Box ($50 Ticket)</option>
+                    <option value="T2">Raider Arcade: $2,500 Sim Box ($25 Ticket)</option>
+                    <option value="T1">Recruit Arcade: $1,000 Sim Box ($10 Ticket)</option>
+                </select>
+            </div>
+            
+            <div class="order-tabs">
+                <button class="tab-btn active" onclick="setOrderType('MARKET', this)">MARKET</button>
+                <button class="tab-btn" onclick="setOrderType('LIMIT', this)">LIMIT</button>
+            </div>
+            
+            <div class="input-block">
+                <label>Target Execution Price ($)</label>
+                <div class="input-wrapper">
+                    <input type="text" id="target-execution-price" value="MARKET PRICE" disabled oninput="triggerLimitWorkingLine()">
+                </div>
+            </div>
+            
+            <div class="input-block">
+                <label>Position Contract Size</label>
+                <div class="input-wrapper">
+                    <button onclick="changeContractSizeValue(-0.1)">-</button>
+                    <input type="text" id="position-contract-size" value="1.0" oninput="recalculateSpecInterface()">
+                    <button onclick="changeContractSizeValue(0.1)">+</button>
+                </div>
+            </div>
+            
+            <div class="spec-metrics-display">
+                <div class="spec-row">Notional Contract Value:<strong id="spec-calc-notional">$0.00</strong></div>
+                <div class="spec-row">Margin Allocated (1:50):<strong id="spec-calc-margin">$0.00</strong></div>
+                <div class="spec-row">Remaining Buying Power:<strong id="spec-calc-buyingpower">$5,000.00</strong></div>
+            </div>
+            
+            <div class="bracket-toggle-container">
+                <input type="checkbox" id="bracket-toggle-check" onchange="toggleBracketInputBlock()">
+                <label for="bracket-toggle-check" style="cursor:pointer;">Attach TP / SL Bracket Order Parameters</label>
+            </div>
+            
+            <div class="bracket-inputs-grid" id="bracket-input-box-wrapper">
+                <div class="input-block">
+                    <label>Take Profit Price</label>
+                    <div class="input-wrapper"><input type="number" step="any" id="bracket-tp-input" value="0.00"></div>
+                </div>
+                <div class="input-block">
+                    <label>Stop Loss Price</label>
+                    <div class="input-wrapper"><input type="number" step="any" id="bracket-sl-input" value="0.00"></div>
+                </div>
+            </div>
+            
+            <div class="execution-actions">
+                <button class="exec-btn buy" onclick="executeDevOrder('BUY')">BUY / LONG</button>
+                <button class="exec-btn sell" onclick="executeDevOrder('SELL')">SELL / SHORT</button>
+            </div>
+            
+            <div class="position-display" id="live-position-status">
+                <div class="position-row"><span>No Active Dev Positions Open</span><span>--</span></div>
+            </div>
+            
+        </div>
+        
+        <div class="rules-container">
+            <div style="font-weight:bold; color:#fff; margin-bottom:8px; text-transform:uppercase; font-size:0.65rem; letter-spacing:0.5px;">Objective Verification Runners</div>
+            <div class="rule-item">Target Threshold Baseline: <span id="metric-target">$400.00 Left</span></div>
+            <div class="rule-item">Daily Drawdown Safeguard: <span id="metric-daily-loss" class="pass">PASSED (-$0.00 / $250)</span></div>
+            <div class="rule-item">EOD Trailing Profit Guard: <span id="metric-trailing" class="pass">PASSED ($0.00 / $400)</span></div>
+            <div class="rule-item">35% Consistency Constraint: <span id="metric-consistency" class="pass">COMPLIANT ($140.00 Cap Per Trade)</span></div>
+        </div>
+        
+        <div style="display:none;">
+            <span id="live-index-val">0.00</span>
+            <span id="live-mark-val">0.00</span>
+        </div>
+    </div>
+    
+</div>
+
+</body>
+</html>
