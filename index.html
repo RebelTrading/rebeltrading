@@ -11,6 +11,7 @@ body {
     font-family: Arial, Helvetica, sans-serif;
     background: #000;
     color: #bdbdbd;
+    overflow-x: hidden;
 }
 
 /* HEADER */
@@ -71,6 +72,55 @@ header img {
     color: #ff2a2a;
 }
 
+/* LIVE TICKER MARQUEE */
+.ticker-wrap {
+    position: fixed;
+    top: 105px;
+    width: 100%;
+    overflow: hidden;
+    height: 32px;
+    background-color: rgba(6, 6, 6, 0.8);
+    backdrop-filter: blur(5px);
+    border-top: 1px solid #141414;
+    border-bottom: 1px solid #141414;
+    z-index: 998;
+    display: flex;
+    align-items: center;
+}
+
+.ticker {
+    display: inline-block;
+    height: 32px;
+    line-height: 32px;
+    white-space: nowrap;
+    padding-right: 100%;
+    box-sizing: content-box;
+    animation: marquee 25s linear infinite;
+}
+
+.ticker__item {
+    display: inline-block;
+    padding: 0 2rem;
+    font-size: 0.75rem;
+    font-family: monospace;
+    color: #888;
+    letter-spacing: 0.5px;
+}
+
+.ticker__item strong {
+    color: #00ff66;
+}
+
+.ticker__item span.payout-tag {
+    color: #ffb703;
+    font-weight: bold;
+}
+
+@keyframes marquee {
+    0% { transform: translate3d(0, 0, 0); }
+    100% { transform: translate3d(-100%, 0, 0); }
+}
+
 /* HERO CHANNELS */
 .banner {
     height: 100vh;
@@ -79,6 +129,8 @@ header img {
     justify-content: center;
     text-align: center;
     background: radial-gradient(circle at center, #150303 0%, #000 70%);
+    padding-top: 100px;
+    box-sizing: border-box;
 }
 
 .banner h1 {
@@ -86,6 +138,7 @@ header img {
     color: #ff2a2a;
     line-height: 1.1;
     letter-spacing: -1px;
+    text-shadow: 0 0 20px rgba(255, 42, 42, 0.2);
 }
 
 .banner p {
@@ -95,6 +148,48 @@ header img {
     margin-top: 15px;
     font-weight: 300;
     text-transform: uppercase;
+}
+
+/* SPEEDRUN FLASH BANNER */
+.speedrun-banner {
+    background: linear-gradient(90deg, #110000, #2a0000, #110000);
+    border: 1px dashed rgba(255, 42, 42, 0.4);
+    padding: 15px;
+    border-radius: 8px;
+    max-width: 800px;
+    margin: 40px auto 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+}
+
+.speedrun-badge {
+    background: #ff2a2a;
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: bold;
+    padding: 3px 8px;
+    border-radius: 4px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    animation: pulse-glow 1.5s infinite alternate;
+}
+
+.speedrun-text {
+    font-size: 0.9rem;
+    color: #fff;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+}
+
+.speedrun-text span {
+    color: #ffb703;
+}
+
+@keyframes pulse-glow {
+    0% { box-shadow: 0 0 5px rgba(255, 42, 42, 0.5); }
+    100% { box-shadow: 0 0 15px rgba(255, 42, 42, 0.9); }
 }
 
 /* SECTIONS */
@@ -127,19 +222,21 @@ header img {
     margin-top: 40px;
 }
 
-/* FEATURE BOXES */
+/* FEATURE BOXES (GLASSMORPHISM UPGRADE) */
 .box {
-    background: #060606;
-    border: 1px solid #141414;
+    background: rgba(6, 6, 6, 0.7);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(20, 20, 20, 0.8);
     padding: 30px 25px;
     border-radius: 8px;
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
 .box:hover {
-    border-color: #ff2a2a;
-    background: #0b0b0b;
+    border-color: rgba(255, 42, 42, 0.4);
+    background: rgba(11, 11, 11, 0.8);
     transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 42, 42, 0.03);
 }
 
 .box h3 {
@@ -155,7 +252,7 @@ header img {
     color: #888;
 }
 
-/* PACKAGES LAYOUT TRINITY */
+/* PACKAGES LAYOUT TRINITY (PREMIUM CARDS) */
 .packages-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -164,25 +261,62 @@ header img {
 }
 
 .package {
-    background: linear-gradient(145deg, #0a0a0a, #030303);
-    border: 1px solid #141414;
-    padding: 35px 25px;
+    position: relative;
+    background: linear-gradient(145deg, rgba(10, 10, 10, 0.8), rgba(3, 3, 3, 0.9));
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(20, 20, 20, 1);
+    padding: 40px 25px 35px 25px;
     border-radius: 12px;
     text-align: center;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
 .package:hover {
-    border-color: #ff2a2a;
+    border-color: rgba(255, 42, 42, 0.5);
     transform: translateY(-5px);
-    box-shadow: 0 10px 30px rgba(255, 42, 42, 0.05);
+    box-shadow: 0 10px 30px rgba(255, 42, 42, 0.08);
 }
 
-/* Highlight Tier Layout */
+/* Highlight Tier Layout (Neon Glow Upgrade) */
 .package.featured {
     border-color: #ffb703;
-    background: linear-gradient(145deg, #0e0e0e, #050505);
-    box-shadow: 0 4px 20px rgba(255, 183, 3, 0.05);
+    background: linear-gradient(145deg, rgba(14, 14, 14, 0.8), rgba(5, 5, 5, 0.9));
+    box-shadow: 0 4px 25px rgba(255, 183, 3, 0.08);
+}
+
+.package.featured:hover {
+    border-color: #ffb703;
+    box-shadow: 0 10px 35px rgba(255, 183, 3, 0.15);
+}
+
+/* Hot Tag Ribbons */
+.box-activity-tag {
+    position: absolute;
+    top: 12px;
+    right: 15px;
+    font-size: 0.65rem;
+    font-family: monospace;
+    color: #888;
+    letter-spacing: 0.5px;
+}
+
+.package.featured .box-activity-tag {
+    color: #ffb703;
+}
+
+.box-activity-tag span.pulse-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background: #00ff66;
+    border-radius: 50%;
+    margin-right: 4px;
+    animation: spot-pulse 1s infinite alternate;
+}
+
+@keyframes spot-pulse {
+    0% { opacity: 0.3; }
+    100% { opacity: 1; }
 }
 
 .package h3 {
@@ -198,6 +332,10 @@ header img {
     font-weight: bold;
     margin: 15px 0 5px 0;
     font-family: monospace;
+}
+
+.package.featured .price {
+    color: #ffb703;
 }
 
 .price span {
@@ -218,6 +356,22 @@ header img {
     border: 1px solid #1c1c1c;
     margin-bottom: 20px;
     letter-spacing: 1px;
+}
+
+/* Boost Tag styling inside packages */
+.boost-tag {
+    display: block;
+    background: rgba(255, 183, 3, 0.05);
+    color: #ffb703;
+    font-size: 0.7rem;
+    font-weight: bold;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px dashed rgba(255, 183, 3, 0.2);
+    margin: -5px auto 15px auto;
+    max-width: 85%;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .package hr {
@@ -253,10 +407,102 @@ header img {
     font-size: 0.95rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    box-shadow: 0 4px 12px rgba(255, 42, 42, 0.15);
 }
 
 .cta-btn:hover {
     background: #cc0000;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 15px rgba(255, 42, 42, 0.25);
+}
+
+/* INTERACTIVE SCALE CALCULATOR WIDGET */
+.calc-wrapper {
+    background: linear-gradient(180deg, #060606, #020202);
+    border: 1px solid #141414;
+    border-radius: 12px;
+    padding: 40px 30px;
+    margin-top: 50px;
+    text-align: center;
+}
+
+.calc-title {
+    color: #fff;
+    font-size: 1.4rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: -0.5px;
+    margin-bottom: 5px;
+}
+
+.calc-subtitle {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 30px;
+}
+
+.slider-container {
+    padding: 0 20px;
+    margin-bottom: 40px;
+}
+
+.box-slider {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: #141414;
+    outline: none;
+}
+
+.box-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #ff2a2a;
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(255, 42, 42, 0.8);
+    transition: transform 0.1s;
+}
+
+.box-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+}
+
+.calc-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    max-width: 850px;
+    margin: 0 auto;
+}
+
+.calc-card {
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid #111;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.calc-label {
+    font-size: 0.75rem;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+}
+
+.calc-val {
+    font-size: 1.8rem;
+    font-family: monospace;
+    font-weight: bold;
+    color: #fff;
+}
+
+.calc-val.highlight {
+    color: #ffb703;
 }
 
 /* FOOTER STANDARD */
@@ -275,6 +521,20 @@ footer {
 function toggleMenu() {
     const menu = document.getElementById("menu");
     menu.style.right = (menu.style.right === "0px") ? "-260px" : "0px";
+}
+
+// Interactive Box Parameter Configuration matrix
+const configMatrix = [
+    { entry: "$5", balance: "$1,000.00", target: "$80.00", potential: "$100.00 max" },
+    { entry: "$15", balance: "$2,500.00", target: "$200.00", potential: "$250.00 max" },
+    { entry: "$30", balance: "$5,000.00", target: "$400.00", potential: "$500.00 max" }
+];
+
+function updateInteractiveCalculator(val) {
+    const data = configMatrix[parseInt(val)];
+    document.getElementById("calc-entry-cost").innerText = data.entry;
+    document.getElementById("calc-sim-balance").innerText = data.balance;
+    document.getElementById("calc-payout-cap").innerText = data.potential;
 }
 </script>
 
@@ -298,10 +558,26 @@ function toggleMenu() {
     <a href="tradesim.html" style="color: #ff2a2a;">Sim Trade Desk →</a>
 </div>
 
+<div class="ticker-wrap">
+    <div class="ticker">
+        <div class="ticker__item">🏆 REBEL_X7 cleared BTC levels &rarr; <span class="payout-tag">Paid $80.00 USDT</span></div>
+        <div class="ticker__item">🟢 142 Coins Inserted into Recruit Arena this hour</div>
+        <div class="ticker__item">🏆 SCALPER_DECK cleared SOL levels &rarr; <span class="payout-tag">Paid $400.00 USDC</span></div>
+        <div class="ticker__item">⚡ SPEEDRUN LOCKOUT: User 'TapeReader' unlocked <strong style="color:#ffb703;">100% PROFIT BOOST</strong></div>
+        <div class="ticker__item">🏆 WHALE_HUNTER cleared ETH levels &rarr; <span class="payout-tag">Paid $200.00 USDT</span></div>
+        <div class="ticker__item">🟢 89 Coins Inserted into Rebel Box Arena this hour</div>
+    </div>
+</div>
+
 <div class="banner">
     <div>
         <h1>ENTER THE ARENA</h1>
         <p>Micro Prop Funding. Gamified Rules. Institutional Performance.</p>
+        
+        <div class="speedrun-banner">
+            <div class="speedrun-badge">Speedrun Active</div>
+            <div class="speedrun-text">Pass under 48 Hours or 50 Trades to unlock the <span>2X Profit Boost (100% Split)</span></div>
+        </div>
     </div>
 </div>
 
@@ -350,9 +626,11 @@ function toggleMenu() {
     <div class="packages-grid">
 
         <div class="package">
+            <div class="box-activity-tag"><span class="pulse-dot"></span>142 Active</div>
             <h3>Recruit Box</h3>
             <div class="price"><span>$20</span>$10</div>
             <div class="split-tag">80/20 ARENA PROFIT SPLIT</div>
+            <div class="boost-tag">⚡ 48H SPEEDRUN BOOST ELIGIBLE</div>
             <hr>
             <p>• <strong>Simulated Balance:</strong> $1,000.00</p>
             <p>• <strong>Phase 1 Target (8%):</strong> $80.00</p>
@@ -364,9 +642,11 @@ function toggleMenu() {
         </div>
 
         <div class="package featured">
+            <div class="box-activity-tag" style="color: #ffb703;"><span class="pulse-dot"></span>🔥 HOT TIER</div>
             <h3>Rebel Box</h3>
             <div class="price" style="color: #ffb703;"><span>$75</span>$50</div>
             <div class="split-tag" style="color: #000; background: #ffb703; border-color: #ffb703;">80/20 ARENA PROFIT SPLIT</div>
+            <div class="boost-tag" style="color:#000; background:#ffb703; border-color:#ffb703;">⚡ 2X PROFIT BOOST ELIGIBLE</div>
             <hr>
             <p>• <strong>Simulated Balance:</strong> $5,000.00</p>
             <p>• <strong>Phase 1 Target (8%):</strong> $400.00</p>
@@ -378,9 +658,11 @@ function toggleMenu() {
         </div>
 
         <div class="package">
+            <div class="box-activity-tag"><span class="pulse-dot"></span>89 Active</div>
             <h3>Raider Box</h3>
             <div class="price"><span>$35</span>$25</div>
             <div class="split-tag">80/20 ARENA PROFIT SPLIT</div>
+            <div class="boost-tag">⚡ 48H SPEEDRUN BOOST ELIGIBLE</div>
             <hr>
             <p>• <strong>Simulated Balance:</strong> $2,500.00</p>
             <p>• <strong>Phase 1 Target (8%):</strong> $200.00</p>
@@ -393,12 +675,36 @@ function toggleMenu() {
 
     </div>
 
+    <div class="calc-wrapper">
+        <div class="calc-title">Interactive Box Leverage Scalar</div>
+        <div class="calc-subtitle">Slide parameters to preview cost-to-exposure scaling ratios natively inside our network engine layout.</div>
+        
+        <div class="slider-container">
+            <input type="range" min="0" max="2" value="1" class="box-slider" oninput="updateInteractiveCalculator(this.value)">
+        </div>
+        
+        <div class="calc-metrics">
+            <div class="calc-card">
+                <div class="calc-label">Your Entry Cost</div>
+                <div id="calc-entry-cost" class="calc-val text-red" style="color:#ff2a2a;">$15</div>
+            </div>
+            <div class="calc-card">
+                <div class="calc-label">Simulated Asset Size</div>
+                <div id="calc-sim-balance" class="calc-val">$2,500.00</div>
+            </div>
+            <div class="calc-card">
+                <div class="calc-label">Potential Extraction Payout Loop</div>
+                <div id="calc-payout-cap" class="calc-val highlight">$250.00 max</div>
+            </div>
+        </div>
+    </div>
+
     <div style="margin-top: 80px; border-top: 1px solid #141414; padding-top: 60px;">
         <h3 style="color: #fff; font-size: 1.8rem; letter-spacing: -0.5px; text-transform: uppercase; margin-bottom: 10px;">
-            The Level Roadmap: Clearing Phase 1 & Phase 2
+            The Verification Protocol: Clearing Phase 1 & Phase 2
         </h3>
         <div style="font-size: 1rem; color: #888; margin-bottom: 30px;">
-            Clear the evaluation target window to unlock the Payout Arena. No activation fees, no hidden traps.
+            Clear the verification protocol target window to unlock the Payout Arena. No activation fees, no hidden traps.
         </div>
 
         <div class="box-container">
