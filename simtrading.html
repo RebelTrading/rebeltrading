@@ -520,19 +520,19 @@ const LEVERAGE_FACTOR = 50.0;
 
 const accountTiers = {
     "T1": { name: "Recruit Arcade: $1,000 Sim Box ($10 Ticket)", start: 1000.00, target: 80.00, dailyLimit: 50.00, eodLimit: 80.00 },
-    "T2": { name: "Raider Arcade: $2,500 Sim Box ($25 Ticket)", start: 2500.00, target: 200.00, dailyLimit: 125.00, eodLimit: 200.00 },
-    "T3": { name: "Rebel Arcade: $5,000 Sim Box ($50 Ticket)", start: 5000.00, target: 400.00, dailyLimit: 250.00, eodLimit: 400.00 }
+    "T2": { name: "Raider Arcade: $2,000 Sim Box ($20 Ticket)", start: 2000.00, target: 160.00, dailyLimit: 100.00, eodLimit: 160.00 },
+    "T3": { name: "Rebel Arcade: $3,000 Sim Box ($30 Ticket)", start: 3000.00, target: 240.00, dailyLimit: 150.00, eodLimit: 240.00 }
 };
 
 let activeTierKey = "T3";
-let STARTING_BALANCE = 5000.00;
-let ACCOUNT_BALANCE = 5000.00;
-let PEAK_BALANCE = 5000.00;
+let STARTING_BALANCE = 3000.00;
+let ACCOUNT_BALANCE = 3000.00;
+let PEAK_BALANCE = 3000.00;
 let FLOATING_PNL = 0.00;
 let REALIZED_PNL = 0.00;
-let PROFIT_TARGET = 400.00;
-let DAILY_LOSS_LIMIT = 250.00;
-let EOD_TRAILING_LIMIT = 400.00;
+let PROFIT_TARGET = 240.00;
+let DAILY_LOSS_LIMIT = 150.00;
+let EOD_TRAILING_LIMIT = 240.00;
 
 // High-Fidelity Crypto Perp Multipliers & Fixed Decimals Configurations
 const assetMap = {
@@ -1210,14 +1210,14 @@ window.addEventListener('DOMContentLoaded', function() {
         <div class="panel-header">REBEL DEV ARCADE PANEL</div>
         <div class="order-panel">
             
-            <div class="account-selector input-block">
-                <label>Select Matrix Account</label>
-                <select onchange="changeSimAccountTier(this)">
-                    <option value="T3">Rebel Arcade: $5,000 Sim Box ($50 Ticket)</option>
-                    <option value="T2">Raider Arcade: $2,500 Sim Box ($25 Ticket)</option>
-                    <option value="T1">Recruit Arcade: $1,000 Sim Box ($10 Ticket)</option>
-                </select>
-            </div>
+            <div class="account-selector">
+    <label style="font-size: 0.6rem; color: #555; text-transform: uppercase; display: block; margin-bottom: 4px;">ACTIVE BOX SUBSCRIPTION CLASS</label>
+    <select onchange="changeSimAccountTier(this)">
+        <option value="T3" selected>Rebel Arcade: $3,000 Sim Box ($30 Ticket)</option>
+        <option value="T2">Raider Arcade: $2,000 Sim Box ($20 Ticket)</option>
+        <option value="T1">Recruit Arcade: $1,000 Sim Box ($10 Ticket)</option>
+    </select>
+</div>
             
             <div class="order-tabs">
                 <button class="tab-btn active" onclick="setOrderType('MARKET', this)">MARKET</button>
@@ -1274,12 +1274,12 @@ window.addEventListener('DOMContentLoaded', function() {
         </div>
         
         <div class="rules-container">
-            <div style="font-weight:bold; color:#fff; margin-bottom:8px; text-transform:uppercase; font-size:0.65rem; letter-spacing:0.5px;">Objective Verification Runners</div>
-            <div class="rule-item">Target Threshold Baseline: <span id="metric-target">$400.00 Left</span></div>
-            <div class="rule-item">Daily Drawdown Safeguard: <span id="metric-daily-loss" class="pass">PASSED (-$0.00 / $250)</span></div>
-            <div class="rule-item">EOD Trailing Profit Guard: <span id="metric-trailing" class="pass">PASSED ($0.00 / $400)</span></div>
-            <div class="rule-item">35% Consistency Constraint: <span id="metric-consistency" class="pass">COMPLIANT ($140.00 Cap Per Trade)</span></div>
-        </div>
+    <div style="font-weight:bold; color:#fff; font-size:0.7rem; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px;">Prop Verification Framework</div>
+    <div class="rule-item"><span>Profit Extraction Target Metric:</span><span id="metric-target">$240.00 Left</span></div>
+    <div class="rule-item"><span>Intraday Drawdown Safety Metric:</span><span id="metric-daily-loss" class="pass">PASSED (-$0.00 / $150.00)</span></div>
+    <div class="rule-item"><span>EOD Trailing Drawdown Limit:</span><span id="metric-trailing" class="pass">PASSED ($0.00 / $240.00)</span></div>
+    <div class="rule-item"><span>35% Single-Trade Consistency Rule:</span><span id="metric-consistency" class="pass">COMPLIANT ($84.00 Cap)</span></div>
+</div>
     </div>
     
 </div>
