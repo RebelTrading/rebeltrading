@@ -519,9 +519,9 @@ let ORDER_TYPE = "MARKET";
 const LEVERAGE_FACTOR = 50.0;
 
 const accountTiers = {
-    "T1": { name: "Recruit Arcade: $1,000 Sim Box ($10 Ticket)", start: 1000.00, target: 80.00, dailyLimit: 50.00, eodLimit: 80.00 },
-    "T2": { name: "Raider Arcade: $2,000 Sim Box ($20 Ticket)", start: 2000.00, target: 160.00, dailyLimit: 100.00, eodLimit: 160.00 },
-    "T3": { name: "Rebel Arcade: $3,000 Sim Box ($30 Ticket)", start: 3000.00, target: 240.00, dailyLimit: 150.00, eodLimit: 240.00 }
+    "T1": { name: "Recruit Arcade: $1,000 Sim Box ($10 Ticket)", start: 1000.00, target: 100.00, dailyLimit: 50.00, eodLimit: 100.00 },
+    "T2": { name: "Raider Arcade: $2,000 Sim Box ($20 Ticket)", start: 2000.00, target: 200.00, dailyLimit: 100.00, eodLimit: 200.00 },
+    "T3": { name: "Rebel Arcade: $3,000 Sim Box ($30 Ticket)", start: 3000.00, target: 300.00, dailyLimit: 150.00, eodLimit: 300.00 }
 };
 
 let activeTierKey = "T3";
@@ -530,9 +530,9 @@ let ACCOUNT_BALANCE = 3000.00;
 let PEAK_BALANCE = 3000.00;
 let FLOATING_PNL = 0.00;
 let REALIZED_PNL = 0.00;
-let PROFIT_TARGET = 240.00;
+let PROFIT_TARGET = 300.00;
 let DAILY_LOSS_LIMIT = 150.00;
-let EOD_TRAILING_LIMIT = 240.00;
+let EOD_TRAILING_LIMIT = 300.00;
 
 // High-Fidelity Crypto Perp Multipliers & Fixed Decimals Configurations
 const assetMap = {
@@ -1275,10 +1275,10 @@ window.addEventListener('DOMContentLoaded', function() {
         
         <div class="rules-container">
     <div style="font-weight:bold; color:#fff; font-size:0.7rem; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px;">Prop Verification Framework</div>
-    <div class="rule-item"><span>Profit Extraction Target Metric:</span><span id="metric-target">$240.00 Left</span></div>
+    <div class="rule-item"><span>Profit Extraction Target Metric:</span><span id="metric-target">$300.00 Left</span></div>
     <div class="rule-item"><span>Intraday Drawdown Safety Metric:</span><span id="metric-daily-loss" class="pass">PASSED (-$0.00 / $150.00)</span></div>
-    <div class="rule-item"><span>EOD Trailing Drawdown Limit:</span><span id="metric-trailing" class="pass">PASSED ($0.00 / $240.00)</span></div>
-    <div class="rule-item"><span>35% Single-Trade Consistency Rule:</span><span id="metric-consistency" class="pass">COMPLIANT ($84.00 Cap)</span></div>
+    <div class="rule-item"><span>EOD Trailing Drawdown Limit:</span><span id="metric-trailing" class="pass">PASSED ($0.00 / $300.00)</span></div>
+    <div class="rule-item"><span>35% Single-Trade Consistency Rule:</span><span id="metric-consistency" class="pass">COMPLIANT ($105.00 Cap)</span></div>
 </div>
     </div>
     
