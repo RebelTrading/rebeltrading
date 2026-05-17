@@ -558,6 +558,35 @@ function toggleMenu() {
     menu.style.right = (menu.style.right === "0px") ? "-260px" : "0px";
 }
 
+// ==========================================
+// NEW: Built-in synthetic SFX for order filling
+// ==========================================
+function playOrderFilledSFX() {
+    try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        
+        const ctx = new AudioContext();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, ctx.currentTime); // High A note
+        osc.frequency.exponentialRampToValueAtTime(1320, ctx.currentTime + 0.08); // Sharp slide up
+        
+        gain.gain.setValueAtTime(0.12, ctx.currentTime); // Perfect volume level
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12); // Clean dropoff
+        
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        
+        osc.start();
+        osc.stop(ctx.currentTime + 0.12);
+    } catch (e) {
+        console.log("Audio play blocked by browser:", e);
+    }
+}
+
 function getCurrentPrice() {
     return localAssetPrices[CURRENT_ASSET];
 }
@@ -953,6 +982,9 @@ function executeDevOrder(side) {
             largestTradeProfit: 0.0
         };
         showActivePositionOverlays();
+        
+        // ADD THIS LINE: Triggers the audio feedback on Market Buys/Sells
+        playOrderFilledSFX();
     } else {
         const limitPriceVal = parseFloat(document.getElementById('target-execution-price').value);
         pendingLimitOrder = {
@@ -964,6 +996,9 @@ function executeDevOrder(side) {
             slPrice: targetSL
         };
         triggerLimitWorkingLine();
+        
+        // ADD THIS LINE: Triggers the audio when a Limit Buy/Sell hits the book
+        playOrderFilledSFX();
     }
 
     updateAccountMetrics();
