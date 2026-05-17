@@ -857,33 +857,47 @@ function updateAccountMetrics() {
         }
         // =========================================================
         // =========================================================
-        // NEW: PROGRESS BAR BADGES & NEON HYPER-CHARGE GLOWS
+        // NEW: LIVE TRADE PROGRESS MILESTONES & TACTICAL VOICE SFX
         // =========================================================
-        // Calculate your true challenge progress percentage
-        let totalTarget = 300.00; // Your profit target goal to pass
-        let netProfit = ACCOUNT_BALANCE + FLOATING_PNL - 3000.00; // Profit above starting 3K
-        let challengeProgressPct = (netProfit / totalTarget) * 100;
+        // Track the live trade progress percentage against your account target
+        let challengeProgressPct = (FLOATING_PNL / PROFIT_TARGET) * 100;
 
         const barWrapper = document.getElementById('challenge-progress-wrapper');
         const badgeContainer = document.getElementById('arcade-badge-container');
 
         if (challengeProgressPct >= 10.0) {
-            // Tier 2 Milestone: 10%+ Progress achieved
+            // Tier 2 Milestone: Live trade hits 10%+ of challenge goal
             if (!barWrapper.classList.contains('progress-glow-tier2')) {
                 barWrapper.classList.remove('progress-glow-tier1');
                 barWrapper.classList.add('progress-glow-tier2');
                 badgeContainer.innerHTML = `<span class="persistent-arcade-badge badge-tier2">⚡ APEX EXTRACTION ⚡</span>`;
+                
+                // AUDIO: Option 2 Deeper Overdrive Voice
+                window.speechSynthesis.cancel();
+                let speech2 = new SpeechSynthesisUtterance("System Overdrive. Apex Extraction status locked.");
+                speech2.rate = 1.05;
+                speech2.pitch = 0.85;
+                window.speechSynthesis.speak(speech2);
+
                 setTimeout(() => barWrapper.classList.remove('progress-glow-tier2'), 2500);
             }
         } else if (challengeProgressPct >= 5.0) {
-            // Tier 1 Milestone: 5%+ Progress achieved
+            // Tier 1 Milestone: Live trade hits 5%+ of challenge goal
             if (!barWrapper.classList.contains('progress-glow-tier1') && !barWrapper.classList.contains('progress-glow-tier2')) {
                 barWrapper.classList.add('progress-glow-tier1');
                 badgeContainer.innerHTML = `<span class="persistent-arcade-badge badge-tier1">⚔️ MOMENTUM STRIKE ⚔️</span>`;
+                
+                // AUDIO: Option 2 Tactical Lock Voice
+                window.speechSynthesis.cancel();
+                let speech1 = new SpeechSynthesisUtterance("System Breach. Momentum Strike unlocked.");
+                speech1.rate = 1.05;
+                speech1.pitch = 0.9;
+                window.speechSynthesis.speak(speech1);
+
                 setTimeout(() => barWrapper.classList.remove('progress-glow-tier1'), 2000);
             }
         } else {
-            // No badges earned yet under 5% progress
+            // Clear badge if trade pulls back below the milestone line
             badgeContainer.innerHTML = '';
         }
         // =========================================================
@@ -1257,6 +1271,9 @@ window.addEventListener('DOMContentLoaded', function() {
        <div class="header-badge-space">
     <div id="arcade-badge-container"></div>
 
+    <div class="header-badge-space">
+    <div id="arcade-badge-container"></div>
+
     <div class="progress-container" id="challenge-progress-wrapper">
         <div class="progress-labels">
             <span class="level-title">Level 1 Challenge</span>
@@ -1267,6 +1284,7 @@ window.addEventListener('DOMContentLoaded', function() {
         </div>
     </div>
 </div>
+           
     <div class="hamburger" onclick="toggleMenu()">
         <div></div><div></div><div></div>
     </div>
