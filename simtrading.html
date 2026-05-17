@@ -508,6 +508,46 @@ header img {
 }
 .rule-item span.pass { color: #00ff66; font-weight: bold; }
 .rule-item span.fail { color: #ff2a2a; font-weight: bold; }
+/* --- ARCADE MILESTONE GLOWS & BADGES --- */
+.chart-flash-tier1 {
+    animation: tier1Pulse 2s ease-in-out;
+}
+.chart-flash-tier2 {
+    animation: tier2Pulse 2.5s ease-in-out;
+}
+
+@keyframes tier1Pulse {
+    0%, 100% { box-shadow: none; }
+    30%, 70% { box-shadow: inset 0 0 30px #00d2ff, 0 0 30px #00d2ff; border-color: #00d2ff; }
+}
+
+@keyframes tier2Pulse {
+    0%, 100% { box-shadow: none; }
+    30%, 70% { box-shadow: inset 0 0 40px #00ff66, 0 0 40px #00ff66; border-color: #00ff66; }
+}
+
+.arcade-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 0.75rem;
+    border-radius: 3px;
+    margin-left: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+}
+.badge-tier1 {
+    background: #004466;
+    color: #00d2ff;
+    border: 1px solid #00d2ff;
+}
+.badge-tier2 {
+    background: #005522;
+    color: #00ff66;
+    border: 1px solid #00ff66;
+}
 </style>
 
 <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
@@ -805,6 +845,33 @@ function updateAccountMetrics() {
         } else {
             FLOATING_PNL = (-priceDelta) * activePosition.size * spec.multiplier;
         }
+        // =========================================================
+        // NEW: 2-TIER SINGLE-TRADE ARCADE MILESTONE LOGIC
+        // =========================================================
+        let singleTradePct = (FLOATING_PNL / STARTING_BALANCE) * 100;
+        const chartWrapper = document.getElementById('tv_chart_container');
+        const badgeContainer = document.getElementById('arcade-badge-container');
+
+        if (singleTradePct >= 5.0) {
+            // Tier 2: APEX EXTRACTION
+            if (!chartWrapper.classList.contains('chart-flash-tier2')) {
+                chartWrapper.classList.remove('chart-flash-tier1');
+                chartWrapper.classList.add('chart-flash-tier2');
+                badgeContainer.innerHTML = `<span class="arcade-badge badge-tier2">⚡ APEX EXTRACTION ⚡</span>`;
+                setTimeout(() => chartWrapper.classList.remove('chart-flash-tier2'), 2500);
+            }
+        } else if (singleTradePct >= 2.0) {
+            // Tier 1: MOMENTUM STRIKE
+            if (!chartWrapper.classList.contains('chart-flash-tier1') && !chartWrapper.classList.contains('chart-flash-tier2')) {
+                chartWrapper.classList.add('chart-flash-tier1');
+                badgeContainer.innerHTML = `<span class="arcade-badge badge-tier1">⚔️ MOMENTUM STRIKE ⚔️</span>`;
+                setTimeout(() => chartWrapper.classList.remove('chart-flash-tier1'), 2000);
+            }
+        } else {
+            // Reset container if trade slips back below 2% or goes negative
+            badgeContainer.innerHTML = '';
+        }
+        // =========================================================
         
         if (FLOATING_PNL > activePosition.largestTradeProfit) {
             activePosition.largestTradeProfit = FLOATING_PNL;
@@ -1025,6 +1092,7 @@ function executeDevOrder(side) {
 function closeActivePosition() {
     if (!activePosition.hasPosition) return;
     playPositionClosedSFX();
+    document.getElementById('arcade-badge-container').innerHTML = '';
 
     ACCOUNT_BALANCE += FLOATING_PNL;
     REALIZED_PNL += FLOATING_PNL;
@@ -1319,6 +1387,8 @@ window.addEventListener('DOMContentLoaded', function() {
                 <button class="exec-btn buy" onclick="executeDevOrder('BUY')">BUY / LONG</button>
                 <button class="exec-btn sell" onclick="executeDevOrder('SELL')">SELL / SHORT</button>
             </div>
+            
+            <div id="arcade-badge-container" style="margin-bottom: 6px; min-height: 24px;"></div>
             
             <div class="position-display" id="live-position-status">
                 <div class="position-row"><span>No Active Open Positions</span><span>--</span></div>
