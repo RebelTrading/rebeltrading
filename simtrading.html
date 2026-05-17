@@ -1024,6 +1024,7 @@ function executeDevOrder(side) {
 
 function closeActivePosition() {
     if (!activePosition.hasPosition) return;
+    playPositionClosedSFX();
 
     ACCOUNT_BALANCE += FLOATING_PNL;
     REALIZED_PNL += FLOATING_PNL;
