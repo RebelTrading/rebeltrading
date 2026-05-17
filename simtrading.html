@@ -508,12 +508,12 @@ header img {
 }
 .rule-item span.pass { color: #00ff66; font-weight: bold; }
 .rule-item span.fail { color: #ff2a2a; font-weight: bold; }
+
 /* --- NEW: HEADER PROGRESS MILESTONE STYLES --- */
 .header-badge-space {
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    gap: 12px;
 }
 
 .persistent-arcade-badge {
@@ -524,20 +524,38 @@ header img {
     border-radius: 3px;
     letter-spacing: 1px;
     text-transform: uppercase;
-    box-shadow: 0 0 8px rgba(0,0,0,0.6);
     white-space: nowrap;
 }
 
 .badge-tier1 {
-    background: #002b47;
-    color: #00d2ff;
-    border: 1px solid #00d2ff;
+    background: #001a0e;
+    color: #00ff66;
+    border: 1px solid #00ff66;
+    box-shadow: 0 0 8px rgba(0, 255, 102, 0.4);
 }
 
 .badge-tier2 {
-    background: #003a17;
-    color: #00ff66;
-    border: 1px solid #00ff66;
+    background: #001f3d;
+    color: #00d2ff;
+    border: 1px solid #00d2ff;
+    box-shadow: 0 0 8px rgba(0, 210, 255, 0.4);
+}
+
+/* --- NEW: CHASSIS AMBIENT POSITION FEEDBACK GLOWS --- */
+#tv_chart_container {
+    transition: box-shadow 0.25s ease, border-color 0.25s ease;
+    border: 1px solid #1f1f1f;
+    box-sizing: border-box;
+}
+
+.chart-panel-green-glow {
+    border-color: #00ff66 !important;
+    box-shadow: inset 0 0 20px rgba(0, 255, 102, 0.15), 0 0 25px rgba(0, 255, 102, 0.25) !important;
+}
+
+.chart-panel-red-glow {
+    border-color: #ff2a2a !important;
+    box-shadow: inset 0 0 20px rgba(255, 42, 42, 0.15), 0 0 25px rgba(255, 42, 42, 0.25) !important;
 }
 
 /* Hyper-Charge Progress Wrapper Glows */
@@ -857,61 +875,68 @@ function updateAccountMetrics() {
         }
         // =========================================================
         // =========================================================
-        // NEW: LIVE TRADE PROGRESS MILESTONES & TACTICAL VOICE SFX
         // =========================================================
-        // Track the live trade progress percentage against your account target
-        let challengeProgressPct = (FLOATING_PNL / PROFIT_TARGET) * 100;
+    // UPDATED: PERSISTENT BANNER MILESTONES & REAL-TIME POSITION HEARTBEAT GLOW
+    // =========================================================
+    let totalRealizedAndFloating = REALIZED_PNL + FLOATING_PNL;
+    let accountProgressPct = (totalRealizedAndFloating / PROFIT_TARGET) * 100;
 
-        const barWrapper = document.getElementById('challenge-progress-wrapper');
-        const badgeContainer = document.getElementById('arcade-badge-container');
+    const badgeContainer = document.getElementById('arcade-badge-container');
+    const chartWrapper = document.getElementById('tv_chart_container');
 
-        if (challengeProgressPct >= 10.0) {
-            // Tier 2 Milestone: Live trade hits 10%+ of challenge goal
-            if (!barWrapper.classList.contains('progress-glow-tier2')) {
-                barWrapper.classList.remove('progress-glow-tier1');
-                barWrapper.classList.add('progress-glow-tier2');
-                badgeContainer.innerHTML = `<span class="persistent-arcade-badge badge-tier2">⚡ APEX EXTRACTION ⚡</span>`;
-                
-                // AUDIO: Option 2 Deeper Overdrive Voice
-                window.speechSynthesis.cancel();
-                let speech2 = new SpeechSynthesisUtterance("System Overdrive. Apex Extraction status locked.");
-                speech2.rate = 1.05;
-                speech2.pitch = 0.85;
-                window.speechSynthesis.speak(speech2);
-
-                setTimeout(() => barWrapper.classList.remove('progress-glow-tier2'), 2500);
-            }
-        } else if (challengeProgressPct >= 5.0) {
-            // Tier 1 Milestone: Live trade hits 5%+ of challenge goal
-            if (!barWrapper.classList.contains('progress-glow-tier1') && !barWrapper.classList.contains('progress-glow-tier2')) {
-                barWrapper.classList.add('progress-glow-tier1');
-                badgeContainer.innerHTML = `<span class="persistent-arcade-badge badge-tier1">⚔️ MOMENTUM STRIKE ⚔️</span>`;
-                
-                // AUDIO: Option 2 Tactical Lock Voice
-                window.speechSynthesis.cancel();
-                let speech1 = new SpeechSynthesisUtterance("System Breach. Momentum Strike unlocked.");
-                speech1.rate = 1.05;
-                speech1.pitch = 0.9;
-                window.speechSynthesis.speak(speech1);
-
-                setTimeout(() => barWrapper.classList.remove('progress-glow-tier1'), 2000);
-            }
-        } else {
-            // Clear badge if trade pulls back below the milestone line
-            badgeContainer.innerHTML = '';
+    // 1. Persistent Account Milestones Check
+    if (accountProgressPct >= 10.0) {
+        if (!badgeContainer.querySelector('.badge-tier2')) {
+            badgeContainer.innerHTML = `<span class="persistent-arcade-badge badge-tier2">⚡ LEVEL 2 STRIKE ⚡</span>`;
+            
+            window.speechSynthesis.cancel();
+            let speech2 = new SpeechSynthesisUtterance("Momentum boost unlocked.");
+            speech2.rate = 1.15;
+            speech2.pitch = 1.0;
+            window.speechSynthesis.speak(speech2);
         }
-        // =========================================================
+    } else if (accountProgressPct >= 5.0) {
+        if (!badgeContainer.querySelector('.badge-tier1')) {
+            badgeContainer.innerHTML = `<span class="persistent-arcade-badge badge-tier1">⚔️ LEVEL 1 STRIKE ⚔️</span>`;
+            
+            window.speechSynthesis.cancel();
+            let speech1 = new SpeechSynthesisUtterance("Momentum boost unlocked.");
+            speech1.rate = 1.15;
+            speech1.pitch = 1.0;
+            window.speechSynthesis.speak(speech1);
+        }
+    } else {
+        badgeContainer.innerHTML = '';
+    }
+
+    // 2. Real-Time Chart Container Heartbeat Sync (Green/Red Tracker)
+    if (chartWrapper) {
+        if (FLOATING_PNL >= 0) {
+            chartWrapper.classList.remove('chart-panel-red-glow');
+            chartWrapper.classList.add('chart-panel-green-glow');
+        } else {
+            chartWrapper.classList.remove('chart-panel-green-glow');
+            chartWrapper.classList.add('chart-panel-red-glow');
+        }
+    }
+    // =========================================================
+        
         if (FLOATING_PNL > activePosition.largestTradeProfit) {
             activePosition.largestTradeProfit = FLOATING_PNL;
         }
         updatePositionOverlayLines();
-    } else {
+  } else {
         FLOATING_PNL = 0.00;
         document.getElementById('active-position-line').style.display = 'none';
         document.getElementById('tv-target-line').style.display = 'none';
         document.getElementById('sl-risk-line').style.display = 'none';
-    }
 
+        // Clear the green/red neon glow completely when flat
+        const chartWrapper = document.getElementById('tv_chart_container');
+        if (chartWrapper) {
+            chartWrapper.classList.remove('chart-panel-green-glow', 'chart-panel-red-glow');
+        }
+    }
     let netLiquidationValue = ACCOUNT_BALANCE + FLOATING_PNL;
     
     if (netLiquidationValue > PEAK_BALANCE) {
@@ -1273,6 +1298,8 @@ window.addEventListener('DOMContentLoaded', function() {
 
     <div class="header-badge-space">
     <div id="arcade-badge-container"></div>
+
+    <div class="header-badge-space" id="arcade-badge-container"></div>
 
     <div class="progress-container" id="challenge-progress-wrapper">
         <div class="progress-labels">
