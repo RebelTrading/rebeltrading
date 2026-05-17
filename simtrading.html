@@ -558,24 +558,52 @@ header img {
     box-shadow: inset 0 0 20px rgba(255, 42, 42, 0.15), 0 0 25px rgba(255, 42, 42, 0.25) !important;
 }
 
-/* Hyper-Charge Progress Wrapper Glows */
-.progress-glow-tier1 {
-    animation: barPulseTier1 2.5s ease-in-out;
+/* --- NEW: CHASSIS OVERDRIVE EXTENSION GLOWS (TOUCH-FREE ARCHITECTURE) --- */
+/* Single-instance physical chassis snap trigger animation */
+.chassis-snap-active {
+    animation: chassisSnapJump 0.16s cubic-bezier(0.25, 0.8, 0.25, 1) ease-in-out;
 }
 
-.progress-glow-tier2 {
-    animation: barPulseTier2 2.5s ease-in-out;
+@keyframes chassisSnapJump {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.006); }
+    100% { transform: scale(1); }
 }
 
-@keyframes barPulseTier1 {
-    0%, 100% { box-shadow: none; }
-    30%, 70% { box-shadow: 0 0 20px #00d2ff; border-radius: 4px; }
+/* Level 1 Overdrive Profile: Soft, deep, rhythmic engine breath */
+.chart-overdrive-tier1 {
+    border-color: #ffb703 !important; /* Gold Tier Accent matching the badge */
+    animation: engineBreathingGold 3s infinite ease-in-out !important;
 }
 
-@keyframes barPulseTier2 {
-    0%, 100% { box-shadow: none; }
-    30%, 70% { box-shadow: 0 0 25px #00ff66; border-radius: 4px; }
+@keyframes engineBreathingGold {
+    0%, 100% {
+        box-shadow: inset 0 0 15px rgba(255, 183, 3, 0.1), 
+                    0 0 15px rgba(255, 183, 3, 0.15) !important;
+    }
+    50% {
+        box-shadow: inset 0 0 25px rgba(255, 183, 3, 0.25), 
+                    0 0 35px rgba(255, 183, 3, 0.4) !important;
+    }
 }
+
+/* Level 2 Overdrive Profile: High-Velocity Cyan/Green Arc Wave Pulse */
+.chart-overdrive-tier2 {
+    border-color: #00ff66 !important; /* Neon Hyper-Green Level Clear Accent */
+    animation: enginePulseHyperGreen 1.5s infinite cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+@keyframes enginePulseHyperGreen {
+    0%, 100% {
+        box-shadow: inset 0 0 20px rgba(0, 255, 102, 0.15), 
+                    0 0 20px rgba(0, 255, 102, 0.25) !important;
+    }
+    50% {
+        box-shadow: inset 0 0 35px rgba(0, 255, 102, 0.35), 
+                    0 0 45px rgba(0, 255, 102, 0.55) !important;
+    }
+}
+
 </style>
 
 <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
@@ -884,11 +912,18 @@ function updateAccountMetrics() {
     const badgeContainer = document.getElementById('arcade-badge-container');
     const chartWrapper = document.getElementById('tv_chart_container');
 
-    // 1. Persistent Account Milestones Check
+   // 1. Persistent Account Milestones Check (UPDATED FOR INTEGRATED OVERDRIVE PULSE SYSTEM)
     if (accountProgressPct >= 10.0) {
         if (!badgeContainer.querySelector('.badge-tier2')) {
             badgeContainer.innerHTML = `<span class="persistent-arcade-badge badge-tier2">⚡ LEVEL 2 STRIKE ⚡</span>`;
             
+            // Trigger the Physical Scale Snap and swap Overdrive states completely untouched
+            if (chartWrapper) {
+                chartWrapper.classList.remove('chart-overdrive-tier1');
+                chartWrapper.classList.add('chassis-snap-active', 'chart-overdrive-tier2');
+                setTimeout(() => chartWrapper.classList.remove('chassis-snap-active'), 160);
+            }
+
             window.speechSynthesis.cancel();
             let speech2 = new SpeechSynthesisUtterance("Momentum boost unlocked.");
             speech2.rate = 1.15;
@@ -899,6 +934,13 @@ function updateAccountMetrics() {
         if (!badgeContainer.querySelector('.badge-tier1')) {
             badgeContainer.innerHTML = `<span class="persistent-arcade-badge badge-tier1">⚔️ LEVEL 1 STRIKE ⚔️</span>`;
             
+            // Trigger the Physical Scale Snap and append Gold Chassis Breathing Overdrive
+            if (chartWrapper) {
+                chartWrapper.classList.remove('chart-overdrive-tier2');
+                chartWrapper.classList.add('chassis-snap-active', 'chart-overdrive-tier1');
+                setTimeout(() => chartWrapper.classList.remove('chassis-snap-active'), 160);
+            }
+
             window.speechSynthesis.cancel();
             let speech1 = new SpeechSynthesisUtterance("Momentum boost unlocked.");
             speech1.rate = 1.15;
@@ -907,16 +949,9 @@ function updateAccountMetrics() {
         }
     } else {
         badgeContainer.innerHTML = '';
-    }
-
-    // 2. Real-Time Chart Container Heartbeat Sync (Green/Red Tracker)
-    if (chartWrapper) {
-        if (FLOATING_PNL >= 0) {
-            chartWrapper.classList.remove('chart-panel-red-glow');
-            chartWrapper.classList.add('chart-panel-green-glow');
-        } else {
-            chartWrapper.classList.remove('chart-panel-green-glow');
-            chartWrapper.classList.add('chart-panel-red-glow');
+        // Wipe all custom badge overdrive statuses immediately if user slips below tier thresholds
+        if (chartWrapper) {
+            chartWrapper.classList.remove('chart-overdrive-tier1', 'chart-overdrive-tier2');
         }
     }
     // =========================================================
@@ -931,12 +966,19 @@ function updateAccountMetrics() {
         document.getElementById('tv-target-line').style.display = 'none';
         document.getElementById('sl-risk-line').style.display = 'none';
 
-        // Clear the green/red neon glow completely when flat
+        // Clear all glowing and overdrive states completely when flat
         const chartWrapper = document.getElementById('tv_chart_container');
         if (chartWrapper) {
-            chartWrapper.classList.remove('chart-panel-green-glow', 'chart-panel-red-glow');
+            chartWrapper.classList.remove(
+                'chart-panel-green-glow', 
+                'chart-panel-red-glow', 
+                'chart-overdrive-tier1', 
+                'chart-overdrive-tier2', 
+                'chassis-snap-active'
+            );
         }
     }
+    
     let netLiquidationValue = ACCOUNT_BALANCE + FLOATING_PNL;
     
     if (netLiquidationValue > PEAK_BALANCE) {
@@ -1294,12 +1336,8 @@ window.addEventListener('DOMContentLoaded', function() {
     </div>
 
        <div class="header-badge-space">
-    <div id="arcade-badge-container"></div>
-
-    <div class="header-badge-space">
-    <div id="arcade-badge-container"></div>
-
-    <div class="header-badge-space" id="arcade-badge-container"></div>
+        <div id="arcade-badge-container"></div>
+    </div>
 
     <div class="progress-container" id="challenge-progress-wrapper">
         <div class="progress-labels">
