@@ -508,45 +508,55 @@ header img {
 }
 .rule-item span.pass { color: #00ff66; font-weight: bold; }
 .rule-item span.fail { color: #ff2a2a; font-weight: bold; }
-/* --- ARCADE MILESTONE GLOWS & BADGES --- */
-.chart-flash-tier1 {
-    animation: tier1Pulse 2s ease-in-out;
-}
-.chart-flash-tier2 {
-    animation: tier2Pulse 2.5s ease-in-out;
-}
-
-@keyframes tier1Pulse {
-    0%, 100% { box-shadow: none; }
-    30%, 70% { box-shadow: inset 0 0 30px #00d2ff, 0 0 30px #00d2ff; border-color: #00d2ff; }
+/* --- NEW: HEADER PROGRESS MILESTONE STYLES --- */
+.header-badge-space {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
 }
 
-@keyframes tier2Pulse {
-    0%, 100% { box-shadow: none; }
-    30%, 70% { box-shadow: inset 0 0 40px #00ff66, 0 0 40px #00ff66; border-color: #00ff66; }
-}
-
-.arcade-badge {
-    display: inline-block;
-    padding: 4px 8px;
+.persistent-arcade-badge {
+    padding: 3px 8px;
     font-family: monospace;
     font-weight: bold;
-    font-size: 0.75rem;
+    font-size: 0.70rem;
     border-radius: 3px;
-    margin-left: 10px;
     letter-spacing: 1px;
     text-transform: uppercase;
-    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    box-shadow: 0 0 8px rgba(0,0,0,0.6);
+    white-space: nowrap;
 }
+
 .badge-tier1 {
-    background: #004466;
+    background: #002b47;
     color: #00d2ff;
     border: 1px solid #00d2ff;
 }
+
 .badge-tier2 {
-    background: #005522;
+    background: #003a17;
     color: #00ff66;
     border: 1px solid #00ff66;
+}
+
+/* Hyper-Charge Progress Wrapper Glows */
+.progress-glow-tier1 {
+    animation: barPulseTier1 2.5s ease-in-out;
+}
+
+.progress-glow-tier2 {
+    animation: barPulseTier2 2.5s ease-in-out;
+}
+
+@keyframes barPulseTier1 {
+    0%, 100% { box-shadow: none; }
+    30%, 70% { box-shadow: 0 0 20px #00d2ff; border-radius: 4px; }
+}
+
+@keyframes barPulseTier2 {
+    0%, 100% { box-shadow: none; }
+    30%, 70% { box-shadow: 0 0 25px #00ff66; border-radius: 4px; }
 }
 </style>
 
@@ -846,33 +856,37 @@ function updateAccountMetrics() {
             FLOATING_PNL = (-priceDelta) * activePosition.size * spec.multiplier;
         }
         // =========================================================
-        // NEW: 2-TIER SINGLE-TRADE ARCADE MILESTONE LOGIC
         // =========================================================
-        let singleTradePct = (FLOATING_PNL / STARTING_BALANCE) * 100;
-        const chartWrapper = document.getElementById('tv_chart_container');
+        // NEW: PROGRESS BAR BADGES & NEON HYPER-CHARGE GLOWS
+        // =========================================================
+        // Calculate your true challenge progress percentage
+        let totalTarget = 300.00; // Your profit target goal to pass
+        let netProfit = ACCOUNT_BALANCE + FLOATING_PNL - 3000.00; // Profit above starting 3K
+        let challengeProgressPct = (netProfit / totalTarget) * 100;
+
+        const barWrapper = document.getElementById('challenge-progress-wrapper');
         const badgeContainer = document.getElementById('arcade-badge-container');
 
-        if (singleTradePct >= 5.0) {
-            // Tier 2: APEX EXTRACTION
-            if (!chartWrapper.classList.contains('chart-flash-tier2')) {
-                chartWrapper.classList.remove('chart-flash-tier1');
-                chartWrapper.classList.add('chart-flash-tier2');
-                badgeContainer.innerHTML = `<span class="arcade-badge badge-tier2">⚡ APEX EXTRACTION ⚡</span>`;
-                setTimeout(() => chartWrapper.classList.remove('chart-flash-tier2'), 2500);
+        if (challengeProgressPct >= 10.0) {
+            // Tier 2 Milestone: 10%+ Progress achieved
+            if (!barWrapper.classList.contains('progress-glow-tier2')) {
+                barWrapper.classList.remove('progress-glow-tier1');
+                barWrapper.classList.add('progress-glow-tier2');
+                badgeContainer.innerHTML = `<span class="persistent-arcade-badge badge-tier2">⚡ APEX EXTRACTION ⚡</span>`;
+                setTimeout(() => barWrapper.classList.remove('progress-glow-tier2'), 2500);
             }
-        } else if (singleTradePct >= 2.0) {
-            // Tier 1: MOMENTUM STRIKE
-            if (!chartWrapper.classList.contains('chart-flash-tier1') && !chartWrapper.classList.contains('chart-flash-tier2')) {
-                chartWrapper.classList.add('chart-flash-tier1');
-                badgeContainer.innerHTML = `<span class="arcade-badge badge-tier1">⚔️ MOMENTUM STRIKE ⚔️</span>`;
-                setTimeout(() => chartWrapper.classList.remove('chart-flash-tier1'), 2000);
+        } else if (challengeProgressPct >= 5.0) {
+            // Tier 1 Milestone: 5%+ Progress achieved
+            if (!barWrapper.classList.contains('progress-glow-tier1') && !barWrapper.classList.contains('progress-glow-tier2')) {
+                barWrapper.classList.add('progress-glow-tier1');
+                badgeContainer.innerHTML = `<span class="persistent-arcade-badge badge-tier1">⚔️ MOMENTUM STRIKE ⚔️</span>`;
+                setTimeout(() => barWrapper.classList.remove('progress-glow-tier1'), 2000);
             }
         } else {
-            // Reset container if trade slips back below 2% or goes negative
+            // No badges earned yet under 5% progress
             badgeContainer.innerHTML = '';
         }
         // =========================================================
-        
         if (FLOATING_PNL > activePosition.largestTradeProfit) {
             activePosition.largestTradeProfit = FLOATING_PNL;
         }
@@ -1092,7 +1106,6 @@ function executeDevOrder(side) {
 function closeActivePosition() {
     if (!activePosition.hasPosition) return;
     playPositionClosedSFX();
-    document.getElementById('arcade-badge-container').innerHTML = '';
 
     ACCOUNT_BALANCE += FLOATING_PNL;
     REALIZED_PNL += FLOATING_PNL;
@@ -1241,17 +1254,19 @@ window.addEventListener('DOMContentLoaded', function() {
         </div>
     </div>
 
-        <div class="progress-container">
-            <div class="progress-labels">
-                <span class="level-title">Level 1 Challenge</span>
-                <span class="percentage-track" id="header-progress-pct">0%</span>
-            </div>
-            <div class="progress-bar-track">
-                <div class="progress-bar-fill" id="header-progress-fill"></div>
-            </div>
+       <div class="header-badge-space">
+    <div id="arcade-badge-container"></div>
+
+    <div class="progress-container" id="challenge-progress-wrapper">
+        <div class="progress-labels">
+            <span class="level-title">Level 1 Challenge</span>
+            <span class="percentage-track" id="header-progress-pct">0%</span>
+        </div>
+        <div class="progress-bar-track">
+            <div class="progress-bar-fill" id="header-progress-fill"></div>
         </div>
     </div>
-
+</div>
     <div class="hamburger" onclick="toggleMenu()">
         <div></div><div></div><div></div>
     </div>
@@ -1388,7 +1403,6 @@ window.addEventListener('DOMContentLoaded', function() {
                 <button class="exec-btn sell" onclick="executeDevOrder('SELL')">SELL / SHORT</button>
             </div>
             
-            <div id="arcade-badge-container" style="margin-bottom: 6px; min-height: 24px;"></div>
             
             <div class="position-display" id="live-position-status">
                 <div class="position-row"><span>No Active Open Positions</span><span>--</span></div>
