@@ -559,31 +559,30 @@ function toggleMenu() {
 }
 
 // ==========================================
-// NEW: Built-in synthetic SFX for order filling
+// NEW: Native Text-to-Speech "Order Filled" Voice Notification
 // ==========================================
 function playOrderFilledSFX() {
     try {
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        if (!AudioContext) return;
-        
-        const ctx = new AudioContext();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(880, ctx.currentTime); // High A note
-        osc.frequency.exponentialRampToValueAtTime(1320, ctx.currentTime + 0.08); // Sharp slide up
-        
-        gain.gain.setValueAtTime(0.12, ctx.currentTime); // Perfect volume level
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12); // Clean dropoff
-        
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        
-        osc.start();
-        osc.stop(ctx.currentTime + 0.12);
+        if ('speechSynthesis' in window) {
+            // Cancel any previous voice clips currently speaking so they don't stack up if you scale quickly
+            window.speechSynthesis.cancel();
+
+            const utterance = new SpeechSynthesisUtterance("Order filled");
+            
+            // Premium platform voice tuning
+            utterance.rate = 1.15;  // Slightly sped up so it sounds crisp and immediate, like NinjaTrader
+            utterance.pitch = 1.0;   // Clean, neutral pitch
+            utterance.volume = 1.0;  // Full volume
+
+            // Optional: Auto-select a clean English voice if available in the browser
+            const voices = window.speechSynthesis.getVoices();
+            const preferredVoice = voices.find(v => v.lang.startsWith('en') && v.name.includes('Google')) || voices.find(v => v.lang.startsWith('en'));
+            if (preferredVoice) utterance.voice = preferredVoice;
+
+            window.speechSynthesis.speak(utterance);
+        }
     } catch (e) {
-        console.log("Audio play blocked by browser:", e);
+        console.log("Voice synthesis blocked or unsupported:", e);
     }
 }
 
