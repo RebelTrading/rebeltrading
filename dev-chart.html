@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rebel Trading Desk - Lightweight Chart Dev Sandbox</title>
+
+<!-- Pull TradingView Lightweight Charts Library -->
+<script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #000;
+    color: #bdbdbd;
+    overflow: hidden;
+}
+
+/* COMPREHENSIVE TRADING HEADER SYSTEM */
+header {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    background: #0a0a0a;
+    display: grid;
+    grid-template-columns: 220px 1fr auto;
+    align-items: center;
+    padding: 0 15px;
+    box-sizing: border-box;
+    border-bottom: 1px solid #1a1a1a;
+    z-index: 1000;
+    height: 65px;
+}
+
+header h2 {
+    margin: 0;
+    color: #fff;
+    font-size: 1.1rem;
+    letter-spacing: 1px;
+}
+
+.ticker-tape {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 25px;
+    padding-left: 20px;
+    padding-right: 20px;
+    font-size: 0.75rem;
+    color: #888;
+}
+
+.ticker-metrics-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+}
+
+.ticker-item {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.ticker-label {
+    text-transform: uppercase;
+    font-size: 0.65rem;
+    color: #555;
+    letter-spacing: 0.5px;
+}
+
+.ticker-value {
+    color: #fff;
+    font-weight: bold;
+    font-family: monospace;
+    font-size: 0.85rem;
+}
+
+/* LAYOUT CONTAINER */
+.desk-container {
+    margin-top: 65px;
+    padding: 8px;
+    box-sizing: border-box;
+    display: grid;
+    grid-template-columns: 1fr 340px; 
+    gap: 8px;
+    height: calc(100vh - 65px);
+    background: #050505;
+}
+
+/* WORKSPACE PANELS */
+.panel {
+    background: #0b0b0b;
+    border: 1px solid #1f1f1f;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.panel-header {
+    background: #0e0e0e;
+    border-bottom: 1px solid #1f1f1f;
+    padding: 10px 15px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* TIMEFRAME & INDICATOR TOOLBAR */
+.chart-controls {
+    display: flex;
+    background: #0e0e0e;
+    border-bottom: 1px solid #1f1f1f;
+    padding: 6px;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.control-btn {
+    background: #141414;
+    border: 1px solid #222;
+    color: #888;
+    padding: 4px 10px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.control-btn.active, .control-btn:hover {
+    background: #ff2a2a;
+    border-color: #ff2a2a;
+    color: #fff;
+}
+
+.control-divider {
+    width: 1px;
+    height: 16px;
+    background: #222;
+    margin: 0 4px;
+}
+
+/* CHART CANVAS WORKSPACE */
+.chart-wrapper {
+    flex-grow: 1;
+    width: 100%;
+    height: 100%;
+    position: relative;
+    background: #000;
+}
+
+#chart_container {
+    width: 100%;
+    height: 100%;
+}
+
+/* CUSTOM FLOATING "+" ENTRY BUTTON */
+#chart-plus-trigger {
+    position: absolute;
+    display: none;
+    z-index: 100;
+    background: #ffb703;
+    color: #000;
+    border: none;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    font-weight: bold;
+    font-size: 14px;
+    line-height: 22px;
+    text-align: center;
+    cursor: pointer;
+    box-shadow: 0 0 8px rgba(255, 183, 3, 0.8);
+    transform: translate(-50%, -50%);
+    pointer-events: auto;
+}
+
+/* REBEL CHASSIS GLOW SYSTEMS */
+@keyframes breathe-green {
+    0% { border-color: rgba(0, 255, 102, 0.3); box-shadow: 0 0 10px rgba(0, 255, 102, 0.1); }
+    100% { border-color: #00ff66; box-shadow: 0 0 20px rgba(0, 255, 102, 0.3); }
+}
+@keyframes breathe-red {
+    0% { border-color: rgba(255, 42, 42, 0.3); box-shadow: 0 0 10px rgba(255, 42, 42, 0.1); }
+    100% { border-color: #ff2a2a; box-shadow: 0 0 20px rgba(255, 42, 42, 0.3); }
+}
+.glow-green { animation: breathe-green 1.5s infinite alternate ease-in-out; }
+.glow-red { animation: breathe-red 1.5s infinite alternate ease-in-out; }
+
+/* REPLICATED ORDER PANEL FROM TRADESIM */
+.order-panel {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.input-block {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.input-block label {
+    font-size: 0.65rem;
+    color: #555;
+    text-transform: uppercase;
+}
+.input-wrapper {
+    display: flex;
+    background: #111;
+    border: 1px solid #222;
+    border-radius: 4px;
+}
+.input-wrapper input {
+    width: 100%;
+    border: none;
+    background: transparent;
+    padding: 8px;
+    color: #fff;
+    text-align: center;
+    font-weight: bold;
+    font-size: 0.8rem;
+}
+
+.execution-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 5px;
+}
+.exec-btn {
+    padding: 12px;
+    border: none;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+.exec-btn.buy { background: #00ff66; color: #000; }
+.exec-btn.sell { background: #ff2a2a; color: #fff; }
+
+.position-display {
+    background: #0e0e0e;
+    border: 1px dashed #333;
+    padding: 10px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    margin-top: 10px;
+}
+</style>
+</head>
+<body>
+
+<header>
+    <h2>⚡ REBEL DEV CANVAS</h2>
+    <div class="ticker-tape">
+        <div class="ticker-metrics-wrapper">
+            <div class="ticker-item">
+                <span class="ticker-label">Active Symbol</span>
+                <span class="ticker-value" id="dev-symbol">BTC-USD PERP</span>
+            </div>
+            <div class="ticker-item">
+                <span class="ticker-label">Sim Spot Price</span>
+                <span class="ticker-value" id="dev-price" style="color: #00ff66;">$79,130.00</span>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="desk-container">
+    <!-- CHART PANEL CHASSIS -->
+    <div class="panel" id="chart-panel-chassis">
+        <div class="chart-controls">
+            <!-- Timeframes -->
+            <button class="control-btn active" onclick="changeTimeframe('1m')">1M</button>
+            <button class="control-btn" onclick="changeTimeframe('5m')">5M</button>
+            <button class="control-btn" onclick="changeTimeframe('15m')">15M</button>
+            <button class="control-btn" onclick="changeTimeframe('1H')">1H</button>
+            <button class="control-btn" onclick="changeTimeframe('1D')">1D</button>
+            <div class="control-divider"></div>
+            <!-- Indicators Toggle -->
+            <button class="control-btn" id="toggle-ema" onclick="toggleIndicator('EMA')">EMA (9/21)</button>
+            <button class="control-btn" id="toggle-vwap" onclick="toggleIndicator('VWAP')">VWAP</button>
+            <button class="control-btn" id="toggle-bb" onclick="toggleIndicator('BB')">Bollinger Bands</button>
+        </div>
+        
+        <div class="chart-wrapper">
+            <!-- Lightweight Chart Target container -->
+            <div id="chart_container"></div>
+            <!-- The floating interactive "+" order hot-spot trigger -->
+            <button id="chart-plus-trigger" title="Click to queue limit price">+</button>
+        </div>
+    </div>
+
+    <!-- REPLICATED COMPACT ORDER PANEL LAYOUT FOR INTEGRATION TESTING -->
+    <div class="panel">
+        <div class="panel-header">SANDBOX EXECUTION GATEWAY</div>
+        <div class="order-panel">
+            <div class="input-block">
+                <label>Target Execution Price</label>
+                <div class="input-wrapper">
+                    <input type="text" id="target-execution-price" value="79130.00">
+                </div>
+            </div>
+            <div class="input-block">
+                <label>Contracts Size</label>
+                <div class="input-wrapper">
+                    <input type="text" id="position-contract-size" value="1.0">
+                </div>
+            </div>
+            <div class="execution-actions">
+                <button class="exec-btn buy" onclick="testExecuteTrade('BUY')">BUY / LONG</button>
+                <button class="exec-btn sell" onclick="testExecuteTrade('SELL')">SELL / SHORT</button>
+            </div>
+            
+            <div class="position-display" id="sandbox-position-readout">
+                <div style="color: #555; text-align: center;">No Active Long/Short Position</div>
+            </div>
+            <button class="exec-btn" style="background:#222; color:#fff; width:100%; margin-top:5px; padding:6px; font-size:0.75rem;" onclick="clearPosition()">FLATTEN SANDBOX</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// --- CORE SIM STATE ENGINE SYNCHRONIZATION ---
+let currentPrice = 79130.00;
+let activeTrade = { hasPosition: false, side: null, entryPrice: 0, size: 1.0, tpLine: null, slLine: null, entryLine: null };
+let selectedTimeframe = '1m';
+let crosshairPrice = 0; // Tracks crosshair coordinates
+
+// Visibility states for indicators
+let indicatorsActive = { EMA: false, VWAP: false, BB: false };
+
+// UI Elements references
+const chassis = document.getElementById('chart-panel-chassis');
+const plusTrigger = document.getElementById('chart-plus-trigger');
+const priceInput = document.getElementById('target-execution-price');
+
+// --- 1. INITIALIZE LIGHTWEIGHT CHART WITH REBEL TRADING STYLING ---
+const chart = LightweightCharts.createChart(document.getElementById('chart_container'), {
+    layout: {
+        background: { type: LightweightCharts.ColorType.Solid, color: '#000000' },
+        textColor: '#bdbdbd',
+        fontSize: 11,
+    },
+    grid: {
+        vertLines: { color: '#111111' },
+        horzLines: { color: '#111111' },
+    },
+    crosshair: {
+        mode: LightweightCharts.CrosshairMode.Normal,
+        vertLine: { color: '#ffb703', width: 1, style: 2 },
+        horzLine: { color: '#ffb703', width: 1, style: 2 },
+    },
+    rightPriceScale: {
+        borderColor: '#1f1f1f',
+    },
+    timeScale: {
+        borderColor: '#1f1f1f',
+        timeVisible: true,
+    },
+});
+
+// Create Primary Candlestick Series
+const candleSeries = chart.addCandlestickSeries({
+    upColor: '#00ff66',
+    downColor: '#ff2a2a',
+    borderDownColor: '#ff2a2a',
+    borderUpColor: '#00ff66',
+    wickDownColor: '#ff2a2a',
+    wickUpColor: '#00ff66',
+});
+
+// Create placeholders for overlay indicators
+const ema9Series = chart.addLineSeries({ color: '#00d2ff', width: 1, title: 'EMA 9' });
+const ema21Series = chart.addLineSeries({ color: '#ff0055', width: 1, title: 'EMA 21' });
+const vwapSeries = chart.addLineSeries({ color: '#ffb703', width: 1.5, title: 'VWAP' });
+
+// --- 2. SAMPLE HIGH-FIDELITY CRYPTO CANDLE STUB GENERATION ---
+function generateMockCandles() {
+    let baseTime = Math.floor(Date.now() / 1000) - 100 * 60;
+    let mockData = [];
+    let runningPrice = 79000;
+    for(let i=0; i<100; i++) {
+        let open = runningPrice + (Math.random() - 0.5) * 40;
+        let close = open + (Math.random() - 0.5) * 40;
+        let high = Math.max(open, close) + Math.random() * 20;
+        let low = Math.min(open, close) - Math.random() * 20;
+        mockData.push({ time: baseTime + i*60, open, high, low, close });
+        runningPrice = close;
+    }
+    currentPrice = runningPrice;
+    document.getElementById('dev-price').innerText = `$${currentPrice.toFixed(2)}`;
+    return mockData;
+}
+
+let activeCandleDataset = generateMockCandles();
+candleSeries.setData(activeCandleDataset);
+
+// --- 3. MATHEMATICAL INDICATOR CALCULATIONS LAYER ---
+function computeAndRenderIndicators() {
+    if (indicatorsActive.EMA) {
+        let ema9Data = [];
+        let ema21Data = [];
+        // Basic mathematical proxy for testing
+        activeCandleDataset.forEach((c, idx) => {
+            ema9Data.push({ time: c.time, value: c.close * 0.999 + (idx*0.1) });
+            ema21Data.push({ time: c.time, value: c.close * 0.9985 - (idx*0.05) });
+        });
+        ema9Series.setData(ema9Data);
+        ema21Series.setData(ema21Data);
+    } else {
+        ema9Series.setData([]);
+        ema21Series.setData([]);
+    }
+
+    if (indicatorsActive.VWAP) {
+        let vwapData = activeCandleDataset.map(c => ({ time: c.time, value: (c.high + c.low + c.close)/3 }));
+        vwapSeries.setData(vwapData);
+    } else {
+        vwapSeries.setData([]);
+    }
+}
+
+function toggleIndicator(type) {
+    indicatorsActive[type] = !indicatorsActive[type];
+    document.getElementById(`toggle-${type.toLowerCase()}`).classList.toggle('active', indicatorsActive[type]);
+    computeAndRenderIndicators();
+}
+
+function changeTimeframe(tf) {
+    selectedTimeframe = tf;
+    document.querySelectorAll('.chart-controls .control-btn').forEach(btn => {
+        if(['1M','5M','15M','1H','1D'].includes(btn.innerText)) btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+    
+    // Regenerate data structure to emulate timeframe shifts
+    activeCandleDataset = generateMockCandles();
+    candleSeries.setData(activeCandleDataset);
+    computeAndRenderIndicators();
+    
+    // Synchronize open orders if tracking
+    if(activeTrade.hasPosition) refreshTradeLines();
+}
+
+// --- 4. INTERACTIVE CROSSHAIR TRACKING & "+" ORDER EXTRACTION ---
+chart.subscribeCrosshairMove(param => {
+    if (!param.time || param.point === undefined) {
+        plusTrigger.style.display = 'none';
+        return;
+    }
+    
+    // Convert coordinate maps back to native price coordinates
+    const price = candleSeries.coordinateToPrice(param.point.y);
+    if (price) {
+        crosshairPrice = price;
+        
+        // Pin the HTML element directly over the right-side coordinate gutter
+        plusTrigger.style.display = 'block';
+        plusTrigger.style.top = `${param.point.y + 40}px`; // Account for control menu offsets
+        plusTrigger.style.left = `${param.point.x + 15}px`;
+    }
+});
+
+// Trap click events on the "+" handle to populate inputs instantly
+plusTrigger.addEventListener('click', () => {
+    if(crosshairPrice > 0) {
+        priceInput.value = crosshairPrice.toFixed(2);
+    }
+});
+
+// --- 5. AXIS-ANCHORED TRADING OVERLAYS & SIMULATED EXECUTION ENGINE ---
+function testExecuteTrade(side) {
+    let size = parseFloat(document.getElementById('position-contract-size').value) || 1.0;
+    let entry = parseFloat(priceInput.value) || currentPrice;
+    
+    clearPosition(); // Reset active structures
+    
+    activeTrade.hasPosition = true;
+    activeTrade.side = side;
+    activeTrade.entryPrice = entry;
+    activeTrade.size = size;
+
+    // Apply relative ambient feedback flows to the chart panel container box
+    chassis.className = 'panel ' + (side === 'BUY' ? 'glow-green' : 'glow-red');
+
+    // Render precise programmatic axis lines directly through the core API
+    refreshTradeLines();
+    updatePositionUI();
+}
+
+function refreshTradeLines() {
+    // Clear legacy pointers
+    if (activeTrade.entryLine) candleSeries.removePriceLine(activeTrade.entryLine);
+    if (activeTrade.tpLine) candleSeries.removePriceLine(activeTrade.tpLine);
+    if (activeTrade.slLine) candleSeries.removePriceLine(activeTrade.slLine);
+
+    const isLong = activeTrade.side === 'BUY';
+    const tickShift = activeTrade.entryPrice * 0.01; // Sample brackets spacing for simulation sandbox
+
+    // 1. Core Entry Anchor Axis
+    activeTrade.entryLine = candleSeries.createPriceLine({
+        price: activeTrade.entryPrice,
+        color: isLong ? '#00ff66' : '#ff2a2a',
+        lineWidth: 2,
+        lineStyle: LightweightCharts.LineStyle.Solid,
+        axisLabelVisible: true,
+        title: `ENTRY (${activeTrade.side})`,
+    });
+
+    // 2. Program Take Profit (TP) Line
+    let tpPrice = isLong ? activeTrade.entryPrice + tickShift : activeTrade.entryPrice - tickShift;
+    activeTrade.tpLine = candleSeries.createPriceLine({
+        price: tpPrice,
+        color: '#00ff66',
+        lineWidth: 1,
+        lineStyle: LightweightCharts.LineStyle.Dashed,
+        axisLabelVisible: true,
+        title: 'TAKE PROFIT (DRAG SIM)',
+    });
+
+    // 3. Program Stop Loss (SL) Line
+    let slPrice = isLong ? activeTrade.entryPrice - tickShift : activeTrade.entryPrice + tickShift;
+    activeTrade.slLine = candleSeries.createPriceLine({
+        price: slPrice,
+        color: '#ff2a2a',
+        lineWidth: 1,
+        lineStyle: LightweightCharts.LineStyle.Dashed,
+        axisLabelVisible: true,
+        title: 'STOP LOSS (DRAG SIM)',
+    });
+}
+
+function updatePositionUI() {
+    const readout = document.getElementById('sandbox-position-readout');
+    if(activeTrade.hasPosition) {
+        readout.innerHTML = `
+            <div style="display:flex; justify-content:space-between; margin-bottom: 4px;">
+                <span>Side: <strong style="color:${activeTrade.side === 'BUY'?'#00ff66':'#ff2a2a'}">${activeTrade.side}</strong></span>
+                <span>Size: <strong>${activeTrade.size} Units</strong></span>
+            </div>
+            <div>Entry Anchor Price: <strong>$${activeTrade.entryPrice.toFixed(2)}</strong></div>
+        `;
+    }
+}
+
+function clearPosition() {
+    if (activeTrade.entryLine) candleSeries.removePriceLine(activeTrade.entryLine);
+    if (activeTrade.tpLine) candleSeries.removePriceLine(activeTrade.tpLine);
+    if (activeTrade.slLine) candleSeries.removePriceLine(activeTrade.slLine);
+    
+    activeTrade = { hasPosition: false, side: null, entryPrice: 0, size: 1.0, tpLine: null, slLine: null, entryLine: null };
+    chassis.className = 'panel';
+    document.getElementById('sandbox-position-readout').innerHTML = `<div style="color: #555; text-align: center;">No Active Long/Short Position</div>`;
+}
+
+// Track resizing constraints dynamically
+window.addEventListener('resize', () => {
+    chart.resize(document.getElementById('chart_container').clientWidth, document.getElementById('chart_container').clientHeight);
+});
+</script>
+</body>
+</html>
