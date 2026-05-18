@@ -649,7 +649,7 @@ let CURRENT_ASSET = "BTC-USD";
 let ORDER_TYPE = "MARKET";
 const LEVERAGE_FACTOR = 50.0;
 
-// High-Performance Native Canvas Context Interfaces
+// Canvas Instantiation Context Interfaces
 let chartInstance = null;
 let candleSeriesInstance = null;
 let lastCalculatedTimestamp = 0;
@@ -762,13 +762,13 @@ function switchAsset(assetKey, element) {
     cancelPendingLimit();
     clearAllChartOverlays();
 
-    // TEAR DOWN OLD INSTANCE SAFEGUARD
+    // CLEAR PRIOR OBJECT RUNTIMES
     if (chartInstance) {
         chartInstance.remove();
         chartInstance = null;
     }
 
-    // INITIALIZE NEW STABLE INSTANCE
+    // INITIALIZE STANDARD SPEC CHART CANVAS
     chartInstance = LightweightCharts.createChart(document.getElementById('tv_chart_container'), {
         width: document.getElementById('tv_chart_container').clientWidth,
         height: document.getElementById('tv_chart_container').clientHeight,
@@ -793,7 +793,8 @@ function switchAsset(assetKey, element) {
         },
     });
 
-    candleSeriesInstance = chartInstance.addCandlestickSeries({
+    // FIXED: MODERN REPOSITORY INVOCATION PATTERN (Prevents silent blank runtime crash)
+    candleSeriesInstance = chartInstance.addSeries(LightweightCharts.CandlestickSeries, {
         upColor: '#00ff66',
         downColor: '#ff2a2a',
         borderDownColor: '#ff2a2a',
@@ -802,12 +803,10 @@ function switchAsset(assetKey, element) {
         wickUpColor: '#00ff66',
     });
 
-    // DOC COMPLIANT SEED DATA SYSTEM
+    // COMPLIANT BACKDATA SEED ARRAY
     let simulatedHistoryArray = [];
     let basePriceSeed = currentLivePrice;
     let currentTimeStampSec = Math.floor(Date.now() / 1000);
-    
-    // Seed backwards 150 discrete seconds sequentially
     let startingHistoryStamp = currentTimeStampSec - 150;
 
     for (let i = 0; i < 150; i++) {
@@ -831,7 +830,7 @@ function switchAsset(assetKey, element) {
     candleSeriesInstance.setData(simulatedHistoryArray);
     lastCalculatedTimestamp = currentTimeStampSec;
 
-    // MAC PERFORMANCE LAYOUT RESPONSIVENESS WATCHER
+    // MAC PERFORMANCE CONTAINER WATCHER
     const resizeObserver = new ResizeObserver(entries => {
         if (entries.length === 0 || !chartInstance) return;
         chartInstance.applyOptions({ 
@@ -1361,11 +1360,10 @@ async function fetchRebelEnginePrices() {
             markEl.innerText = `$${markPriceVal.toLocaleString('en-US', { minimumFractionDigits: precision, maximumFractionDigits: precision })}`;
         }
         
-        // DOCUMENTATION COMPLIANT TICK INTERVAL EXECUTION
+        // SAFE TICK INTERVAL EXECUTION
         if (candleSeriesInstance) {
             let nextTimestampSec = Math.floor(Date.now() / 1000);
             
-            // Prevent backwards timing conflicts on interval overlapping
             if (nextTimestampSec <= lastCalculatedTimestamp) {
                 nextTimestampSec = lastCalculatedTimestamp + 1;
             }
