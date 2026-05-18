@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Billing Matrix | Rebel Trading Desk</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #000;
+    color: #bdbdbd;
+    overflow-x: hidden;
+}
+
+/* HEADER */
+header {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    background: rgba(0,0,0,0.9);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 10px;
+    box-sizing: border-box;
+    border-bottom: 1px solid #1a1a1a;
+    z-index: 1000;
+}
+
+header img {
+    height: 80px;
+}
+
+/* HAMBURGER */
+.hamburger {
+    cursor: pointer;
+    width: 35px;
+}
+
+.hamburger div {
+    height: 2px;
+    background: #fff;
+    margin: 5px 0;
+}
+
+/* GAMIFIED SIM CHALLENGE HEADER CTA */
+.sim-challenge-btn {
+    background: linear-gradient(135deg, #6400CC 0%, #3a0078 100%);
+    color: #fff;
+    text-decoration: none;
+    font-family: monospace;
+    font-size: 0.7rem;
+    font-weight: bold;
+    letter-spacing: 1px;
+    padding: 8px 16px;
+    border-radius: 4px;
+    border: 1px solid #9d4edd;
+    text-transform: uppercase;
+    box-shadow: 0 0 10px rgba(100, 0, 204, 0.4);
+    transition: all 0.2s ease-in-out;
+    display: inline-block;
+}
+
+.sim-challenge-btn:hover {
+    background: linear-gradient(135deg, #7b2cbf 0%, #5a189a 100%);
+    box-shadow: 0 0 18px rgba(100, 0, 204, 0.7);
+    transform: scale(1.02);
+    border-color: #fff;
+}
+
+/* MENU */
+.menu {
+    position: fixed;
+    top: 0;
+    right: -260px;
+    width: 260px;
+    height: 100%;
+    background: #0a0a0a;
+    padding-top: 80px;
+    transition: 0.3s;
+    z-index: 999;
+    border-left: 1px solid #1a1a1a;
+}
+
+.menu a {
+    display: block;
+    padding: 15px 25px;
+    color: #aaa;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.menu a:hover {
+    color: #ff2a2a;
+}
+
+/* LIVE NETWORK STATUS BAR TERMINAL GRID */
+.network-status-bar {
+    position: fixed;
+    top: 105px;
+    width: 100%;
+    background: #050505;
+    padding: 12px 24px;
+    box-sizing: border-box;
+    border-bottom: 1px solid #141414;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+    align-items: center;
+    z-index: 998;
+    font-family: monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.5px;
+    color: #666;
+}
+
+.network-status-bar strong {
+    color: #fff;
+}
+
+.terminal-node {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.terminal-node.center {
+    justify-content: center;
+}
+
+.terminal-node.right {
+    justify-content: flex-end;
+}
+
+.ping-dot {
+    width: 6px;
+    height: 6px;
+    background-color: #00ff66;
+    border-radius: 50%;
+    display: inline-block;
+    box-shadow: 0 0 8px #00ff66;
+    animation: network-ping 1.2s infinite alternate;
+}
+
+.terminal-tag {
+    background: rgba(100, 0, 204, 0.1);
+    color: #9d4edd;
+    padding: 2px 6px;
+    border-radius: 3px;
+    border: 1px solid rgba(100, 0, 204, 0.2);
+    font-size: 0.6rem;
+    font-weight: bold;
+}
+
+@keyframes network-ping {
+    0% { transform: scale(0.9); opacity: 0.4; box-shadow: 0 0 2px #00ff66; }
+    100% { transform: scale(1.1); opacity: 1; box-shadow: 0 0 10px #00ff66; }
+}
+
+/* LIVE TICKER MARQUEE */
+.ticker-wrap {
+    position: fixed;
+    top: 132px;
+    width: 100%;
+    overflow: hidden;
+    height: 32px;
+    background-color: rgba(6, 6, 6, 0.8);
+    backdrop-filter: blur(5px);
+    border-top: 1px solid #141414;
+    border-bottom: 1px solid #141414;
+    z-index: 998;
+    display: flex;
+    align-items: center;
+}
+
+.ticker {
+    display: inline-block;
+    height: 32px;
+    line-height: 32px;
+    white-space: nowrap;
+    padding-right: 100%;
+    box-sizing: content-box;
+    animation: marquee 25s linear infinite;
+}
+
+.ticker__item {
+    display: inline-block;
+    padding: 0 2rem;
+    font-size: 0.75rem;
+    font-family: monospace;
+    color: #888;
+    letter-spacing: 0.5px;
+}
+
+.ticker__item strong {
+    color: #00ff66;
+}
+
+.ticker__item span.payout-tag {
+    color: #ffb703;
+    font-weight: bold;
+}
+
+@keyframes marquee {
+    0% { transform: translate3d(0, 0, 0); }
+    100% { transform: translate3d(-100%, 0, 0); }
+}
+
+/* HERO CHANNELS */
+.banner {
+    height: 45vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: radial-gradient(circle at center, #10002b 0%, #000 70%);
+    padding-top: 140px;
+    box-sizing: border-box;
+}
+
+.banner h1 {
+    font-size: 3.5rem;
+    color: #fff;
+    line-height: 1.1;
+    letter-spacing: -1px;
+    text-transform: uppercase;
+    text-shadow: 0 0 25px rgba(100, 0, 204, 0.3);
+}
+
+.banner h1 span {
+    color: #9d4edd;
+}
+
+.banner p {
+    color: #888;
+    font-size: 1rem;
+    letter-spacing: 2px;
+    margin-top: 15px;
+    font-weight: 300;
+    text-transform: uppercase;
+    font-family: monospace;
+}
+
+/* SECTIONS */
+.section {
+    padding: 20px 30px 80px 30px;
+    max-width: 1200px;
+    margin: auto;
+}
+
+/* BILLING PRODUCT DECK GRID */
+.box-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 30px;
+    margin-top: 20px;
+}
+
+/* PRODUCT ARCADE BOXES */
+.box {
+    background: rgba(6, 6, 6, 0.8);
+    backdrop-filter: blur(12px);
+    border: 1px solid #1a1a1a;
+    padding: 30px 25px;
+    border-radius: 8px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.box:hover {
+    border-color: #6400CC;
+    background: rgba(10, 5, 18, 0.5);
+    box-shadow: 0 0 25px rgba(100, 0, 204, 0.15);
+}
+
+.step-number {
+    position: absolute;
+    top: -15px;
+    left: 25px;
+    background: #6400CC;
+    color: #fff;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 0.75rem;
+    padding: 4px 12px;
+    border-radius: 4px;
+    letter-spacing: 1px;
+    box-shadow: 0 0 10px rgba(100, 0, 204, 0.5);
+}
+
+.product-meta {
+    margin-bottom: 20px;
+    text-align: center;
+    border-bottom: 1px solid #141414;
+    padding-bottom: 20px;
+}
+
+.box h3 {
+    color: #fff;
+    font-size: 1.6rem;
+    margin-top: 15px;
+    margin-bottom: 5px;
+    font-family: monospace;
+    letter-spacing: -0.5px;
+}
+
+.product-price {
+    font-size: 2.2rem;
+    color: #00ff66;
+    font-weight: bold;
+    font-family: monospace;
+    margin: 10px 0;
+}
+
+.product-details {
+    font-size: 0.8rem;
+    color: #666;
+    font-family: monospace;
+    text-transform: uppercase;
+}
+
+/* EMBED CONTAINER HOUSING WIDGETS */
+.widget-payload-frame {
+    background: #030303;
+    border: 1px dashed #222;
+    border-radius: 6px;
+    padding: 15px;
+    min-height: 280px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* FOOTER STANDARD */
+footer {
+    text-align: center;
+    padding: 40px;
+    background: #050505;
+    border-top: 1px solid #111;
+    font-size: 0.8rem;
+    color: #555;
+    letter-spacing: 0.5px;
+}
+</style>
+
+<script>
+function toggleMenu() {
+    const menu = document.getElementById("menu");
+    menu.style.right = (menu.style.right === "0px") ? "-260px" : "0px";
+}
+</script>
+
+<script type="module" crossorigin src="https://embed.hel.io/assets/index-v1.js"></script>
+
+</head>
+
+<body>
+
+<header>
+    <img src="https://raw.githubusercontent.com/rebeltrading/rebeltrading/main/rebeltradelogo2.png" alt="Rebel Trading Logo">
+    
+    <a href="tradesim.html" class="sim-challenge-btn">🎮 TERMINAL RUN DESK →</a>
+    
+    <div class="hamburger" onclick="toggleMenu()">
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
+</header>
+
+<div id="menu" class="menu">
+    <a href="index.html#who">The Manifesto</a>
+    <a href="index.html#infrastructure">Arcade Architecture</a>
+    <a href="index.html#packages">Sim Boxes Tiers</a>
+    <a href="payouts.html">Payout Protocol</a>
+    <a href="termsofuse.html">Terms of Use</a> 
+    <a href="tradesim.html" style="color: #6400CC;">Sim Trade Desk →</a>
+</div>
+
+<div class="network-status-bar">
+    <div class="terminal-node">
+        <span class="ping-dot"></span>
+        <span>GATEWAY // <span style="color: #6400CC; font-weight:bold;">CRYPTO_RAILS_READY</span></span>
+        <span class="terminal-tag">NON-CUSTODIAL SECURE</span>
+    </div>
+    
+    <div class="terminal-node center">
+        <span>BILLING PIPELINE: <strong style="color: #ffb703;">USDC / USDT MULTI-CHAIN</strong></span>
+    </div>
+    
+    <div class="terminal-node right">
+        <span>ENCRYPTION: <strong style="color: #00ff66;">AES-256</strong> &nbsp;&bull;&nbsp; DISPATCH: <strong>IMMEDIATE</strong></span>
+    </div>
+</div>
+
+<div class="ticker-wrap">
+    <div class="ticker">
+        <div class="ticker__item">🏆 NASDAQ_X7 cleared BTC levels &rarr; <span class="payout-tag">Paid $80.00 USDT</span></div>
+        <div class="ticker__item">🟢 142 Coins Inserted into Recruit Arena this hour</div>
+        <div class="ticker__item">🏆 SCALPER_DECK cleared SOL levels &rarr; <span class="payout-tag">Paid $400.00 USDC</span></div>
+        <div class="ticker__item">⚡ SPEEDRUN LOCKOUT: User 'TapeReader' unlocked <strong style="color:#ffb703;">100% PROFIT BOOST</strong></div>
+        <div class="ticker__item">🏆 WHALE_HUNTER cleared ETH levels &rarr; <span class="payout-tag">Paid $200.00 USDT</span></div>
+        <div class="ticker__item">🟢 89 Coins Inserted into Rebel Box Arena this hour</div>
+    </div>
+</div>
+
+<div class="banner">
+    <div>
+        <h1>SECURE <span>ARENA ALLOCATION</span></h1>
+        <p>Select a Sim Box Deployment. Initialize Smart Contract Checkout Gateway.</p>
+    </div>
+</div>
+
+<section class="section">
+    
+    <div class="box-container">
+        
+        <div class="box">
+            <div class="product-meta">
+                <div class="step-number">REBL-BOX 1K</div>
+                <h3>$1,000 SIM BOX</h3>
+                <div class="product-price">$25.00</div>
+                <div class="product-details">SOLANA • BASE • POLYGON ACCEPTED</div>
+            </div>
+            
+            <div class="widget-payload-frame">
+                <div id="helioCheckoutContainer1" style="width: 100%;"></div>
+                <script>
+                  document.addEventListener("DOMContentLoaded", () => {
+                    window.helioCheckout(
+                      document.getElementById("helioCheckoutContainer1"),
+                      {
+                        paylinkId: "6a0a56cfea3219151cf81975",
+                        theme: {"themeMode":"dark"},
+                        primaryColor: "#6400CC",
+                        neutralColor: "#5A6578",
+                      }
+                    );
+                  });
+                </script>
+            </div>
+        </div>
+
+        <div class="box">
+            <div class="product-meta">
+                <div class="step-number">REBL-BOX 2K</div>
+                <h3>$2,000 SIM BOX</h3>
+                <div class="product-price">$50.00</div>
+                <div class="product-details">SOLANA • BASE • POLYGON ACCEPTED</div>
+            </div>
+            
+            <div class="widget-payload-frame">
+                <div id="helioCheckoutContainer2" style="width: 100%;"></div>
+                <script>
+                  document.addEventListener("DOMContentLoaded", () => {
+                    window.helioCheckout(
+                      document.getElementById("helioCheckoutContainer2"),
+                      {
+                        paylinkId: "6a0a578b63a89dc9b93da97e",
+                        theme: {"themeMode":"dark"},
+                        primaryColor: "#6400CC",
+                        neutralColor: "#5A6578",
+                      }
+                    );
+                  });
+                </script>
+            </div>
+        </div>
+
+        <div class="box">
+            <div class="product-meta">
+                <div class="step-number">REBL-BOX 3K</div>
+                <h3>$3,000 SIM BOX</h3>
+                <div class="product-price">$75.00</div>
+                <div class="product-details">SOLANA • BASE • POLYGON ACCEPTED</div>
+            </div>
+            
+            <div class="widget-payload-frame">
+                <div id="helioCheckoutContainer3" style="width: 100%;"></div>
+                <script>
+                  document.addEventListener("DOMContentLoaded", () => {
+                    window.helioCheckout(
+                      document.getElementById("helioCheckoutContainer3"),
+                      {
+                        paylinkId: "6a0a57d9efd1a6b2e1b201ca",
+                        theme: {"themeMode":"dark"},
+                        primaryColor: "#6400CC",
+                        neutralColor: "#5A6578",
+                      }
+                    );
+                  });
+                </script>
+            </div>
+        </div>
+
+    </div>
+
+    <p style="margin-top: 60px; text-align: center; font-size: 0.85rem; color: #666; font-family: monospace; letter-spacing: 0.5px; text-transform: uppercase;">
+        🔒 Direct Non-Custodial Delivery. Upon on-chain validation of your transaction hash, access keys are instantly bound to your registration record.
+    </p>
+</section>
+
+<footer>
+    © 2026 Rebel Trading Group — Private Micro-Prop Crypto Evaluation & Asset Simulation Network
+    <br><br>
+    <a href="termsofuse.html" style="color:#6400CC; text-decoration:none; font-weight:bold;">
+        Terms of Use
+    </a>
+</footer>
+
+</body>
+</html>
