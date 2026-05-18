@@ -34,6 +34,14 @@ header img {
     height: 80px;
 }
 
+/* NEW: Keeps both centered header buttons aligned together */
+.header-cta-group {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+
 /* HAMBURGER */
 .hamburger {
     cursor: pointer;
@@ -679,14 +687,17 @@ function updateInteractiveCalculator(val) {
 <header>
     <img src="https://raw.githubusercontent.com/rebeltrading/rebeltrading/main/rebeltradelogo2.png" alt="Rebel Trading Logo">
     
-    <a href="#packages" class="sim-challenge-btn">🎮 GET SIM CHALLENGE →</a>
+    <div class="header-cta-group">
+        <a href="roadmap.html" class="sim-challenge-btn" style="background: #111; border-color: #333; box-shadow: none;">🗺️ REBEL ROADMAP</a>
+        <a href="#packages" class="sim-challenge-btn">🎮 GET SIM CHALLENGE →</a>
+    </div>
     
     <div class="hamburger" onclick="toggleMenu()">
         <div></div>
         <div></div>
         <div></div>
     </div>
-</header>
+</header> 
 
 <div id="menu" class="menu">
     <a href="#who">The Manifesto</a>
