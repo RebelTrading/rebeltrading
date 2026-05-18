@@ -570,47 +570,39 @@ header img {
     100% { transform: scale(1); }
 }
 
-/* NEW ADDITION: GHOST LAYER ARCHITECTURE FOR SYSTEM UNLOCK FLASHES */
-#chart-glitch-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 100;
-    pointer-events: none; /* Let clicks pass straight into TradingView free */
-    opacity: 0;
+/* Level 1 Overdrive Profile: Soft, deep, rhythmic engine breath */
+.chart-overdrive-tier1 {
+    border-color: #ffb703 !important; /* Gold Tier Accent matching the badge */
+    animation: engineBreathingGold 3s infinite ease-in-out !important;
 }
 
-/* Rapid-pulse system milestone animation trigger */
-.trigger-system-flash {
-    animation: tacticalGlitchPulse 0.6s cubic-bezier(0.15, 0.85, 0.35, 1) forwards;
+@keyframes engineBreathingGold {
+    0%, 100% {
+        box-shadow: inset 0 0 15px rgba(255, 183, 3, 0.1), 
+                    0 0 15px rgba(255, 183, 3, 0.15) !important;
+    }
+    50% {
+        box-shadow: inset 0 0 25px rgba(255, 183, 3, 0.25), 
+                    0 0 35px rgba(255, 183, 3, 0.4) !important;
+    }
 }
 
-@keyframes tacticalGlitchPulse {
-    0% {
-        opacity: 0;
-        background: rgba(0, 210, 255, 0);
+/* Level 2 Overdrive Profile: High-Velocity Cyan/Green Arc Wave Pulse */
+.chart-overdrive-tier2 {
+    border-color: #00ff66 !important; /* Neon Hyper-Green Level Clear Accent */
+    animation: enginePulseHyperGreen 1.5s infinite cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+@keyframes enginePulseHyperGreen {
+    0%, 100% {
+        box-shadow: inset 0 0 20px rgba(0, 255, 102, 0.15), 
+                    0 0 20px rgba(0, 255, 102, 0.25) !important;
     }
-    10% {
-        opacity: 0.85;
-        background: rgba(0, 210, 255, 0.35);
-        box-shadow: inset 0 0 50px rgba(0, 210, 255, 0.6);
+    50% {
+        box-shadow: inset 0 0 35px rgba(0, 255, 102, 0.35), 
+                    0 0 45px rgba(0, 255, 102, 0.55) !important;
     }
-    20% {
-        opacity: 0.2;
-        background: rgba(255, 255, 255, 0.2);
-    }
-    30% {
-        opacity: 0.75;
-        background: rgba(0, 210, 255, 0.25);
-        box-shadow: inset 0 0 30px rgba(0, 210, 255, 0.4);
-    }
-    100% {
-        opacity: 0;
-        background: rgba(0, 210, 255, 0);
-    }
-} 
+}
 
 </style>
 
@@ -920,17 +912,17 @@ function updateAccountMetrics() {
     const badgeContainer = document.getElementById('arcade-badge-container');
     const chartWrapper = document.getElementById('tv_chart_container');
 
-   // 1. Persistent Account Milestones Check (FIXED FOR GHOST OVERLAY FLASH)
+   // 1. Persistent Account Milestones Check (UPDATED FOR INTEGRATED OVERDRIVE PULSE SYSTEM)
     if (accountProgressPct >= 10.0) {
         if (!badgeContainer.querySelector('.badge-tier2')) {
             badgeContainer.innerHTML = `<span class="persistent-arcade-badge badge-tier2">⚡ BOSS LEVEL 5% ⚡</span>`;
             
-            // Trigger physical snap jump and overlay flash
+            // Trigger the Physical Scale Snap and swap Overdrive states completely untouched
             if (chartWrapper) {
-                chartWrapper.classList.add('chassis-snap-active');
+                chartWrapper.classList.remove('chart-overdrive-tier1');
+                chartWrapper.classList.add('chassis-snap-active', 'chart-overdrive-tier2');
                 setTimeout(() => chartWrapper.classList.remove('chassis-snap-active'), 160);
             }
-            triggerMilestoneFlash();
 
             window.speechSynthesis.cancel();
             let speech2 = new SpeechSynthesisUtterance("Momentum boost unlocked.");
@@ -942,12 +934,12 @@ function updateAccountMetrics() {
         if (!badgeContainer.querySelector('.badge-tier1')) {
             badgeContainer.innerHTML = `<span class="persistent-arcade-badge badge-tier1">⚔️ LEVEL 1 STRIKE ⚔️</span>`;
             
-            // Trigger physical snap jump and overlay flash
+            // Trigger the Physical Scale Snap and append Gold Chassis Breathing Overdrive
             if (chartWrapper) {
-                chartWrapper.classList.add('chassis-snap-active');
+                chartWrapper.classList.remove('chart-overdrive-tier2');
+                chartWrapper.classList.add('chassis-snap-active', 'chart-overdrive-tier1');
                 setTimeout(() => chartWrapper.classList.remove('chassis-snap-active'), 160);
             }
-            triggerMilestoneFlash();
 
             window.speechSynthesis.cancel();
             let speech1 = new SpeechSynthesisUtterance("Momentum boost unlocked.");
@@ -957,7 +949,11 @@ function updateAccountMetrics() {
         }
     } else {
         badgeContainer.innerHTML = '';
-    } 
+        // Wipe all custom badge overdrive statuses immediately if user slips below tier thresholds
+        if (chartWrapper) {
+            chartWrapper.classList.remove('chart-overdrive-tier1', 'chart-overdrive-tier2');
+        }
+    }
     // =========================================================
         
         if (FLOATING_PNL > activePosition.largestTradeProfit) {
@@ -1304,17 +1300,6 @@ async function fetchRebelEnginePrices() {
     }
 }
 
-function triggerMilestoneFlash() {
-    const overlay = document.getElementById('chart-glitch-overlay');
-    if (overlay) {
-        // Clear the class first to reset any running animations
-        overlay.classList.remove('trigger-system-flash');
-        // Force a DOM reflow to reset the CSS animation timeline cleanly
-        void overlay.offsetWidth;
-        // Fire the flash animation
-        overlay.classList.add('trigger-system-flash');
-    }
-}
 window.addEventListener('DOMContentLoaded', function() {
     switchAsset('BTC', document.getElementById('default-asset'));
     setInterval(fetchRebelEnginePrices, 1000);
@@ -1420,9 +1405,7 @@ window.addEventListener('DOMContentLoaded', function() {
                 <div id="sl-line-badge" class="chart-overlay-tag">STOP LOSS SAFEGUARD: $0.00</div>
             </div>
 
-            <div id="tv_chart_container" style="width:100%; height:100%; position: relative;">
-                <div id="chart-glitch-overlay"></div>
-            </div>
+            <div id="tv_chart_container" style="width:100%; height:100%;"></div>
         </div>
     </div>
     
