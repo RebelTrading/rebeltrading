@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rebel Trading Desk - Micro Perp Simulation Sandbox (Lightweight Chart Dev)</title>
+<title>Rebel Trading Desk - Micro Perp Simulation Sandbox (Canvas Dev)</title>
 
 <style>
 body {
@@ -649,10 +649,10 @@ let CURRENT_ASSET = "BTC-USD";
 let ORDER_TYPE = "MARKET";
 const LEVERAGE_FACTOR = 50.0;
 
-// LIGHTWEIGHT CHART SYSTEM STATE HANDLERS
-let activeChartInstance = null;
-let activeCandleSeries = null;
-let mockHistoricalTimeCursor = null;
+// Canvas Architecture Memory Holders
+let chartInstance = null;
+let candleSeriesInstance = null;
+let mockHistoricalTimeCursor = Math.floor(Date.now() / 1000) - 150;
 
 const accountTiers = {
     "T1": { name: "Recruit Arcade: $1,000 Sim Box ($10 Ticket)", start: 1000.00, target: 100.00, dailyLimit: 50.00, eodLimit: 100.00 },
@@ -672,10 +672,10 @@ let EOD_TRAILING_LIMIT = 300.00;
 
 // High-Fidelity Crypto Perp Multipliers & Fixed Decimals Configurations
 const assetMap = {
-    'BTC': { api: 'BTC-USD', tv: 'COINBASE:BTCUSD', display: 'BTC/USD Perpetual', multiplier: 0.1, precision: 2, tickSize: 0.50, delta: 1.50 },
-    'ETH': { api: 'ETH-USD', tv: 'COINBASE:ETHUSD', display: 'ETH/USD Perpetual', multiplier: 1.0, precision: 2, tickSize: 0.10, delta: 0.50 },
-    'SOL': { api: 'SOL-USD', tv: 'COINBASE:SOLUSD', display: 'SOL/USD Perpetual', multiplier: 10.0, precision: 2, tickSize: 0.05, delta: 0.10 },
-    'XRP': { api: 'XRP-USD', tv: 'COINBASE:XRPUSD', display: 'XRP/USD Perpetual', multiplier: 1000.0, precision: 4, tickSize: 0.0001, delta: 0.0005 }
+    'BTC': { api: 'BTC-USD', display: 'BTC/USD Perpetual', multiplier: 0.1, precision: 2, tickSize: 0.50, delta: 1.50 },
+    'ETH': { api: 'ETH-USD', display: 'ETH/USD Perpetual', multiplier: 1.0, precision: 2, tickSize: 0.10, delta: 0.50 },
+    'SOL': { api: 'SOL-USD', display: 'SOL/USD Perpetual', multiplier: 10.0, precision: 2, tickSize: 0.05, delta: 0.10 },
+    'XRP': { api: 'XRP-USD', display: 'XRP/USD Perpetual', multiplier: 1000.0, precision: 4, tickSize: 0.0001, delta: 0.0005 }
 };
 
 let localAssetPrices = {
@@ -754,77 +754,6 @@ function changeSimAccountTier(selectElement) {
     recalculateSpecInterface();
 }
 
-/* NATIVE LIGHTWEIGHT CHART CHASSIS GENERATOR */
-function initLightweightChartInstance() {
-    const container = document.getElementById('tv_chart_container');
-    if (!container) return;
-    
-    container.innerHTML = ''; // Wipe clean out legacy engine frames
-
-    activeChartInstance = LightweightCharts.createChart(container, {
-        layout: {
-            background: { color: '#0b0b0b' },
-            textColor: '#bdbdbd',
-            fontSize: 11,
-            fontFamily: 'Arial, Helvetica, sans-serif'
-        },
-        grid: {
-            vertLines: { color: '#141414' },
-            horzLines: { color: '#141414' }
-        },
-        crosshair: {
-            mode: LightweightCharts.CrosshairMode.Normal,
-            vertLine: { color: '#555', width: 1, style: 3 },
-            horzLine: { color: '#555', width: 1, style: 3 }
-        },
-        timeScale: {
-            timeVisible: true,
-            secondsVisible: true,
-            borderColor: '#1f1f1f'
-        },
-        rightPriceScale: {
-            borderColor: '#1f1f1f',
-            autoScale: true
-        }
-    });
-
-    activeCandleSeries = activeChartInstance.addCandlestickSeries({
-        upColor: '#00ff66',
-        downColor: '#ff2a2a',
-        borderUpColor: '#00ff66',
-        borderDownColor: '#ff2a2a',
-        wickUpColor: '#00ff66',
-        wickDownColor: '#ff2a2a'
-    });
-
-    // Seed canvas engine structure with mock ticks to align timescale bars
-    const currentPrice = getCurrentPrice();
-    const startTime = Math.floor(Date.now() / 1000) - 150;
-    let initialMockDataset = [];
-    
-    for (let i = 0; i < 150; i++) {
-        let offset = (Math.random() - 0.5) * (currentPrice * 0.001);
-        initialMockDataset.push({
-            time: startTime + i,
-            open: currentPrice + offset,
-            high: currentPrice + offset + (Math.random() * 5),
-            low: currentPrice + offset - (Math.random() * 5),
-            close: currentPrice + offset + (Math.random() - 0.5) * 2
-        });
-    }
-    
-    activeCandleSeries.setData(initialMockDataset);
-    mockHistoricalTimeCursor = startTime + 149;
-
-    // Direct binding for responsive scaling matrix
-    const resizeObserver = new ResizeObserver(entries => {
-        if (entries.length === 0 || !activeChartInstance) return;
-        const { width, height } = entries[0].contentRect;
-        activeChartInstance.resize(width, height);
-    });
-    resizeObserver.observe(container);
-}
-
 function switchAsset(assetKey, element) {
     document.querySelectorAll('.asset-bar button').forEach(btn => btn.classList.remove('active'));
     if (element) element.classList.add('active');
@@ -848,8 +777,78 @@ function switchAsset(assetKey, element) {
     cancelPendingLimit();
     clearAllChartOverlays();
 
-    // Re-initialize standalone charting stack to process current assets natively
-    initLightweightChartInstance();
+    // NATIVE CANVAS INITIALIZATION ENGINE
+    if (chartInstance) {
+        chartInstance.remove();
+        chartInstance = null;
+    }
+
+    chartInstance = LightweightCharts.createChart(document.getElementById('tv_chart_container'), {
+        width: document.getElementById('tv_chart_container').clientWidth,
+        height: document.getElementById('tv_chart_container').clientHeight,
+        layout: {
+            background: { type: 'solid', color: '#0b0b0b' },
+            textColor: '#888888',
+        },
+        grid: {
+            vertLines: { color: '#141414' },
+            horzLines: { color: '#141414' },
+        },
+        crosshair: {
+            mode: LightweightCharts.CrosshairMode.Normal,
+        },
+        rightPriceScale: {
+            borderColor: '#1f1f1f',
+        },
+        timeScale: {
+            borderColor: '#1f1f1f',
+            timeVisible: true,
+            secondsVisible: true
+        },
+    });
+
+    candleSeriesInstance = chartInstance.addCandlestickSeries({
+        upColor: '#00ff66',
+        downColor: '#ff2a2a',
+        borderDownColor: '#ff2a2a',
+        borderUpColor: '#00ff66',
+        wickDownColor: '#ff2a2a',
+        wickUpColor: '#00ff66',
+    });
+
+    // Baseline Lookback Historic Array Generator
+    let simulatedHistoryArray = [];
+    let basePriceSeed = currentLivePrice;
+    mockHistoricalTimeCursor = Math.floor(Date.now() / 1000) - 150;
+
+    for (let i = 0; i < 150; i++) {
+        mockHistoricalTimeCursor += 1; 
+        let randomDrift = (Math.random() * (config.delta * 2) - config.delta);
+        let openPrice = basePriceSeed;
+        let closePrice = basePriceSeed + randomDrift;
+        let highPrice = Math.max(openPrice, closePrice) + (Math.random() * config.delta);
+        let lowPrice = Math.min(openPrice, closePrice) - (Math.random() * config.delta);
+        
+        simulatedHistoryArray.push({
+            time: mockHistoricalTimeCursor,
+            open: openPrice,
+            high: highPrice,
+            low: lowPrice,
+            close: closePrice
+        });
+        basePriceSeed = closePrice;
+    }
+    candleSeriesInstance.setData(simulatedHistoryArray);
+
+    // Clean Workspace Resize Watcher for Mac Displays
+    const resizeObserver = new ResizeObserver(entries => {
+        if (entries.length === 0 || !chartInstance) return;
+        chartInstance.applyOptions({ 
+            width: entries[0].contentRect.width, 
+            height: entries[0].contentRect.height 
+        });
+    });
+    resizeObserver.observe(document.getElementById('tv_chart_container'));
     
     fetchRebelEnginePrices();
     setTimeout(recalculateSpecInterface, 100);
@@ -967,12 +966,13 @@ function checkAutomatedRulesAndExits() {
     }
 }
 
+// TRIGGER METHOD FOR INDEPENDENT CYAN FLASH ELEMENT
 function triggerGhostLayerMilestoneFlash() {
     const flashLayer = document.getElementById('chart-glitch-overlay');
     if (flashLayer) {
         flashLayer.style.display = 'block';
         flashLayer.classList.remove('glitch-flash-active');
-        void flashLayer.offsetWidth; // Force layout repaint
+        void flashLayer.offsetWidth; // Force element layout repaint
         flashLayer.classList.add('glitch-flash-active');
         setTimeout(() => { flashLayer.style.display = 'none'; }, 600);
     }
@@ -998,6 +998,7 @@ function updateAccountMetrics() {
             FLOATING_PNL = (-priceDelta) * activePosition.size * spec.multiplier;
         }
 
+        // REAL-TIME AMBIENT CHASSIS POSITION BORDER TRACKING
         if (chartWrapper) {
             if (FLOATING_PNL > 0) {
                 chartWrapper.classList.remove('chart-panel-red-glow');
@@ -1021,6 +1022,7 @@ function updateAccountMetrics() {
         document.getElementById('tv-target-line').style.display = 'none';
         document.getElementById('sl-risk-line').style.display = 'none';
 
+        // Clear all glowing and overdrive states completely when flat
         if (chartWrapper) {
             chartWrapper.classList.remove(
                 'chart-panel-green-glow', 
@@ -1035,6 +1037,7 @@ function updateAccountMetrics() {
     let combinedTotalProfit = REALIZED_PNL + FLOATING_PNL;
     let accountProgressPct = (combinedTotalProfit / PROFIT_TARGET) * 100;
 
+    // BANNER MILESTONES & OVERDRIVE LOGIC
     const badgeContainer = document.getElementById('arcade-badge-container');
     if (accountProgressPct >= 10.0) {
         if (!badgeContainer.querySelector('.badge-tier2')) {
@@ -1131,6 +1134,7 @@ function updateAccountMetrics() {
         targetField.style.color = "#fff";
     }
 
+    // CHALLENGE PROGRESS BAR SYNCED
     let challengePct = (combinedTotalProfit / PROFIT_TARGET) * 100;
     challengePct = Math.max(0, Math.min(100, challengePct));
     document.getElementById('header-progress-fill').style.width = `${challengePct.toFixed(1)}%`;
@@ -1388,10 +1392,10 @@ async function fetchRebelEnginePrices() {
             markEl.innerText = `$${markPriceVal.toLocaleString('en-US', { minimumFractionDigits: precision, maximumFractionDigits: precision })}`;
         }
         
-        /* STREAM REAL-TIME TICK VALUES DIRECTLY INTO NATIVE CANVAS SERIES ENGINE */
-        if (activeCandleSeries) {
+        // STREAMING REALTIME DATA DIRECTLY INTO LIGHTWEIGHT CANVAS ENGINE
+        if (candleSeriesInstance) {
             mockHistoricalTimeCursor += 1;
-            activeCandleSeries.update({
+            candleSeriesInstance.update({
                 time: mockHistoricalTimeCursor,
                 open: currentPrice * 0.9999,
                 high: currentPrice * 1.0002,
@@ -1593,6 +1597,7 @@ window.addEventListener('DOMContentLoaded', function() {
                 <button class="exec-btn buy" onclick="executeDevOrder('BUY')">BUY / LONG</button>
                 <button class="exec-btn sell" onclick="executeDevOrder('SELL')">SELL / SHORT</button>
             </div>
+            
             
             <div class="position-display" id="live-position-status">
                 <div class="position-row"><span>No Active Open Positions</span><span>--</span></div>
