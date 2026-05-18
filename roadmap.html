@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Protocol Roadmap | Rebel Trading Desk</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #000;
+    color: #bdbdbd;
+    overflow-x: hidden;
+}
+
+/* HEADER */
+header {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    background: rgba(0,0,0,0.9);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 10px;
+    box-sizing: border-box;
+    border-bottom: 1px solid #1a1a1a;
+    z-index: 1000;
+}
+
+header img {
+    height: 80px;
+}
+
+/* HAMBURGER */
+.hamburger {
+    cursor: pointer;
+    width: 35px;
+}
+
+.hamburger div {
+    height: 2px;
+    background: #fff;
+    margin: 5px 0;
+}
+
+/* HEADER CTA */
+.sim-challenge-btn {
+    background: linear-gradient(135deg, #ff2a2a 0%, #990000 100%);
+    color: #fff;
+    text-decoration: none;
+    font-family: monospace;
+    font-size: 0.7rem;
+    font-weight: bold;
+    letter-spacing: 1px;
+    padding: 8px 16px;
+    border-radius: 4px;
+    border: 1px solid #ff5555;
+    text-transform: uppercase;
+    box-shadow: 0 0 10px rgba(255, 42, 42, 0.4);
+    transition: all 0.2s ease-in-out;
+    display: inline-block;
+}
+
+.sim-challenge-btn:hover {
+    background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
+    box-shadow: 0 0 18px rgba(255, 42, 42, 0.7);
+    transform: scale(1.02);
+    border-color: #fff;
+}
+
+/* MENU */
+.menu {
+    position: fixed;
+    top: 0;
+    right: -260px;
+    width: 260px;
+    height: 100%;
+    background: #0a0a0a;
+    padding-top: 80px;
+    transition: 0.3s;
+    z-index: 999;
+    border-left: 1px solid #1a1a1a;
+}
+
+.menu a {
+    display: block;
+    padding: 15px 25px;
+    color: #aaa;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.menu a:hover {
+    color: #ff2a2a;
+}
+
+/* LIVE STATUS BAR */
+.network-status-bar {
+    position: fixed;
+    top: 105px;
+    width: 100%;
+    background: #050505;
+    padding: 12px 24px;
+    box-sizing: border-box;
+    border-bottom: 1px solid #141414;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+    align-items: center;
+    z-index: 998;
+    font-family: monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.5px;
+    color: #666;
+}
+
+.network-status-bar strong {
+    color: #fff;
+}
+
+.terminal-node {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.terminal-node.center {
+    justify-content: center;
+}
+
+.terminal-node.right {
+    justify-content: flex-end;
+}
+
+.ping-dot {
+    width: 6px;
+    height: 6px;
+    background-color: #ffb703;
+    border-radius: 50%;
+    display: inline-block;
+    box-shadow: 0 0 8px #ffb703;
+    animation: network-ping 1.2s infinite alternate;
+}
+
+.terminal-tag {
+    background: rgba(255, 183, 3, 0.1);
+    color: #ffb703;
+    padding: 2px 6px;
+    border-radius: 3px;
+    border: 1px solid rgba(255, 183, 3, 0.2);
+    font-size: 0.6rem;
+    font-weight: bold;
+}
+
+@keyframes network-ping {
+    0% { transform: scale(0.9); opacity: 0.4; box-shadow: 0 0 2px #ffb703; }
+    100% { transform: scale(1.1); opacity: 1; box-shadow: 0 0 10px #ffb703; }
+}
+
+/* HERO BANNER */
+.banner {
+    height: 55vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: radial-gradient(circle at center, #150303 0%, #000 70%);
+    padding-top: 180px;
+    box-sizing: border-box;
+}
+
+.banner h1 {
+    font-size: 4rem;
+    color: #ff2a2a;
+    line-height: 1.1;
+    letter-spacing: -1px;
+    text-shadow: 0 0 20px rgba(255, 42, 42, 0.2);
+}
+
+.banner p {
+    color: #fff;
+    font-size: 1.2rem;
+    letter-spacing: 2px;
+    margin-top: 15px;
+    font-weight: 300;
+    text-transform: uppercase;
+}
+
+/* SECTION OUTER CONTAINER */
+.section {
+    padding: 60px 20px 120px 20px;
+    max-width: 900px;
+    margin: auto;
+}
+
+.section h2 {
+    color: #ff2a2a;
+    font-size: 2.5rem;
+    letter-spacing: -0.5px;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    text-align: center;
+}
+
+.section-subtitle {
+    font-size: 1.1rem;
+    color: #fff;
+    margin-bottom: 80px;
+    font-weight: bold;
+    text-align: center;
+}
+
+/* THE GAMIFIED ROADMAP TRACK */
+.roadmap-track {
+    position: relative;
+    padding-left: 40px;
+    margin-left: 20px;
+    border-left: 3px dashed #1a1a1a;
+}
+
+/* Highlighted tracking effect for completed or active paths */
+.roadmap-track::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -3px;
+    height: 30%; /* Illustrates we are currently progressing through Phase 1 & 2 */
+    border-left: 3px solid #ff2a2a;
+    box-shadow: 0 0 10px rgba(255, 42, 42, 0.6);
+}
+
+/* ROADMAP NODES (THE STEPS) */
+.roadmap-step {
+    position: relative;
+    margin-bottom: 70px;
+    background: rgba(6, 6, 6, 0.7);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(20, 20, 20, 0.8);
+    padding: 30px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.roadmap-step:hover {
+    border-color: rgba(255, 42, 42, 0.3);
+    background: rgba(11, 11, 11, 0.8);
+    transform: translateX(5px);
+}
+
+/* Node Blip on the track line */
+.roadmap-node-blip {
+    position: absolute;
+    left: -53px;
+    top: 32px;
+    width: 20px;
+    height: 20px;
+    background: #0a0a0a;
+    border: 3px solid #1a1a1a;
+    border-radius: 50%;
+    z-index: 2;
+    box-sizing: border-box;
+}
+
+/* Style for active / near term steps */
+.roadmap-step.active .roadmap-node-blip {
+    border-color: #ff2a2a;
+    background: #ff2a2a;
+    box-shadow: 0 0 12px #ff2a2a;
+}
+
+.roadmap-step.token-phase .roadmap-node-blip {
+    border-color: #ffb703;
+    background: #ffb703;
+    box-shadow: 0 0 12px #ffb703;
+}
+
+/* Phase Indicators */
+.phase-badge {
+    position: absolute;
+    top: -15px;
+    right: 30px;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 0.75rem;
+    padding: 4px 14px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.phase-badge.active {
+    background: #ff2a2a;
+    color: #fff;
+    box-shadow: 0 0 10px rgba(255, 42, 42, 0.4);
+}
+
+.phase-badge.future {
+    background: #141414;
+    color: #666;
+    border: 1px solid #222;
+}
+
+.phase-badge.token {
+    background: #ffb703;
+    color: #000;
+    box-shadow: 0 0 10px rgba(255, 183, 3, 0.4);
+}
+
+/* Content Typography */
+.roadmap-step h3 {
+    color: #fff;
+    font-size: 1.5rem;
+    margin: 0 0 12px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.roadmap-step p {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #888;
+    margin: 0;
+}
+
+.roadmap-step strong {
+    color: #fff;
+}
+
+.highlight-yellow {
+    color: #ffb703 !important;
+}
+
+/* FOOTER */
+footer {
+    text-align: center;
+    padding: 40px;
+    background: #050505;
+    border-top: 1px solid #111;
+    font-size: 0.8rem;
+    color: #555;
+    letter-spacing: 0.5px;
+}
+</style>
+
+<script>
+function toggleMenu() {
+    const menu = document.getElementById("menu");
+    menu.style.right = (menu.style.right === "0px") ? "-260px" : "0px";
+}
+</script>
+</head>
+
+<body>
+
+<header>
+    <img src="https://raw.githubusercontent.com/rebeltrading/rebeltrading/main/rebeltradelogo2.png" alt="Rebel Trading Logo">
+    
+    <a href="payments.html" class="sim-challenge-btn">🎮 GET SIM CHALLENGE →</a>
+    
+    <div class="hamburger" onclick="toggleMenu()">
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
+</header>
+
+<div id="menu" class="menu">
+    <a href="index.html#who">The Manifesto</a>
+    <a href="index.html#infrastructure">Arcade Architecture</a>
+    <a href="index.html#packages">Sim Boxes Tiers</a>
+    <a href="payouts.html">Payout Protocol</a>
+    <a href="roadmap.html" style="color: #ff2a2a;">Protocol Roadmap</a>
+    <a href="termsofuse.html">Terms of Use</a> 
+    <a href="tradesim.html">Sim Trade Desk →</a>
+</div>
+
+<div class="network-status-bar">
+    <div class="terminal-node">
+        <span class="ping-dot"></span>
+        <span>CONSOLE // <span style="color: #ffb703; font-weight:bold;">EXPANSION_STRATEGY_ENGAGED</span></span>
+        <span class="terminal-tag">BLOCKCHAIN MIGRATION PLAN</span>
+    </div>
+    
+    <div class="terminal-node center">
+        <span>STRATEGIC OBJECTIVE: <strong style="color: #fff;">$REBEL ECOSYSTEM DEPLOYMENT</strong></span>
+    </div>
+    
+    <div class="terminal-node right">
+        <span>NETWORK: <strong style="color: #00ff66;">SOLANA READY</strong></span>
+    </div>
+</div>
+
+<div class="banner">
+    <div>
+        <h1>THE PROTOCOL ROADMAP</h1>
+        <p>From High-Velocity Arcade Simulation to a Sovereign Token Economy.</p>
+    </div>
+</div>
+
+<section class="section">
+    <h2>Ecosystem Expansion Map</h2>
+    <div class="section-subtitle">A tactical layout of our platform launch stages, treasury accumulation, and Solana chain deployment.</div>
+    
+    <div class="roadmap-track">
+        
+        <div class="roadmap-step active">
+            <div class="roadmap-node-blip"></div>
+            <div class="phase-badge active">Phase 01</div>
+            <h3>Launch Trade Sim & Rebel Trading</h3>
+            <p>
+                Deployment of the primary browser-based crypto prop arcade. Users can access the platform, select their challenge boxes, insert coins via <strong>USD (card), USDC, or USDT</strong>, and execute micro-scalping strategies on-chain. Automated payouts run natively through standard dollar-valued stablecoins to ensure instant structural certainty and zero bank lag.
+            </p>
+        </div>
+
+        <div class="roadmap-step active">
+            <div class="roadmap-node-blip"></div>
+            <div class="phase-badge active">Phase 02</div>
+            <h3>Dynamic Price Box Adaptation</h3>
+            <p>
+                We run on real-time feedback loops. Based strictly on community metrics, volume data, and user demand, we will dynamically scale, restructure, or optimize our <strong>Sim Card Challenge Tiers</strong>. This ensures entry conditions remain perfectly tuned to give scalpers the maximum fair runway for active profit harvesting.
+            </p>
+        </div>
+
+        <div class="roadmap-step">
+            <div class="roadmap-node-blip"></div>
+            <div class="phase-badge future">Phase 03</div>
+            <h3>Treasury Marketing Acceleration</h3>
+            <p>
+                Fueling the expansion machine. We programmatically allocate <strong>10% of all simulation packet sales</strong> directly into an autonomous protocol marketing treasury fund. After the first 6+ months of consistent operational revenue accumulation, this war chest is fully unlocked to scale global advertising, coordinate influencer takeovers, and fund aggressive community onboarding operations.
+            </p>
+        </div>
+
+        <div class="roadmap-step token-phase">
+            <div class="roadmap-node-blip"></div>
+            <div class="phase-badge token">Phase 04</div>
+            <h3>Launch $REBEL Token on Solana</h3>
+            <p>
+                The birth of the sovereign economy. We officially deploy our native utility asset, the <strong class="highlight-yellow">$REBEL</strong> token, on the ultra-fast Solana blockchain. This step provides our dedicated user base, trading community, and ecosystem believers a direct mechanism to <strong>invest in our brand growth</strong>, participate in utility liquidity pools, and gain a vested stake in the trading network's future.
+            </p>
+        </div>
+
+        <div class="roadmap-step token-phase">
+            <div class="roadmap-node-blip"></div>
+            <div class="phase-badge token">Phase 05</div>
+            <h3>Hybrid Payout Integration</h3>
+            <p>
+                The ultimate choice of asset extraction. The native <strong class="highlight-yellow">$REBEL</strong> token integrates directly into the platform architecture as an official performance payout asset option. This integration is <strong>completely optional</strong>. Elite traders retain full, unrestricted rights to maintain their standard pipelines in cash, USDC, or USDT. Those who choose to extract via $REBEL unlock priority platform enhancements and enhanced treasury multipliers.
+            </p>
+        </div>
+
+    </div>
+</section>
+
+<footer>
+    © 2026 Rebel Trading Group — Private Micro-Prop Crypto Evaluation & Asset Simulation Network
+    <br><br>
+    <a href="termsofuse.html" style="color:#ff2a2a; text-decoration:none; font-weight:bold;">
+        Terms of Use
+    </a>
+</footer>
+
+</body>
+</html>
