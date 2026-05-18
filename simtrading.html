@@ -283,6 +283,33 @@ header img {
 #sl-risk-line { border-top: 2px dashed #ff2a2a; }
 #sl-risk-line .chart-overlay-tag { background: #ff2a2a; color: #fff; }
 
+/* TIME-TRIGGERED GHOST MILESTONE OVERLAY COMPONENT */
+#chart-glitch-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 210, 255, 0.12);
+    border: 3px dashed #00d2ff;
+    box-sizing: border-box;
+    z-index: 99;
+    display: none;
+    pointer-events: none;
+    mix-blend-mode: screen;
+}
+
+.glitch-flash-active {
+    animation: glitchFlashFrame 0.6s steps(2) forwards;
+}
+
+@keyframes glitchFlashFrame {
+    0%, 100% { opacity: 0; }
+    20%, 80% { opacity: 1; background: rgba(0, 210, 255, 0.18); border-color: #00ff66; }
+    40% { opacity: 0.3; background: rgba(0, 255, 102, 0.1); }
+    60% { opacity: 1; background: rgba(0, 210, 255, 0.25); border-color: #00d2ff; }
+}
+
 /* ORDER BOOK (DOM) */
 .dom-container {
     display: flex;
@@ -509,7 +536,7 @@ header img {
 .rule-item span.pass { color: #00ff66; font-weight: bold; }
 .rule-item span.fail { color: #ff2a2a; font-weight: bold; }
 
-/* --- NEW: HEADER PROGRESS MILESTONE STYLES --- */
+/* --- HEADER PROGRESS MILESTONE STYLES --- */
 .header-badge-space {
     display: flex;
     align-items: center;
@@ -541,25 +568,33 @@ header img {
     box-shadow: 0 0 8px rgba(0, 210, 255, 0.4);
 }
 
-/* --- NEW: CHASSIS AMBIENT POSITION FEEDBACK GLOWS --- */
+/* --- CHASSIS AMBIENT POSITION FEEDBACK GLOWS --- */
 #tv_chart_container {
     transition: box-shadow 0.25s ease, border-color 0.25s ease;
     border: 1px solid #1f1f1f;
     box-sizing: border-box;
 }
 
+/* RESTORED: RHYTHMIC ACTIVE POSITION HEARTBEAT BORDERS */
+@keyframes position-breathe-green {
+    0% { border-color: rgba(0, 255, 102, 0.5); box-shadow: inset 0 0 12px rgba(0, 255, 102, 0.1), 0 0 10px rgba(0, 255, 102, 0.15); }
+    100% { border-color: #00ff66; box-shadow: inset 0 0 22px rgba(0, 255, 102, 0.25), 0 0 25px rgba(0, 255, 102, 0.4); }
+}
+
+@keyframes position-breathe-red {
+    0% { border-color: rgba(255, 42, 42, 0.5); box-shadow: inset 0 0 12px rgba(255, 42, 42, 0.1), 0 0 10px rgba(255, 42, 42, 0.15); }
+    100% { border-color: #ff2a2a; box-shadow: inset 0 0 22px rgba(255, 42, 42, 0.25), 0 0 25px rgba(255, 42, 42, 0.4); }
+}
+
 .chart-panel-green-glow {
-    border-color: #00ff66 !important;
-    box-shadow: inset 0 0 20px rgba(0, 255, 102, 0.15), 0 0 25px rgba(0, 255, 102, 0.25) !important;
+    animation: position-breathe-green 1.6s infinite alternate ease-in-out !important;
 }
 
 .chart-panel-red-glow {
-    border-color: #ff2a2a !important;
-    box-shadow: inset 0 0 20px rgba(255, 42, 42, 0.15), 0 0 25px rgba(255, 42, 42, 0.25) !important;
+    animation: position-breathe-red 1.6s infinite alternate ease-in-out !important;
 }
 
-/* --- NEW: CHASSIS OVERDRIVE EXTENSION GLOWS (TOUCH-FREE ARCHITECTURE) --- */
-/* Single-instance physical chassis snap trigger animation */
+/* --- CHASSIS OVERDRIVE EXTENSION GLOWS (TOUCH-FREE ARCHITECTURE) --- */
 .chassis-snap-active {
     animation: chassisSnapJump 0.16s cubic-bezier(0.25, 0.8, 0.25, 1) ease-in-out;
 }
@@ -572,7 +607,7 @@ header img {
 
 /* Level 1 Overdrive Profile: Soft, deep, rhythmic engine breath */
 .chart-overdrive-tier1 {
-    border-color: #ffb703 !important; /* Gold Tier Accent matching the badge */
+    border-color: #ffb703 !important; 
     animation: engineBreathingGold 3s infinite ease-in-out !important;
 }
 
@@ -589,7 +624,7 @@ header img {
 
 /* Level 2 Overdrive Profile: High-Velocity Cyan/Green Arc Wave Pulse */
 .chart-overdrive-tier2 {
-    border-color: #00ff66 !important; /* Neon Hyper-Green Level Clear Accent */
+    border-color: #00ff66 !important; 
     animation: enginePulseHyperGreen 1.5s infinite cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
@@ -638,7 +673,6 @@ const assetMap = {
     'XRP': { api: 'XRP-USD', tv: 'COINBASE:XRPUSD', display: 'XRP/USD Perpetual', multiplier: 1000.0, precision: 4, tickSize: 0.0001, delta: 0.0005 }
 };
 
-// Dynamically track decoupled live memory caches per asset to completely prevent cross-contamination
 let localAssetPrices = {
     "BTC-USD": 79130.00,
     "ETH-USD": 3450.00,
@@ -654,34 +688,24 @@ function toggleMenu() {
     menu.style.right = (menu.style.right === "0px") ? "-260px" : "0px";
 }
 
-// ==========================================
-// NEW: Native Text-to-Speech "Order Filled" Voice Notification
-// ==========================================
 function playOrderFilledSFX() {
     try {
         if ('speechSynthesis' in window) {
-            // Cancel any previous voice clips currently speaking so they don't stack up if you scale quickly
             window.speechSynthesis.cancel();
-
             const utterance = new SpeechSynthesisUtterance("Order filled");
-            
-            // Premium platform voice tuning
-            utterance.rate = 1.15;  // Slightly sped up so it sounds crisp and immediate, like NinjaTrader
-            utterance.pitch = 1.0;   // Clean, neutral pitch
-            utterance.volume = 1.0;  // Full volume
-
-            // Optional: Auto-select a clean English voice if available in the browser
+            utterance.rate = 1.15;  
+            utterance.pitch = 1.0;   
+            utterance.volume = 1.0;  
             const voices = window.speechSynthesis.getVoices();
             const preferredVoice = voices.find(v => v.lang.startsWith('en') && v.name.includes('Google')) || voices.find(v => v.lang.startsWith('en'));
             if (preferredVoice) utterance.voice = preferredVoice;
-
             window.speechSynthesis.speak(utterance);
         }
     } catch (e) {
         console.log("Voice synthesis blocked or unsupported:", e);
     }
 }
-// NEW: Voice Notification for Close Button
+
 function playPositionClosedSFX() {
     try {
         if ('speechSynthesis' in window) {
@@ -726,7 +750,7 @@ function changeSimAccountTier(selectElement) {
 }
 
 function switchAsset(assetKey, element) {
-    document.querySelectorAll('.asset-bar').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.asset-bar button').forEach(btn => btn.classList.remove('active'));
     if (element) element.classList.add('active');
     
     const config = assetMap[assetKey];
@@ -840,7 +864,6 @@ function checkAutomatedRulesAndExits() {
     const currentPrice = getCurrentPrice();
     if (!currentPrice || currentPrice === 0) return;
 
-    // 1. Process Pending Limit Orders
     if (pendingLimitOrder.isSet) {
         let isStruck = false;
         if (pendingLimitOrder.side === 'BUY' && currentPrice <= pendingLimitOrder.limitPrice) isStruck = true;
@@ -862,7 +885,6 @@ function checkAutomatedRulesAndExits() {
         }
     }
 
-    // 2. Process Active Position Brackets (SL / TP)
     if (activePosition.hasPosition && activePosition.asset === CURRENT_ASSET) {
         let shouldClose = false;
         let finalExitPrice = currentPrice;
@@ -884,6 +906,18 @@ function checkAutomatedRulesAndExits() {
     }
 }
 
+// TRIGGER METHOD FOR INDEPENDENT CYAN FLASH ELEMENT
+function triggerGhostLayerMilestoneFlash() {
+    const flashLayer = document.getElementById('chart-glitch-overlay');
+    if (flashLayer) {
+        flashLayer.style.display = 'block';
+        flashLayer.classList.remove('glitch-flash-active');
+        void flashLayer.offsetWidth; // Force element layout repaint
+        flashLayer.classList.add('glitch-flash-active');
+        setTimeout(() => { flashLayer.style.display = 'none'; }, 600);
+    }
+}
+
 function updateAccountMetrics() {
     const currentAssetKey = Object.keys(assetMap).find(key => assetMap[key].api === CURRENT_ASSET);
     const spec = assetMap[currentAssetKey];
@@ -893,6 +927,8 @@ function updateAccountMetrics() {
     document.getElementById('live-index-val').innerText = `$${currentPrice.toFixed(spec.precision)}`;
     document.getElementById('live-mark-val').innerText = `$${(currentPrice + spec.delta).toFixed(spec.precision)}`;
 
+    const chartWrapper = document.getElementById('tv_chart_container');
+
     if (activePosition.hasPosition && activePosition.asset === CURRENT_ASSET) {
         let priceDelta = currentPrice - activePosition.entryPrice;
         
@@ -901,28 +937,60 @@ function updateAccountMetrics() {
         } else {
             FLOATING_PNL = (-priceDelta) * activePosition.size * spec.multiplier;
         }
-        // =========================================================
-        // =========================================================
-        // =========================================================
-    // UPDATED: PERSISTENT BANNER MILESTONES & REAL-TIME POSITION HEARTBEAT GLOW
-    // =========================================================
-    let totalRealizedAndFloating = REALIZED_PNL + FLOATING_PNL;
-    let accountProgressPct = (totalRealizedAndFloating / PROFIT_TARGET) * 100;
 
+        // RESTORED: REAL-TIME AMBIENT CHASSIS POSITION BORDER TRACKING
+        if (chartWrapper) {
+            if (FLOATING_PNL > 0) {
+                chartWrapper.classList.remove('chart-panel-red-glow');
+                chartWrapper.classList.add('chart-panel-green-glow');
+            } else if (FLOATING_PNL < 0) {
+                chartWrapper.classList.remove('chart-panel-green-glow');
+                chartWrapper.classList.add('chart-panel-red-glow');
+            } else {
+                chartWrapper.classList.add('chart-panel-green-glow');
+                chartWrapper.classList.remove('chart-panel-red-glow');
+            }
+        }
+        
+        if (FLOATING_PNL > activePosition.largestTradeProfit) {
+            activePosition.largestTradeProfit = FLOATING_PNL;
+        }
+        updatePositionOverlayLines();
+    } else {
+        FLOATING_PNL = 0.00;
+        document.getElementById('active-position-line').style.display = 'none';
+        document.getElementById('tv-target-line').style.display = 'none';
+        document.getElementById('sl-risk-line').style.display = 'none';
+
+        // Clear all glowing and overdrive states completely when flat
+        if (chartWrapper) {
+            chartWrapper.classList.remove(
+                'chart-panel-green-glow', 
+                'chart-panel-red-glow', 
+                'chart-overdrive-tier1', 
+                'chart-overdrive-tier2', 
+                'chassis-snap-active'
+            );
+        }
+    }
+
+    let combinedTotalProfit = REALIZED_PNL + FLOATING_PNL;
+    let accountProgressPct = (combinedTotalProfit / PROFIT_TARGET) * 100;
+
+    // LOCKED IN: PERSISTENT BANNER MILESTONES & OVERDRIVE LOGIC
     const badgeContainer = document.getElementById('arcade-badge-container');
-    const chartWrapper = document.getElementById('tv_chart_container');
-
-   // 1. Persistent Account Milestones Check (UPDATED FOR INTEGRATED OVERDRIVE PULSE SYSTEM)
     if (accountProgressPct >= 10.0) {
         if (!badgeContainer.querySelector('.badge-tier2')) {
             badgeContainer.innerHTML = `<span class="persistent-arcade-badge badge-tier2">⚡ BOSS LEVEL 5% ⚡</span>`;
             
-            // Trigger the Physical Scale Snap and swap Overdrive states completely untouched
             if (chartWrapper) {
                 chartWrapper.classList.remove('chart-overdrive-tier1');
                 chartWrapper.classList.add('chassis-snap-active', 'chart-overdrive-tier2');
                 setTimeout(() => chartWrapper.classList.remove('chassis-snap-active'), 160);
             }
+
+            // TRIGGER FIXED OVERLAY CYAN PULSE WITHOUT BREAKING SYSTEM LAWS
+            triggerGhostLayerMilestoneFlash();
 
             window.speechSynthesis.cancel();
             let speech2 = new SpeechSynthesisUtterance("Momentum boost unlocked.");
@@ -934,12 +1002,14 @@ function updateAccountMetrics() {
         if (!badgeContainer.querySelector('.badge-tier1')) {
             badgeContainer.innerHTML = `<span class="persistent-arcade-badge badge-tier1">⚔️ LEVEL 1 STRIKE ⚔️</span>`;
             
-            // Trigger the Physical Scale Snap and append Gold Chassis Breathing Overdrive
             if (chartWrapper) {
                 chartWrapper.classList.remove('chart-overdrive-tier2');
                 chartWrapper.classList.add('chassis-snap-active', 'chart-overdrive-tier1');
                 setTimeout(() => chartWrapper.classList.remove('chassis-snap-active'), 160);
             }
+
+            // TRIGGER FIXED OVERLAY CYAN PULSE WITHOUT BREAKING SYSTEM LAWS
+            triggerGhostLayerMilestoneFlash();
 
             window.speechSynthesis.cancel();
             let speech1 = new SpeechSynthesisUtterance("Momentum boost unlocked.");
@@ -949,45 +1019,18 @@ function updateAccountMetrics() {
         }
     } else {
         badgeContainer.innerHTML = '';
-        // Wipe all custom badge overdrive statuses immediately if user slips below tier thresholds
         if (chartWrapper) {
             chartWrapper.classList.remove('chart-overdrive-tier1', 'chart-overdrive-tier2');
         }
     }
-    // =========================================================
-        
-        if (FLOATING_PNL > activePosition.largestTradeProfit) {
-            activePosition.largestTradeProfit = FLOATING_PNL;
-        }
-        updatePositionOverlayLines();
-  } else {
-        FLOATING_PNL = 0.00;
-        document.getElementById('active-position-line').style.display = 'none';
-        document.getElementById('tv-target-line').style.display = 'none';
-        document.getElementById('sl-risk-line').style.display = 'none';
-
-        // Clear all glowing and overdrive states completely when flat
-        const chartWrapper = document.getElementById('tv_chart_container');
-        if (chartWrapper) {
-            chartWrapper.classList.remove(
-                'chart-panel-green-glow', 
-                'chart-panel-red-glow', 
-                'chart-overdrive-tier1', 
-                'chart-overdrive-tier2', 
-                'chassis-snap-active'
-            );
-        }
-    }
     
     let netLiquidationValue = ACCOUNT_BALANCE + FLOATING_PNL;
-    
     if (netLiquidationValue > PEAK_BALANCE) {
         PEAK_BALANCE = netLiquidationValue;
     }
 
     let accumulatedLoss = STARTING_BALANCE - netLiquidationValue;
     let currentTrailingDrawdown = PEAK_BALANCE - netLiquidationValue;
-    let combinedTotalProfit = REALIZED_PNL + FLOATING_PNL;
 
     document.getElementById('display-balance').innerText = `$${netLiquidationValue.toFixed(2)}`;
     
@@ -1033,6 +1076,7 @@ function updateAccountMetrics() {
         targetField.style.color = "#fff";
     }
 
+    // FIXED: PHYSICAL LEVEL 1 CHALLENGE PROGRESS BAR SYNCED TO THE INTERFACE
     let challengePct = (combinedTotalProfit / PROFIT_TARGET) * 100;
     challengePct = Math.max(0, Math.min(100, challengePct));
     document.getElementById('header-progress-fill').style.width = `${challengePct.toFixed(1)}%`;
@@ -1161,8 +1205,6 @@ function executeDevOrder(side) {
             largestTradeProfit: 0.0
         };
         showActivePositionOverlays();
-        
-        // ADD THIS LINE: Triggers the audio feedback on Market Buys/Sells
         playOrderFilledSFX();
     } else {
         const limitPriceVal = parseFloat(document.getElementById('target-execution-price').value);
@@ -1175,8 +1217,6 @@ function executeDevOrder(side) {
             slPrice: targetSL
         };
         triggerLimitWorkingLine();
-        
-        // ADD THIS LINE: Triggers the audio when a Limit Buy/Sell hits the book
         playOrderFilledSFX();
     }
 
@@ -1404,6 +1444,8 @@ window.addEventListener('DOMContentLoaded', function() {
             <div id="sl-risk-line" class="chart-line-overlay">
                 <div id="sl-line-badge" class="chart-overlay-tag">STOP LOSS SAFEGUARD: $0.00</div>
             </div>
+
+            <div id="chart-glitch-overlay"></div>
 
             <div id="tv_chart_container" style="width:100%; height:100%;"></div>
         </div>
