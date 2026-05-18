@@ -575,7 +575,7 @@ header img {
     box-sizing: border-box;
 }
 
-/* RESTORED: RHYTHMIC ACTIVE POSITION HEARTBEAT BORDERS */
+/* RHYTHMIC ACTIVE POSITION HEARTBEAT BORDERS */
 @keyframes position-breathe-green {
     0% { border-color: rgba(0, 255, 102, 0.5); box-shadow: inset 0 0 12px rgba(0, 255, 102, 0.1), 0 0 10px rgba(0, 255, 102, 0.15); }
     100% { border-color: #00ff66; box-shadow: inset 0 0 22px rgba(0, 255, 102, 0.25), 0 0 25px rgba(0, 255, 102, 0.4); }
@@ -594,7 +594,7 @@ header img {
     animation: position-breathe-red 1.6s infinite alternate ease-in-out !important;
 }
 
-/* --- CHASSIS OVERDRIVE EXTENSION GLOWS (TOUCH-FREE ARCHITECTURE) --- */
+/* CHASSIS OVERDRIVE EXTENSION GLOWS */
 .chassis-snap-active {
     animation: chassisSnapJump 0.16s cubic-bezier(0.25, 0.8, 0.25, 1) ease-in-out;
 }
@@ -605,7 +605,7 @@ header img {
     100% { transform: scale(1); }
 }
 
-/* Level 1 Overdrive Profile: Soft, deep, rhythmic engine breath */
+/* Level 1 Overdrive Profile */
 .chart-overdrive-tier1 {
     border-color: #ffb703 !important; 
     animation: engineBreathingGold 3s infinite ease-in-out !important;
@@ -622,7 +622,7 @@ header img {
     }
 }
 
-/* Level 2 Overdrive Profile: High-Velocity Cyan/Green Arc Wave Pulse */
+/* Level 2 Overdrive Profile */
 .chart-overdrive-tier2 {
     border-color: #00ff66 !important; 
     animation: enginePulseHyperGreen 1.5s infinite cubic-bezier(0.4, 0, 0.2, 1) !important;
@@ -644,20 +644,20 @@ header img {
 <script type="text/javascript" src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
 
 <script>
-// SIMULATED ENGINE GLOBAL ARCHITECTURE
+// GLOBAL APPLICATION STATE ARCHITECTURE
 let CURRENT_ASSET = "BTC-USD";
 let ORDER_TYPE = "MARKET";
 const LEVERAGE_FACTOR = 50.0;
 
-// Canvas Architecture Memory Holders
+// High-Performance Native Canvas Context Interfaces
 let chartInstance = null;
 let candleSeriesInstance = null;
-let mockHistoricalTimeCursor = Math.floor(Date.now() / 1000) - 150;
+let lastCalculatedTimestamp = 0;
 
 const accountTiers = {
-    "T1": { name: "Recruit Arcade: $1,000 Sim Box ($10 Ticket)", start: 1000.00, target: 100.00, dailyLimit: 50.00, eodLimit: 100.00 },
+    "T3": { name: "Rebel Arcade: $3,000 Sim Box ($30 Ticket)", start: 3000.00, target: 300.00, dailyLimit: 150.00, eodLimit: 300.00 },
     "T2": { name: "Raider Arcade: $2,000 Sim Box ($20 Ticket)", start: 2000.00, target: 200.00, dailyLimit: 100.00, eodLimit: 200.00 },
-    "T3": { name: "Rebel Arcade: $3,000 Sim Box ($30 Ticket)", start: 3000.00, target: 300.00, dailyLimit: 150.00, eodLimit: 300.00 }
+    "T1": { name: "Recruit Arcade: $1,000 Sim Box ($10 Ticket)", start: 1000.00, target: 100.00, dailyLimit: 50.00, eodLimit: 100.00 }
 };
 
 let activeTierKey = "T3";
@@ -670,7 +670,6 @@ let PROFIT_TARGET = 300.00;
 let DAILY_LOSS_LIMIT = 150.00;
 let EOD_TRAILING_LIMIT = 300.00;
 
-// High-Fidelity Crypto Perp Multipliers & Fixed Decimals Configurations
 const assetMap = {
     'BTC': { api: 'BTC-USD', display: 'BTC/USD Perpetual', multiplier: 0.1, precision: 2, tickSize: 0.50, delta: 1.50 },
     'ETH': { api: 'ETH-USD', display: 'ETH/USD Perpetual', multiplier: 1.0, precision: 2, tickSize: 0.10, delta: 0.50 },
@@ -699,16 +698,9 @@ function playOrderFilledSFX() {
             window.speechSynthesis.cancel();
             const utterance = new SpeechSynthesisUtterance("Order filled");
             utterance.rate = 1.15;  
-            utterance.pitch = 1.0;   
-            utterance.volume = 1.0;  
-            const voices = window.speechSynthesis.getVoices();
-            const preferredVoice = voices.find(v => v.lang.startsWith('en') && v.name.includes('Google')) || voices.find(v => v.lang.startsWith('en'));
-            if (preferredVoice) utterance.voice = preferredVoice;
             window.speechSynthesis.speak(utterance);
         }
-    } catch (e) {
-        console.log("Voice synthesis blocked or unsupported:", e);
-    }
+    } catch (e) { console.log(e); }
 }
 
 function playPositionClosedSFX() {
@@ -717,16 +709,9 @@ function playPositionClosedSFX() {
             window.speechSynthesis.cancel();
             const utterance = new SpeechSynthesisUtterance("Position closed");
             utterance.rate = 1.15;  
-            utterance.pitch = 1.0;   
-            utterance.volume = 1.0;  
-            const voices = window.speechSynthesis.getVoices();
-            const preferredVoice = voices.find(v => v.lang.startsWith('en') && v.name.includes('Google')) || voices.find(v => v.lang.startsWith('en'));
-            if (preferredVoice) utterance.voice = preferredVoice;
             window.speechSynthesis.speak(utterance);
         }
-    } catch (e) {
-        console.log("Voice synthesis blocked:", e);
-    }
+    } catch (e) { console.log(e); }
 }
 
 function getCurrentPrice() {
@@ -777,12 +762,13 @@ function switchAsset(assetKey, element) {
     cancelPendingLimit();
     clearAllChartOverlays();
 
-    // NATIVE CANVAS INITIALIZATION ENGINE
+    // TEAR DOWN OLD INSTANCE SAFEGUARD
     if (chartInstance) {
         chartInstance.remove();
         chartInstance = null;
     }
 
+    // INITIALIZE NEW STABLE INSTANCE
     chartInstance = LightweightCharts.createChart(document.getElementById('tv_chart_container'), {
         width: document.getElementById('tv_chart_container').clientWidth,
         height: document.getElementById('tv_chart_container').clientHeight,
@@ -816,21 +802,24 @@ function switchAsset(assetKey, element) {
         wickUpColor: '#00ff66',
     });
 
-    // Baseline Lookback Historic Array Generator
+    // DOC COMPLIANT SEED DATA SYSTEM
     let simulatedHistoryArray = [];
     let basePriceSeed = currentLivePrice;
-    mockHistoricalTimeCursor = Math.floor(Date.now() / 1000) - 150;
+    let currentTimeStampSec = Math.floor(Date.now() / 1000);
+    
+    // Seed backwards 150 discrete seconds sequentially
+    let startingHistoryStamp = currentTimeStampSec - 150;
 
     for (let i = 0; i < 150; i++) {
-        mockHistoricalTimeCursor += 1; 
+        let historicalStamp = startingHistoryStamp + i;
         let randomDrift = (Math.random() * (config.delta * 2) - config.delta);
         let openPrice = basePriceSeed;
         let closePrice = basePriceSeed + randomDrift;
-        let highPrice = Math.max(openPrice, closePrice) + (Math.random() * config.delta);
-        let lowPrice = Math.min(openPrice, closePrice) - (Math.random() * config.delta);
+        let highPrice = Math.max(openPrice, closePrice) + (Math.random() * (config.delta * 0.5));
+        let lowPrice = Math.min(openPrice, closePrice) - (Math.random() * (config.delta * 0.5));
         
         simulatedHistoryArray.push({
-            time: mockHistoricalTimeCursor,
+            time: historicalStamp,
             open: openPrice,
             high: highPrice,
             low: lowPrice,
@@ -838,9 +827,11 @@ function switchAsset(assetKey, element) {
         });
         basePriceSeed = closePrice;
     }
+    
     candleSeriesInstance.setData(simulatedHistoryArray);
+    lastCalculatedTimestamp = currentTimeStampSec;
 
-    // Clean Workspace Resize Watcher for Mac Displays
+    // MAC PERFORMANCE LAYOUT RESPONSIVENESS WATCHER
     const resizeObserver = new ResizeObserver(entries => {
         if (entries.length === 0 || !chartInstance) return;
         chartInstance.applyOptions({ 
@@ -850,8 +841,7 @@ function switchAsset(assetKey, element) {
     });
     resizeObserver.observe(document.getElementById('tv_chart_container'));
     
-    fetchRebelEnginePrices();
-    setTimeout(recalculateSpecInterface, 100);
+    setTimeout(recalculateSpecInterface, 50);
 }
 
 function setOrderType(type, element) {
@@ -966,13 +956,12 @@ function checkAutomatedRulesAndExits() {
     }
 }
 
-// TRIGGER METHOD FOR INDEPENDENT CYAN FLASH ELEMENT
 function triggerGhostLayerMilestoneFlash() {
     const flashLayer = document.getElementById('chart-glitch-overlay');
     if (flashLayer) {
         flashLayer.style.display = 'block';
         flashLayer.classList.remove('glitch-flash-active');
-        void flashLayer.offsetWidth; // Force element layout repaint
+        void flashLayer.offsetWidth; 
         flashLayer.classList.add('glitch-flash-active');
         setTimeout(() => { flashLayer.style.display = 'none'; }, 600);
     }
@@ -982,10 +971,6 @@ function updateAccountMetrics() {
     const currentAssetKey = Object.keys(assetMap).find(key => assetMap[key].api === CURRENT_ASSET);
     const spec = assetMap[currentAssetKey];
     const currentPrice = getCurrentPrice();
-
-    document.getElementById('header-spot-price').innerText = `$${currentPrice.toFixed(spec.precision)}`;
-    document.getElementById('live-index-val').innerText = `$${currentPrice.toFixed(spec.precision)}`;
-    document.getElementById('live-mark-val').innerText = `$${(currentPrice + spec.delta).toFixed(spec.precision)}`;
 
     const chartWrapper = document.getElementById('tv_chart_container');
 
@@ -998,7 +983,6 @@ function updateAccountMetrics() {
             FLOATING_PNL = (-priceDelta) * activePosition.size * spec.multiplier;
         }
 
-        // REAL-TIME AMBIENT CHASSIS POSITION BORDER TRACKING
         if (chartWrapper) {
             if (FLOATING_PNL > 0) {
                 chartWrapper.classList.remove('chart-panel-red-glow');
@@ -1006,9 +990,6 @@ function updateAccountMetrics() {
             } else if (FLOATING_PNL < 0) {
                 chartWrapper.classList.remove('chart-panel-green-glow');
                 chartWrapper.classList.add('chart-panel-red-glow');
-            } else {
-                chartWrapper.classList.add('chart-panel-green-glow');
-                chartWrapper.classList.remove('chart-panel-red-glow');
             }
         }
         
@@ -1022,7 +1003,6 @@ function updateAccountMetrics() {
         document.getElementById('tv-target-line').style.display = 'none';
         document.getElementById('sl-risk-line').style.display = 'none';
 
-        // Clear all glowing and overdrive states completely when flat
         if (chartWrapper) {
             chartWrapper.classList.remove(
                 'chart-panel-green-glow', 
@@ -1037,42 +1017,33 @@ function updateAccountMetrics() {
     let combinedTotalProfit = REALIZED_PNL + FLOATING_PNL;
     let accountProgressPct = (combinedTotalProfit / PROFIT_TARGET) * 100;
 
-    // BANNER MILESTONES & OVERDRIVE LOGIC
     const badgeContainer = document.getElementById('arcade-badge-container');
     if (accountProgressPct >= 10.0) {
         if (!badgeContainer.querySelector('.badge-tier2')) {
             badgeContainer.innerHTML = `<span class="persistent-arcade-badge badge-tier2">⚡ BOSS LEVEL 5% ⚡</span>`;
-            
             if (chartWrapper) {
                 chartWrapper.classList.remove('chart-overdrive-tier1');
                 chartWrapper.classList.add('chassis-snap-active', 'chart-overdrive-tier2');
                 setTimeout(() => chartWrapper.classList.remove('chassis-snap-active'), 160);
             }
-
             triggerGhostLayerMilestoneFlash();
-
             window.speechSynthesis.cancel();
             let speech2 = new SpeechSynthesisUtterance("Momentum boost unlocked.");
             speech2.rate = 1.15;
-            speech2.pitch = 1.0;
             window.speechSynthesis.speak(speech2);
         }
     } else if (accountProgressPct >= 5.0) {
         if (!badgeContainer.querySelector('.badge-tier1')) {
             badgeContainer.innerHTML = `<span class="persistent-arcade-badge badge-tier1">⚔️ LEVEL 1 STRIKE ⚔️</span>`;
-            
             if (chartWrapper) {
                 chartWrapper.classList.remove('chart-overdrive-tier2');
                 chartWrapper.classList.add('chassis-snap-active', 'chart-overdrive-tier1');
                 setTimeout(() => chartWrapper.classList.remove('chassis-snap-active'), 160);
             }
-
             triggerGhostLayerMilestoneFlash();
-
             window.speechSynthesis.cancel();
             let speech1 = new SpeechSynthesisUtterance("Momentum boost unlocked.");
             speech1.rate = 1.15;
-            speech1.pitch = 1.0;
             window.speechSynthesis.speak(speech1);
         }
     } else {
@@ -1130,11 +1101,9 @@ function updateAccountMetrics() {
         targetField.className = "pass";
     } else {
         targetField.innerText = `$${targetLeft.toFixed(2)} Left`;
-        targetField.className = "";
         targetField.style.color = "#fff";
     }
 
-    // CHALLENGE PROGRESS BAR SYNCED
     let challengePct = (combinedTotalProfit / PROFIT_TARGET) * 100;
     challengePct = Math.max(0, Math.min(100, challengePct));
     document.getElementById('header-progress-fill').style.width = `${challengePct.toFixed(1)}%`;
@@ -1392,16 +1361,24 @@ async function fetchRebelEnginePrices() {
             markEl.innerText = `$${markPriceVal.toLocaleString('en-US', { minimumFractionDigits: precision, maximumFractionDigits: precision })}`;
         }
         
-        // STREAMING REALTIME DATA DIRECTLY INTO LIGHTWEIGHT CANVAS ENGINE
+        // DOCUMENTATION COMPLIANT TICK INTERVAL EXECUTION
         if (candleSeriesInstance) {
-            mockHistoricalTimeCursor += 1;
+            let nextTimestampSec = Math.floor(Date.now() / 1000);
+            
+            // Prevent backwards timing conflicts on interval overlapping
+            if (nextTimestampSec <= lastCalculatedTimestamp) {
+                nextTimestampSec = lastCalculatedTimestamp + 1;
+            }
+            
             candleSeriesInstance.update({
-                time: mockHistoricalTimeCursor,
+                time: nextTimestampSec,
                 open: currentPrice * 0.9999,
                 high: currentPrice * 1.0002,
                 low: currentPrice * 0.9998,
                 close: currentPrice
             });
+            
+            lastCalculatedTimestamp = nextTimestampSec;
         }
 
         renderSyntheticOrderBook(currentPrice);
@@ -1413,7 +1390,6 @@ async function fetchRebelEnginePrices() {
 window.addEventListener('DOMContentLoaded', function() {
     switchAsset('BTC', document.getElementById('default-asset'));
     setInterval(fetchRebelEnginePrices, 1000);
-    setInterval(recalculateSpecInterface, 1000);
 });
 </script>
 </head>
@@ -1485,7 +1461,7 @@ window.addEventListener('DOMContentLoaded', function() {
         <div class="stats-bar">
             <div class="stat-box">
                 <div class="stat-label">Net Liquidation</div>
-                <div class="stat-value" id="display-balance">$5,000.00</div>
+                <div class="stat-value" id="display-balance">$3,000.00</div>
             </div>
             <div class="stat-box">
                 <div class="stat-label">Open Floating P&L</div>
@@ -1493,7 +1469,7 @@ window.addEventListener('DOMContentLoaded', function() {
             </div>
             <div class="stat-box">
                 <div class="stat-label">Daily Accum Loss</div>
-                <div class="stat-value" id="display-daily-loss">$0.00 / $250</div>
+                <div class="stat-value" id="display-daily-loss">$0.00 / $150</div>
             </div>
             <div class="stat-box">
                 <div class="stat-label">Max Leverage Engine</div>
@@ -1527,14 +1503,12 @@ window.addEventListener('DOMContentLoaded', function() {
             <span style="font-family: monospace; font-size: 0.7rem; color: #777;">TICK FEED ACTIVE</span>
         </div>
         
-        <div class="dom-container">
-            </div>
+        <div class="dom-container"></div>
         
         <div class="panel-header" style="border-top: 1px solid #1f1f1f; border-bottom: none;">
             <span>TIME & SALES (TAPE)</span>
         </div>
-        <div class="tape-container">
-            </div>
+        <div class="tape-container"></div>
     </div>
     
     <div class="panel">
@@ -1542,13 +1516,13 @@ window.addEventListener('DOMContentLoaded', function() {
         <div class="order-panel">
             
             <div class="account-selector">
-    <label style="font-size: 0.6rem; color: #555; text-transform: uppercase; display: block; margin-bottom: 4px;">ACTIVE BOX SUBSCRIPTION CLASS</label>
-    <select onchange="changeSimAccountTier(this)">
-        <option value="T3" selected>Rebel Arcade: $3,000 Sim Box ($30 Ticket)</option>
-        <option value="T2">Raider Arcade: $2,000 Sim Box ($20 Ticket)</option>
-        <option value="T1">Recruit Arcade: $1,000 Sim Box ($10 Ticket)</option>
-    </select>
-</div>
+                <label style="font-size: 0.6rem; color: #555; text-transform: uppercase; display: block; margin-bottom: 4px;">ACTIVE BOX SUBSCRIPTION CLASS</label>
+                <select onchange="changeSimAccountTier(this)">
+                    <option value="T3" selected>Rebel Arcade: $3,000 Sim Box ($30 Ticket)</option>
+                    <option value="T2">Raider Arcade: $2,000 Sim Box ($20 Ticket)</option>
+                    <option value="T1">Recruit Arcade: $1,000 Sim Box ($10 Ticket)</option>
+                </select>
+            </div>
             
             <div class="order-tabs">
                 <button class="tab-btn active" onclick="setOrderType('MARKET', this)">MARKET</button>
@@ -1574,7 +1548,7 @@ window.addEventListener('DOMContentLoaded', function() {
             <div class="spec-metrics-display">
                 <div class="spec-row">Notional Contract Value:<strong id="spec-calc-notional">$0.00</strong></div>
                 <div class="spec-row">Margin Allocated (1:50):<strong id="spec-calc-margin">$0.00</strong></div>
-                <div class="spec-row">Remaining Buying Power:<strong id="spec-calc-buyingpower">$5,000.00</strong></div>
+                <div class="spec-row">Remaining Buying Power:<strong id="spec-calc-buyingpower">$3,000.00</strong></div>
             </div>
             
             <div class="bracket-toggle-container">
@@ -1598,20 +1572,19 @@ window.addEventListener('DOMContentLoaded', function() {
                 <button class="exec-btn sell" onclick="executeDevOrder('SELL')">SELL / SHORT</button>
             </div>
             
-            
             <div class="position-display" id="live-position-status">
-                <div class="position-row"><span>No Active Open Positions</span><span>--</span></div>
+                <div class="position-row"><span>No Active Dev Positions Open</span><span>--</span></div>
             </div>
             
         </div>
         
         <div class="rules-container">
-    <div style="font-weight:bold; color:#fff; font-size:0.7rem; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px;">Prop Verification Framework</div>
-    <div class="rule-item"><span>Profit Extraction Target Metric:</span><span id="metric-target">$300.00 Left</span></div>
-    <div class="rule-item"><span>Intraday Drawdown Safety Metric:</span><span id="metric-daily-loss" class="pass">PASSED (-$0.00 / $150.00)</span></div>
-    <div class="rule-item"><span>EOD Trailing Drawdown Limit:</span><span id="metric-trailing" class="pass">PASSED ($0.00 / $300.00)</span></div>
-    <div class="rule-item"><span>35% Single-Trade Consistency Rule:</span><span id="metric-consistency" class="pass">COMPLIANT ($105.00 Cap)</span></div>
-</div>
+            <div style="font-weight:bold; color:#fff; font-size:0.7rem; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px;">Prop Verification Framework</div>
+            <div class="rule-item"><span>Profit Extraction Target Metric:</span><span id="metric-target">$300.00 Left</span></div>
+            <div class="rule-item"><span>Intraday Drawdown Safety Metric:</span><span id="metric-daily-loss" class="pass">PASSED (-$0.00 / $150.00)</span></div>
+            <div class="rule-item"><span>EOD Trailing Drawdown Limit:</span><span id="metric-trailing" class="pass">PASSED ($0.00 / $300.00)</span></div>
+            <div class="rule-item"><span>35% Single-Trade Consistency Rule:</span><span id="metric-consistency" class="pass">COMPLIANT ($105.00 Cap)</span></div>
+        </div>
     </div>
     
 </div>
