@@ -2,39 +2,44 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>KLineCharts Pro Setup</title>
+    <title>KLineCharts Lifecycle Managed</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/klinecharts/dist/klinecharts.min.css" />
+    <style>
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; background: #000; }
+        #chart { width: 100vw; height: 100vh; display: block; }
+    </style>
 </head>
-<body style="margin: 0; padding: 0; overflow: hidden; background-color: #000;">
+<body>
 
-    <div id="chart" style="width: 100vw; height: 100vh;"></div>
+    <div id="chart"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/klinecharts/dist/klinecharts.min.js"></script>
-
     <script>
-        // DOMContentLoaded ensures the container exists before KLineCharts touches it
-        window.addEventListener('DOMContentLoaded', () => {
-            
-            const chart = klinecharts.init('chart');
+        // Use a MutationObserver to ensure we initialize only when the DOM is 100% stable
+        const observer = new MutationObserver((mutations, obs) => {
+            const container = document.getElementById('chart');
+            if (container && container.offsetWidth > 0 && container.offsetHeight > 0) {
+                obs.disconnect(); // Stop watching
+                initProfessionalChart(container);
+            }
+        });
 
-            // 1. Mandatory metadata
+        observer.observe(document.body, { childList: true, subtree: true });
+
+        function initProfessionalChart(container) {
+            const chart = klinecharts.init(container);
+            
             chart.setSymbol({ ticker: 'BTC' });
             chart.setPeriod({ span: 1, type: 'day' });
 
-            // 2. Data Loader
             chart.setDataLoader({
                 getBars: async ({ callback }) => {
                     try {
                         const response = await fetch('http://192.168.0.66:8000/api/prices');
-                        const data = await response.json();
+                        const json = await response.json();
                         
-                        // Debugging: THIS WILL SHOW YOU IF THE DATA IS ACTUALLY ARRIVING
-                        console.log("DEBUG API DATA:", data);
-
-                        // If data.btc is undefined, THIS is your blank chart cause.
-                        const rawArray = data.btc || []; 
-
-                        const formatted = rawArray.map(item => ({
+                        // Mapping based on your documentation requirements
+                        const data = (json.btc || []).map(item => ({
                             timestamp: Number(item.t),
                             open: Number(item.o),
                             high: Number(item.h),
@@ -43,19 +48,17 @@
                             volume: Number(item.v)
                         }));
 
-                        callback(formatted, false);
+                        callback(data, false);
                     } catch (e) {
-                        console.error("KLineCharts Error:", e);
+                        console.error("Lifecycle Load Failed:", e);
                         callback([], false);
                     }
                 }
             });
-
-            // 3. Force Resize (CRITICAL: prevents blank/black initialization)
-            window.addEventListener('resize', () => {
-                chart.resize();
-            });
-        });
+            
+            // Per docs: Force resize if layout shifts
+            window.addEventListener('resize', () => chart.resize());
+        }
     </script>
 </body>
 </html>
