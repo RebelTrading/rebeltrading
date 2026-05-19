@@ -3,173 +3,58 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KLineChart Test - ETH/BTC/SOL/XRP</title>
-  <script src="https://cdn.jsdelivr.net/npm/klinecharts/dist/umd/klinecharts.min.js"></script>
+  <title>KLineChart Test</title>
+  <script src="https://cdn.jsdelivr.net/npm/klinecharts@latest/dist/umd/klinecharts.min.js"></script>
   <style>
-    body {
-      margin: 0; padding: 20px;
-      background: #0a0a0a; color: #ddd;
-      font-family: Arial, sans-serif;
-    }
-    h1 { text-align: center; }
-    #chart {
-      width: 100%;
-      max-width: 1400px;
-      height: 700px;
-      border: 1px solid #333;
-      margin: 20px auto;
-      background: #000;
-    }
-    .controls {
-      text-align: center;
-      margin: 15px 0;
-    }
-    button {
-      padding: 8px 16px;
-      margin: 0 5px;
-      background: #222;
-      color: #fff;
-      border: 1px solid #444;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    button.active { background: #ff2a2a; border-color: #ff2a2a; }
+    body { margin:0; padding:20px; background:#0a0a0a; color:#ddd; font-family:Arial; }
+    #chart { width:100%; max-width:1400px; height:720px; margin:20px auto; border:1px solid #333; background:#000; }
   </style>
 </head>
 <body>
-  <h1>KLineChart Test Page (Standalone)</h1>
-  
-  <div class="controls">
-    <button onclick="switchSymbol('BTC-USD')" class="active" id="btn-BTC">BTC</button>
-    <button onclick="switchSymbol('ETH-USD')" id="btn-ETH">ETH</button>
-    <button onclick="switchSymbol('SOL-USD')" id="btn-SOL">SOL</button>
-    <button onclick="switchSymbol('XRP-USD')" id="btn-XRP">XRP</button>
-    <button onclick="toggleLiveData()">Toggle Live API</button>
-  </div>
-
+  <h1>KLineChart Test — Should show candles + indicators</h1>
   <div id="chart"></div>
 
-  <p style="text-align:center; font-size:0.9rem;">
-    Check browser console (F12) for logs/errors.<br>
-    GitHub Pages + mock data should show a chart immediately.
-  </p>
-
   <script>
-    let klineChart = null;
-    let currentSymbol = 'BTC-USD';
-    let useLiveAPI = false;
+    let chart = null;
 
-    // Initialize chart
-    function initChart() {
-      if (klineChart) klinecharts.dispose('chart');
+    function init() {
+      chart = klinecharts.init('chart');
 
-      klineChart = klinecharts.init('chart', {
-        candle: { type: 'candle' },
-        grid: { show: true },
-      });
+      // Add your indicators
+      chart.createIndicator('EMA', false, { calcParams: [9] });
+      chart.createIndicator('EMA', false, { calcParams: [21] });
+      chart.createIndicator('VOLUME', true);
+      chart.createIndicator('MACD', true);
+      chart.createIndicator('RSI', true);
 
-      // Required indicators
-      klineChart.createIndicator('EMA', false, { calcParams: [9] });
-      klineChart.createIndicator('EMA', false, { calcParams: [21] });
-      klineChart.createIndicator('VOLUME', true);
-      klineChart.createIndicator('MACD', true);
-      klineChart.createIndicator('RSI', true);
-
-      console.log('✅ KLineChart initialized with EMA9/21, Volume, MACD, RSI');
-    }
-
-    // Generate realistic mock bars (fallback)
-    function generateMockData(basePrice) {
+      // === CRITICAL: Generate visible data ===
       const now = Date.now();
-      const bars = [];
-      let price = basePrice;
+      const data = [];
+      let price = 65000;
 
-      for (let i = 300; i >= 0; i--) {  // 300 bars (~5 hours @ 1m)
-        const timestamp = now - i * 60000;
+      for (let i = 300; i >= 0; i--) {
+        const ts = now - i * 60000;
         const open = price;
-        const close = open + (Math.random() * 60 - 30);
-        const high = Math.max(open, close) + Math.random() * 40;
-        const low = Math.min(open, close) - Math.random() * 40;
-        const volume = Math.floor(Math.random() * 8000 + 800);
+        const close = open + (Math.random() * 300 - 150);
+        const high = Math.max(open, close) + Math.random() * 200;
+        const low = Math.min(open, close) - Math.random() * 200;
 
-        bars.push({
-          timestamp: timestamp,
-          open: parseFloat(open.toFixed(2)),
-          high: parseFloat(high.toFixed(2)),
-          low: parseFloat(low.toFixed(2)),
-          close: parseFloat(close.toFixed(2)),
-          volume: volume
+        data.push({
+          timestamp: ts,
+          open: Number(open.toFixed(2)),
+          high: Number(high.toFixed(2)),
+          low: Number(low.toFixed(2)),
+          close: Number(close.toFixed(2)),
+          volume: Math.floor(Math.random() * 12000) + 2000
         });
         price = close;
       }
-      return bars;
+
+      chart.applyNewData(data);
+      console.log('✅ Chart initialized with', data.length, 'bars');
     }
 
-    // Fetch from your Beelink API
-    async function fetchLiveData(symbol) {
-      try {
-        const res = await fetch(`http://192.168.0.66:8000/api/prices`);
-        if (!res.ok) throw new Error('Network error');
-        const data = await res.json();
-        console.log('📡 Live API response:', data);
-        
-        // Use current price from your matrix
-        const price = data[symbol] || data['BTC-USD'] || 65000;
-        return generateMockData(parseFloat(price)); // Still mock bars for now
-      } catch (err) {
-        console.warn('⚠️ Live API failed (expected on GitHub Pages):', err.message);
-        return null;
-      }
-    }
-
-    // Load data into chart
-    async function loadChartData() {
-      if (!klineChart) return;
-
-      let bars = null;
-      if (useLiveAPI) {
-        bars = await fetchLiveData(currentSymbol);
-      }
-
-      if (!bars) {
-        // Mock data fallback (works everywhere)
-        const basePrices = {
-          'BTC-USD': 79130,
-          'ETH-USD': 3450,
-          'SOL-USD': 145,
-          'XRP-USD': 1.43
-        };
-        bars = generateMockData(basePrices[currentSymbol] || 65000);
-      }
-
-      klineChart.applyNewData(bars);
-      console.log(`✅ Loaded ${bars.length} bars for ${currentSymbol}`);
-    }
-
-    // Switch symbol
-    async function switchSymbol(symbol) {
-      currentSymbol = symbol;
-      
-      // Update button styles
-      document.querySelectorAll('button').forEach(btn => {
-        btn.classList.remove('active');
-        if (btn.id === `btn-${symbol.split('-')[0]}`) btn.classList.add('active');
-      });
-
-      await loadChartData();
-    }
-
-    function toggleLiveData() {
-      useLiveAPI = !useLiveAPI;
-      alert(`Live API mode: ${useLiveAPI ? 'ON (only works on same network)' : 'OFF (mock data)'}`);
-      loadChartData();
-    }
-
-    // Start everything
-    window.onload = function() {
-      initChart();
-      loadChartData();
-    };
+    window.onload = init;
   </script>
 </body>
 </html>
