@@ -2,31 +2,48 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>KLineCharts Test</title>
-    <!-- Include KLineCharts library from CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/klinecharts/dist/klinecharts.min.js"></script>
+    <title>KLineCharts Live Test</title>
+    <!-- Use the latest version -->
+    <script src="https://unpkg.com/klinecharts/dist/klinecharts.min.js"></script>
     <style>
-        #chart { width: 100%; height: 500px; }
+        #chart { width: 100%; height: 600px; background-color: #131722; }
     </style>
 </head>
 <body>
     <div id="chart"></div>
     <script>
-        // 1. Initialize the chart
+        // 1. Initialize
         const chart = klinecharts.init('chart');
+        chart.createIndicator('MACD');
+        chart.createIndicator('RSI');
 
-        // 2. Add technical indicators (No math needed)
-        chart.createIndicator('MACD', false);
-        chart.createIndicator('RSI', false);
+        // 2. Fetch from your Beelink server
+        async function fetchPrices() {
+            try {
+                const response = await fetch('http://192.168.0.66:8000/api/prices');
+                const rawData = await response.json();
 
-        // 3. Dummy data to test the display
-        const data = [
-            { timestamp: 1716000000000, open: 40000, high: 40100, low: 39900, close: 40050, volume: 100 },
-            { timestamp: 1716003600000, open: 40050, high: 40200, low: 40000, close: 40150, volume: 150 }
-        ];
+                // 3. Transform: Ensure data is mapped to {timestamp, open, high, low, close, volume}
+                // Assuming your API returns something like {btc: {o, h, l, c, v, t}, ...}
+                // Adjust 'rawData.btc' to match the actual key in your JSON
+                const formattedData = rawData.btc.map(item => ({
+                    timestamp: item.t,
+                    open: item.o,
+                    high: item.h,
+                    low: item.l,
+                    close: item.c,
+                    volume: item.v
+                }));
 
-        // 4. Feed data to the chart
-        chart.applyNewData(data);
+                // 4. Load data into the chart
+                chart.setSeries(formattedData);
+            } catch (err) {
+                console.error("Failed to fetch price data:", err);
+            }
+        }
+
+        // Run it
+        fetchPrices();
     </script>
 </body>
 </html>
