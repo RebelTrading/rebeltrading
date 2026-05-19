@@ -9,7 +9,6 @@
     <script src="https://cdn.jsdelivr.net/npm/klinecharts/dist/klinecharts.min.js"></script>
     
     <style>
-        /* 3. The container MUST have an explicit height */
         #chart { width: 100%; height: 600px; }
     </style>
 </head>
@@ -17,21 +16,32 @@
     <div id="chart"></div>
 
     <script>
-        // Wait for the DOM to be fully loaded
-        window.addEventListener('DOMContentLoaded', () => {
-            // Initialize
-            const chart = klinecharts.init('chart');
-            
-            // Add indicators
-            chart.createIndicator('MACD');
-            chart.createIndicator('RSI');
+        // Initialize
+        const chart = klinecharts.init('chart');
+        
+        // Add Indicators
+        chart.createIndicator('MACD');
+        chart.createIndicator('RSI');
 
-            // Set some dummy data to verify it works
-            chart.applyNewData([
-                { timestamp: 1716000000000, open: 40000, high: 40100, low: 39900, close: 40050, volume: 100 },
-                { timestamp: 1716003600000, open: 40050, high: 40200, low: 40000, close: 40150, volume: 150 }
-            ]);
-        });
+        // Fetch Data
+        fetch('http://192.168.0.66:8000/api/prices')
+            .then(response => response.json())
+            .then(data => {
+                // Assuming data is an array directly: [{t, o, h, l, c, v}, ...]
+                const formattedData = data.map(item => ({
+                    timestamp: item.t,
+                    open: item.o,
+                    high: item.h,
+                    low: item.l,
+                    close: item.c,
+                    volume: item.v
+                }));
+                
+                chart.applyNewData(formattedData);
+            })
+            .catch(err => {
+                console.error("Fetch failed. Open console for details.");
+            });
     </script>
 </body>
 </html>
