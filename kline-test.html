@@ -2,12 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>KLineCharts Isolated Test</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/klinecharts/dist/klinecharts.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/klinecharts/dist/klinecharts.min.js"></script>
     <style>
-        body { margin: 0; background: #000; }
-        #chart { width: 100vw; height: 100vh; }
+        #chart { width: 100%; height: 600px; background: #000; }
     </style>
 </head>
 <body>
@@ -15,37 +13,38 @@
     <script>
         const chart = klinecharts.init('chart');
         
-        // Add the indicators you requested
-        chart.createIndicator('EMA', true, { id: 'candle_pane' });
+        // Add Indicators as per docs
         chart.createIndicator('MACD');
         chart.createIndicator('RSI');
-        chart.createIndicator('VOL');
+        chart.createIndicator('EMA', true, { id: 'candle_pane' });
 
-        async function fetchPrices() {
-            try {
-                const response = await fetch('http://192.168.0.66:8000/api/prices');
-                const rawData = await response.json();
-                
-                // IMPORTANT: Use the key from your existing tradesim.html logic.
-                // If it's { "btc": [...] }, use rawData.btc
-                const arrayData = rawData.btc; 
+        // THE KLINECHARTS DATA LOADER PATTERN
+        chart.setDataLoader({
+            getBars: async ({ callback }) => {
+                try {
+                    const response = await fetch('http://192.168.0.66:8000/api/prices');
+                    const rawData = await response.json();
+                    
+                    // You mentioned this fetch works in tradesim.html.
+                    // If the response is an object, access the array here.
+                    const data = Array.isArray(rawData) ? rawData : rawData.btc;
 
-                const formatted = arrayData.map(item => ({
-                    timestamp: item.t,
-                    open: item.o,
-                    high: item.h,
-                    low: item.l,
-                    close: item.c,
-                    volume: item.v
-                }));
-
-                chart.applyNewData(formatted);
-            } catch (e) { 
-                console.error("API error. Check if 'btc' is the correct object key:", e); 
+                    const formatted = data.map(item => ({
+                        timestamp: item.t,
+                        open: item.o,
+                        high: item.h,
+                        low: item.l,
+                        close: item.c,
+                        volume: item.v
+                    }));
+                    
+                    callback(formatted);
+                } catch (e) {
+                    console.error("KLineCharts loader error:", e);
+                    callback([]);
+                }
             }
-        }
-
-        fetchPrices();
+        });
     </script>
 </body>
 </html>
