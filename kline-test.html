@@ -2,11 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>KLineCharts Official Pattern</title>
+    <title>KLineCharts Full Implementation</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/klinecharts/dist/klinecharts.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/klinecharts/dist/klinecharts.min.js"></script>
     <style>
-        body { margin: 0; background: #000; }
+        body { margin: 0; padding: 0; background: #000; }
+        /* Ensure the container has explicit dimensions */
         #chart { width: 100vw; height: 100vh; }
     </style>
 </head>
@@ -14,32 +15,33 @@
     <div id="chart"></div>
 
     <script>
-        // Initialize as per documentation
+        // 1. Initialize the chart
         const chart = klinecharts.init('chart');
 
-        // Set symbol and period
+        // 2. Set symbol and period as per documentation requirements
         chart.setSymbol({ ticker: 'BTC' });
         chart.setPeriod({ span: 1, type: 'day' });
 
-        // Add indicators as requested
+        // 3. Add indicators
         chart.createIndicator('MACD');
         chart.createIndicator('RSI');
         chart.createIndicator('EMA', true, { id: 'candle_pane' });
 
-        // Use the official setDataLoader pattern
+        // 4. Set the Data Loader using the required callback pattern
         chart.setDataLoader({
             getBars: async ({ callback }) => {
                 try {
                     const response = await fetch('http://192.168.0.66:8000/api/prices');
                     const rawData = await response.json();
+                    
+                    // Log the full response to the console (F12) to verify structure
+                    console.log("Full API Response:", rawData);
 
-                    // Debug: See the structure in console
-                    console.log("API Response for Loader:", rawData);
+                    // Map your response to the required KLineCharts format
+                    // UPDATE: Change 'rawData.btc' to the correct key found in your console log
+                    const rawArray = rawData.btc || []; 
 
-                    // Adjust this 'rawData.btc' to match your actual API data structure
-                    const dataArray = rawData.btc; 
-
-                    const formattedData = dataArray.map(item => ({
+                    const formattedData = rawArray.map(item => ({
                         timestamp: item.t,
                         open: item.o,
                         high: item.h,
@@ -48,10 +50,11 @@
                         volume: item.v
                     }));
 
-                    // Return the data to the chart via callback
+                    // Return data to the chart via callback
                     callback(formattedData);
                 } catch (error) {
-                    console.error("Data Load Error:", error);
+                    console.error("Fetch failed:", error);
+                    // Always call the callback, even on error, to avoid a frozen chart
                     callback([]);
                 }
             }
