@@ -2,35 +2,35 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>KLineCharts Trading Prototype</title>
+    <title>KLineCharts Isolated Test</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/klinecharts/dist/klinecharts.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/klinecharts/dist/klinecharts.min.js"></script>
     <style>
-        #chart { width: 100vw; height: 80vh; background: #0c0d0e; }
+        body { margin: 0; background: #000; }
+        #chart { width: 100vw; height: 100vh; }
     </style>
 </head>
 <body>
     <div id="chart"></div>
     <script>
-        // 1. Init
         const chart = klinecharts.init('chart');
+        
+        // Add the indicators you requested
+        chart.createIndicator('EMA', true, { id: 'candle_pane' });
+        chart.createIndicator('MACD');
+        chart.createIndicator('RSI');
+        chart.createIndicator('VOL');
 
-        // 2. Add Built-in Indicators
-        chart.createIndicator('EMA'); // EMA
-        chart.createIndicator('MACD'); // MACD
-        chart.createIndicator('RSI'); // RSI
-        chart.createIndicator('VOL'); // Volume
-        // Note: VWAP is often custom or built-in depending on version; 
-        // check getSupportedIndicators() for your exact version.
-
-        // 3. Connect to your Beelink Feed
         async function fetchPrices() {
             try {
                 const response = await fetch('http://192.168.0.66:8000/api/prices');
-                const data = await response.json();
+                const rawData = await response.json();
                 
-                // Map your API format to KLineCharts {timestamp, open, high, low, close, volume}
-                const formatted = data.map(item => ({
+                // IMPORTANT: Use the key from your existing tradesim.html logic.
+                // If it's { "btc": [...] }, use rawData.btc
+                const arrayData = rawData.btc; 
+
+                const formatted = arrayData.map(item => ({
                     timestamp: item.t,
                     open: item.o,
                     high: item.h,
@@ -38,8 +38,11 @@
                     close: item.c,
                     volume: item.v
                 }));
+
                 chart.applyNewData(formatted);
-            } catch (e) { console.error("Data error:", e); }
+            } catch (e) { 
+                console.error("API error. Check if 'btc' is the correct object key:", e); 
+            }
         }
 
         fetchPrices();
