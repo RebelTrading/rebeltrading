@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>KLineCharts Full Test</title>
+    <title>KLineCharts Official Pattern</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/klinecharts/dist/klinecharts.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/klinecharts/dist/klinecharts.min.js"></script>
     <style>
-        body { margin: 0; padding: 0; background: #000; }
+        body { margin: 0; background: #000; }
         #chart { width: 100vw; height: 100vh; }
     </style>
 </head>
@@ -14,51 +14,48 @@
     <div id="chart"></div>
 
     <script>
-        // 1. Initialize the chart instance
+        // Initialize as per documentation
         const chart = klinecharts.init('chart');
 
-        // 2. Add indicators
+        // Set symbol and period
+        chart.setSymbol({ ticker: 'BTC' });
+        chart.setPeriod({ span: 1, type: 'day' });
+
+        // Add indicators as requested
         chart.createIndicator('MACD');
         chart.createIndicator('RSI');
         chart.createIndicator('EMA', true, { id: 'candle_pane' });
 
-        // 3. Fetch data from your working API
-        async function initChart() {
-            try {
-                const response = await fetch('http://192.168.0.66:8000/api/prices');
-                const rawData = await response.json();
+        // Use the official setDataLoader pattern
+        chart.setDataLoader({
+            getBars: async ({ callback }) => {
+                try {
+                    const response = await fetch('http://192.168.0.66:8000/api/prices');
+                    const rawData = await response.json();
 
-                // LOGGING TO CONSOLE SO WE CAN SEE THE DATA STRUCTURE
-                console.log("Full API Response:", rawData);
+                    // Debug: See the structure in console
+                    console.log("API Response for Loader:", rawData);
 
-                // ADJUST THIS LINE: If your API is { "btc": [...] }, use data.btc
-                // If your API returns the array directly, just use rawData
-                const dataArray = rawData.btc; 
+                    // Adjust this 'rawData.btc' to match your actual API data structure
+                    const dataArray = rawData.btc; 
 
-                if (!dataArray) {
-                    console.error("Key 'btc' not found. Check console log above.");
-                    return;
+                    const formattedData = dataArray.map(item => ({
+                        timestamp: item.t,
+                        open: item.o,
+                        high: item.h,
+                        low: item.l,
+                        close: item.c,
+                        volume: item.v
+                    }));
+
+                    // Return the data to the chart via callback
+                    callback(formattedData);
+                } catch (error) {
+                    console.error("Data Load Error:", error);
+                    callback([]);
                 }
-
-                // Map your keys (t, o, h, l, c, v) to KLineCharts expected keys
-                const formattedData = dataArray.map(item => ({
-                    timestamp: item.t,
-                    open: item.o,
-                    high: item.h,
-                    low: item.l,
-                    close: item.c,
-                    volume: item.v
-                }));
-
-                // Apply the data
-                chart.applyNewData(formattedData);
-                
-            } catch (error) {
-                console.error("Fetch failed:", error);
             }
-        }
-
-        initChart();
+        });
     </script>
 </body>
 </html>
