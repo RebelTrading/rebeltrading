@@ -2,63 +2,59 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>KLineCharts Integration</title>
+    <title>KLineCharts Pro Setup</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/klinecharts/dist/klinecharts.min.css" />
-    <script src="https://cdn.jsdelivr.net/npm/klinecharts/dist/klinecharts.min.js"></script>
-    <style>
-        body { margin: 0; padding: 0; background: #000; }
-        #chart { width: 100vw; height: 100vh; }
-    </style>
 </head>
-<body>
-    <div id="chart"></div>
+<body style="margin: 0; padding: 0; overflow: hidden; background-color: #000;">
+
+    <div id="chart" style="width: 100vw; height: 100vh;"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/klinecharts/dist/klinecharts.min.js"></script>
 
     <script>
-        // 1. Initialize
-        const chart = klinecharts.init('chart');
+        // DOMContentLoaded ensures the container exists before KLineCharts touches it
+        window.addEventListener('DOMContentLoaded', () => {
+            
+            const chart = klinecharts.init('chart');
 
-        // 2. Set Symbol & Period (Required for Data Loader to trigger)
-        chart.setSymbol({ ticker: 'BTC' });
-        chart.setPeriod({ span: 1, type: 'day' });
+            // 1. Mandatory metadata
+            chart.setSymbol({ ticker: 'BTC' });
+            chart.setPeriod({ span: 1, type: 'day' });
 
-        // 3. Normalization Helper (Crucial for KLineCharts field format)
-        function normalizeToKLineData(item) {
-            return {
-                timestamp: Number(item.t), // Ensure milliseconds
-                open: Number(item.o),
-                high: Number(item.h),
-                low: Number(item.l),
-                close: Number(item.c),
-                volume: Number(item.v || 0)
-            };
-        }
+            // 2. Data Loader
+            chart.setDataLoader({
+                getBars: async ({ callback }) => {
+                    try {
+                        const response = await fetch('http://192.168.0.66:8000/api/prices');
+                        const data = await response.json();
+                        
+                        // Debugging: THIS WILL SHOW YOU IF THE DATA IS ACTUALLY ARRIVING
+                        console.log("DEBUG API DATA:", data);
 
-        // 4. Implement the Data Loader per the official GitHub docs
-        chart.setDataLoader({
-            getBars: async ({ type, timestamp, callback }) => {
-                try {
-                    // Fetch your data
-                    const response = await fetch('http://192.168.0.66:8000/api/prices');
-                    const rawData = await response.json();
-                    
-                    // Access the array (Modify 'btc' to the correct key from your console)
-                    const sourceArray = rawData.btc || [];
+                        // If data.btc is undefined, THIS is your blank chart cause.
+                        const rawArray = data.btc || []; 
 
-                    // Normalize data
-                    const bars = sourceArray.map(normalizeToKLineData)
-                        .sort((a, b) => a.timestamp - b.timestamp);
+                        const formatted = rawArray.map(item => ({
+                            timestamp: Number(item.t),
+                            open: Number(item.o),
+                            high: Number(item.h),
+                            low: Number(item.l),
+                            close: Number(item.c),
+                            volume: Number(item.v)
+                        }));
 
-                    console.log(`[KLine] Data Loaded: ${bars.length} bars. Type: ${type}`);
-
-                    // Use callback(data, more)
-                    // If your API returns all data at once, 'more' is false.
-                    callback(bars, false);
-
-                } catch (e) {
-                    console.error("[KLine] Data Loading Error:", e);
-                    callback([], false);
+                        callback(formatted, false);
+                    } catch (e) {
+                        console.error("KLineCharts Error:", e);
+                        callback([], false);
+                    }
                 }
-            }
+            });
+
+            // 3. Force Resize (CRITICAL: prevents blank/black initialization)
+            window.addEventListener('resize', () => {
+                chart.resize();
+            });
         });
     </script>
 </body>
