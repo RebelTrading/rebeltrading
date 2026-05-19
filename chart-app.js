@@ -85,29 +85,43 @@ function initChartInstances() {
 
     // 2. Build RSI Sub-Window
     rsiChart = createChart(rsiDiv, { ...commonOptions, width: rsiDiv.clientWidth, height: rsiDiv.clientHeight });
+    rsiChart.priceScale('right').applyOptions({ scaleMargins: { top: 0.18, bottom: 0.18 } });
+    // ENHANCEMENT: Lock scale padding to leave room above/below the RSI boundary limits
+    rsiChart.priceScale('right').applyOptions({
+        scaleMargins: { top: 0.18, bottom: 0.18 }
+    });
+    
     rsiSeries = rsiChart.addLineSeries({ color: '#9d4edd', lineWidth: 1.5, title: 'RSI (14)' });
     rsiTopLine = rsiChart.addLineSeries({ color: '#3a0ca3', lineWidth: 1, lineStyle: 2, title: '' });
     rsiBottomLine = rsiChart.addLineSeries({ color: '#3a0ca3', lineWidth: 1, lineStyle: 2, title: '' });
 
-    // 3. Build MACD Sub-Window (This bottom row gets the visible TimeScale)
+    // 3. Build MACD Sub-Window
     macdChart = createChart(macdDiv, { 
         ...commonOptions, 
         width: macdDiv.clientWidth, 
         height: macdDiv.clientHeight,
         timeScale: { ...commonOptions.timeScale, visible: true } 
     });
+    
+    macdChart.priceScale('right').applyOptions({ scaleMargins: { top: 0.15, bottom: 0.15 } });
+    // ENHANCEMENT: Keep historical histogram bars centered and away from top/bottom clipping
+    macdChart.priceScale('right').applyOptions({
+        scaleMargins: { top: 0.15, bottom: 0.15 }
+    });
+    
     macdLineSeries = macdChart.addLineSeries({ color: '#00b4d8', lineWidth: 1.5, title: 'MACD' });
     macdSignalSeries = macdChart.addLineSeries({ color: '#ffb703', lineWidth: 1.5, title: 'Signal' });
     macdHistogramSeries = macdChart.addHistogramSeries({ title: 'Hist' });
 
     // --- TIMELINE SYNCHRONIZATION LOOP ---
-    // Forces zooming, scrolling, and dragging on one row to perfectly mirror across all windows
     let isSyncing = false;
     const syncTimelines = (masterChart, targets) => {
         masterChart.timeScale().subscribeVisibleLogicalRangeChange(range => {
             if (isSyncing || !range) return;
             isSyncing = true;
-            targets.forEach(t => t.timeScale().setVisibleLogicalRange(range));
+            targets.forEach(t => {
+                if(t && t.timeScale) t.timeScale().setVisibleLogicalRange(range);
+            });
             isSyncing = false;
         });
     };
@@ -182,6 +196,7 @@ async function loadChartWorkspace() {
         currentHistoricalBars = generateHistoricalBars(currentTimeframe, currentAsset, realAnchorPrice);
         
         refreshChartOverlays();
+        updateRowLayouts(); // Synchronize view states on canvas loads
         
         mainChart.priceScale('right').applyOptions({ autoScale: true });
         mainChart.timeScale().fitContent();
@@ -211,11 +226,16 @@ function refreshChartOverlays() {
         volumeSeries.setData([]);
     }
 
+    // FIX: Match array mapping directly against historical indexes from trailing end to lock leftward shifting
     if (document.getElementById('toggle-rsi')?.checked && currentHistoricalBars.length > 14) {
         const closePrices = currentHistoricalBars.map(b => b.close);
         const rsiValues = RSI.calculate({ values: closePrices, period: 14 });
+        
+        const rsiMapped = [];
         const offset = currentHistoricalBars.length - rsiValues.length;
-        const rsiMapped = rsiValues.map((val, idx) => ({ time: currentHistoricalBars[idx + offset].time, value: val }));
+        for (let i = 0; i < rsiValues.length; i++) {
+            rsiMapped.push({ time: currentHistoricalBars[offset + i].time, value: rsiValues[i] });
+        }
 
         rsiSeries.setData(cleanArray(rsiMapped));
         rsiTopLine.setData(currentHistoricalBars.map(b => ({ time: b.time, value: 70 })));
@@ -224,6 +244,7 @@ function refreshChartOverlays() {
         rsiSeries.setData([]); rsiTopLine.setData([]); rsiBottomLine.setData([]);
     }
 
+    // FIX: Match array mapping directly against historical indexes from trailing end to lock leftward shifting
     if (document.getElementById('toggle-macd')?.checked && currentHistoricalBars.length > 26) {
         const closePrices = currentHistoricalBars.map(b => b.close);
         const macdValues = MACD.calculate({ values: closePrices, fastPeriod: 12, slowPeriod: 26, signalPeriod: 9, SimpleMAOscillator: false, SimpleMASignal: false });
@@ -232,7 +253,7 @@ function refreshChartOverlays() {
         const offset = currentHistoricalBars.length - macdValues.length;
 
         macdValues.forEach((res, idx) => {
-            const time = currentHistoricalBars[idx + offset].time;
+            const time = currentHistoricalBars[offset + idx].time;
             if (res.macd !== undefined) macdLineData.push({ time, value: res.macd });
             if (res.signal !== undefined) macdSignalData.push({ time, value: res.signal });
             if (res.histogram !== undefined) {
@@ -265,7 +286,7 @@ function initPriceLoop() {
 
             if (!livePrice || isNaN(livePrice)) return;
 
-            let interval = currentTimeframe === '5m' ? 300 : currentTimeframe === '1h' ? 3600 : currentTimeframe === '1d' ? 86400 : 60;
+            let interval = currentTimeframe === '5m' ? 300 : currentTimeframe === '1h' ? 3600 : timeframe === '1d' ? 86400 : 60;
             const nowSeconds = Math.floor(Date.now() / 1000);
             const currentBarTime = Math.floor(nowSeconds / interval) * interval;
 
@@ -330,42 +351,121 @@ function initPriceLoop() {
     }, 1000);
 }
 
-// --- UI EVENT BINDINGS ---
+// --- UI EVENT BINDINGS & DRAGGABLE VIEW ENGINE ---
 function updateRowLayouts() {
     const rsiChecked = document.getElementById('toggle-rsi')?.checked;
     const macdChecked = document.getElementById('toggle-macd')?.checked;
 
+    const mainDiv = document.getElementById('main-container');
     const rsiDiv = document.getElementById('rsi-container');
     const macdDiv = document.getElementById('macd-container');
-    const mainDiv = document.getElementById('main-container');
+    
+    const rsiSplitter = document.getElementById('rsi-splitter');
+    const macdSplitter = document.getElementById('macd-splitter');
 
+    // Toggle container display configurations
     rsiDiv.style.display = rsiChecked ? 'block' : 'none';
+    rsiSplitter.style.display = rsiChecked ? 'block' : 'none';
+    
     macdDiv.style.display = macdChecked ? 'block' : 'none';
+    macdSplitter.style.display = macdChecked ? 'block' : 'none';
 
-    // Distribute height percentages based on active panels
+    // Distribute responsive layout weights cleanly matching selected configurations
     if (rsiChecked && macdChecked) {
-        mainDiv.style.height = '60%'; rsiDiv.style.height = '20%'; macdDiv.style.height = '20%';
+        mainDiv.style.flexGrow = "60"; rsiDiv.style.flexGrow = "20"; macdDiv.style.flexGrow = "20";
         mainChart.applyOptions({ timeScale: { visible: false } });
         rsiChart.applyOptions({ timeScale: { visible: false } });
         macdChart.applyOptions({ timeScale: { visible: true } });
     } else if (rsiChecked || macdChecked) {
-        mainDiv.style.height = '75%';
+        mainDiv.style.flexGrow = "75";
         if (rsiChecked) {
-            rsiDiv.style.height = '25%'; rsiChart.applyOptions({ timeScale: { visible: true } });
+            rsiDiv.style.flexGrow = "25"; rsiChart.applyOptions({ timeScale: { visible: true } });
         } else {
-            macdDiv.style.height = '25%'; macdChart.applyOptions({ timeScale: { visible: true } });
+            macdDiv.style.flexGrow = "25"; macdChart.applyOptions({ timeScale: { visible: true } });
         }
         mainChart.applyOptions({ timeScale: { visible: false } });
     } else {
-        mainDiv.style.height = '100%';
+        mainDiv.style.flexGrow = "100";
         mainChart.applyOptions({ timeScale: { visible: true } });
     }
 
-    // Force engine canvas recalculation
-    if(mainChart) mainChart.resize(mainDiv.clientWidth, mainDiv.clientHeight);
-    if(rsiChart) rsiChart.resize(rsiDiv.clientWidth, rsiDiv.clientHeight);
-    if(macdChart) macdChart.resize(macdDiv.clientWidth, macdDiv.clientHeight);
+    triggerChartResize();
 }
+
+function triggerChartResize() {
+    const mainDiv = document.getElementById('main-container');
+    const rsiDiv = document.getElementById('rsi-container');
+    const macdDiv = document.getElementById('macd-container');
+
+    if (mainChart && mainDiv) mainChart.resize(mainDiv.clientWidth, mainDiv.clientHeight);
+    if (rsiChart && rsiDiv) rsiChart.resize(rsiDiv.clientWidth, rsiDiv.clientHeight);
+    if (macdChart && macdDiv) macdChart.resize(macdDiv.clientWidth, macdDiv.clientHeight);
+}
+
+// --- ACTIVE EVENT ENGINE FOR TRADINGVIEW SPLIT INTERACTIVITY ---
+let activeSplitter = null;
+let startY = 0;
+let startTopFlex = 0;
+let startBottomFlex = 0;
+
+function initSplitterDrag(splitterId, topContainerId, bottomContainerId) {
+    const splitter = document.getElementById(splitterId);
+    if (!splitter) return;
+    
+    splitter.addEventListener('mousedown', (e) => {
+        activeSplitter = splitter;
+        startY = e.clientY;
+        
+        const topContainer = document.getElementById(topContainerId);
+        const bottomContainer = document.getElementById(bottomContainerId);
+        
+        startTopFlex = parseFloat(window.getComputedStyle(topContainer).flexGrow) || 1;
+        startBottomFlex = parseFloat(window.getComputedStyle(bottomContainer).flexGrow) || 1;
+        
+        splitter.classList.add('dragging');
+        e.preventDefault();
+    });
+}
+
+window.addEventListener('mousemove', (e) => {
+    if (!activeSplitter) return;
+    
+    const deltaY = e.clientY - startY;
+    const workspaceHeight = document.getElementById('workspace').clientHeight;
+    const flexDelta = (deltaY / workspaceHeight) * 100; 
+    
+    let topTarget, bottomTarget;
+    if (activeSplitter.id === 'rsi-splitter') {
+        topTarget = document.getElementById('main-container');
+        bottomTarget = document.getElementById('rsi-container');
+    } else if (activeSplitter.id === 'macd-splitter') {
+        const rsiActive = document.getElementById('toggle-rsi')?.checked;
+        topTarget = rsiActive ? document.getElementById('rsi-container') : document.getElementById('main-container');
+        bottomTarget = document.getElementById('macd-container');
+    }
+    
+    if (topTarget && bottomTarget) {
+        const newTopFlex = Math.max(startTopFlex + flexDelta, 10); 
+        const newBottomFlex = Math.max(startBottomFlex - flexDelta, 10);
+        
+        topTarget.style.flexGrow = newTopFlex;
+        bottomTarget.style.flexGrow = newBottomFlex;
+        
+        triggerChartResize();
+    }
+});
+
+window.addEventListener('mouseup', () => {
+    if (activeSplitter) {
+        activeSplitter.classList.remove('dragging');
+        activeSplitter = null;
+    }
+});
+
+// Initialize Drag Interactivity Controls
+initSplitterDrag('rsi-splitter', 'main-container', 'rsi-container');
+initSplitterDrag('macd-splitter', 'rsi-container', 'macd-container');
+
 
 document.querySelectorAll('.asset-btn').forEach(button => {
     button.addEventListener('click', (e) => {
@@ -398,11 +498,4 @@ document.querySelectorAll('.tf-btn').forEach(button => {
 
 loadChartWorkspace();
 
-window.addEventListener('resize', () => {
-    const mainDiv = document.getElementById('main-container');
-    const rsiDiv = document.getElementById('rsi-container');
-    const macdDiv = document.getElementById('macd-container');
-    if (mainChart) mainChart.resize(mainDiv.clientWidth, mainDiv.clientHeight);
-    if (rsiChart) rsiChart.resize(rsiDiv.clientWidth, rsiDiv.clientHeight);
-    if (macdChart) macdChart.resize(macdDiv.clientWidth, macdDiv.clientHeight);
-});
+window.addEventListener('resize', () => triggerChartResize());
