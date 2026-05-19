@@ -1,64 +1,56 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>KLineCharts Lifecycle Managed</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/klinecharts/dist/klinecharts.min.css" />
-    <style>
-        body, html { margin: 0; padding: 0; height: 100%; width: 100%; background: #000; }
-        #chart { width: 100vw; height: 100vh; display: block; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KLineChart Test</title>
+  <script src="https://cdn.jsdelivr.net/npm/klinecharts/dist/umd/klinecharts.min.js"></script>
+  <style>
+    body { margin: 0; padding: 20px; background: #000; color: #fff; font-family: sans-serif; }
+    #chart { width: 100%; max-width: 1200px; height: 600px; border: 1px solid #333; }
+  </style>
 </head>
 <body>
+  <h1>KLineChart Test (ETH/BTC/SOL/XRP)</h1>
+  <div id="chart"></div>
 
-    <div id="chart"></div>
-
-    <script src="https://cdn.jsdelivr.net/npm/klinecharts/dist/klinecharts.min.js"></script>
-    <script>
-        // Use a MutationObserver to ensure we initialize only when the DOM is 100% stable
-        const observer = new MutationObserver((mutations, obs) => {
-            const container = document.getElementById('chart');
-            if (container && container.offsetWidth > 0 && container.offsetHeight > 0) {
-                obs.disconnect(); // Stop watching
-                initProfessionalChart(container);
-            }
-        });
-
-        observer.observe(document.body, { childList: true, subtree: true });
-
-        function initProfessionalChart(container) {
-            const chart = klinecharts.init(container);
-            
-            chart.setSymbol({ ticker: 'BTC' });
-            chart.setPeriod({ span: 1, type: 'day' });
-
-            chart.setDataLoader({
-                getBars: async ({ callback }) => {
-                    try {
-                        const response = await fetch('http://192.168.0.66:8000/api/prices');
-                        const json = await response.json();
-                        
-                        // Mapping based on your documentation requirements
-                        const data = (json.btc || []).map(item => ({
-                            timestamp: Number(item.t),
-                            open: Number(item.o),
-                            high: Number(item.h),
-                            low: Number(item.l),
-                            close: Number(item.c),
-                            volume: Number(item.v)
-                        }));
-
-                        callback(data, false);
-                    } catch (e) {
-                        console.error("Lifecycle Load Failed:", e);
-                        callback([], false);
-                    }
-                }
-            });
-            
-            // Per docs: Force resize if layout shifts
-            window.addEventListener('resize', () => chart.resize());
+  <script>
+    window.onload = function () {
+      // Initialize chart
+      const chart = klinecharts.init('chart', {
+        // Optional: theme/custom styles
+        styles: {
+          candle: { type: 'candle' } // or 'area', etc.
         }
-    </script>
+      });
+
+      chart.setSymbol({ ticker: 'ETH' }); // or BTC, etc.
+      chart.setPeriod({ span: 1, type: 'minute' }); // or 'day', etc. Adjust as needed
+
+      // Mock data for testing (replace with real later)
+      const mockData = [
+        { timestamp: Date.now() - 1000*60*100, open: 3400, high: 3450, low: 3380, close: 3425, volume: 12345 },
+        // Add 50-100+ more realistic bars here for a visible chart
+        // ... (generate or copy sample)
+      ];
+
+      // Load initial data
+      chart.applyNewData(mockData);
+
+      // Add indicators (built-ins available)
+      chart.createIndicator('EMA', false, { calcParams: [9] });   // Main pane
+      chart.createIndicator('EMA', false, { calcParams: [21] });
+      chart.createIndicator('MACD', true);   // Sub-pane (true = new pane)
+      chart.createIndicator('RSI', true);
+      // Volume is usually auto-enabled; force if needed:
+      chart.createIndicator('VOLUME', true);
+
+      // VWAP: Calculate on your backend or client-side and add as overlay/custom indicator
+      // Example custom line (after data loaded):
+      // chart.createOverlay('Line', { ... });
+
+      console.log('Chart initialized with indicators');
+    };
+  </script>
 </body>
 </html>
