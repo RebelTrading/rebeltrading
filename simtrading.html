@@ -8,35 +8,37 @@
   <style>
     body { margin:0; padding:20px; background:#0a0a0a; color:#ddd; font-family:Arial; }
     #chart { width:100%; max-width:1400px; height:720px; margin:20px auto; border:2px solid #333; background:#000; }
+    button { padding:10px 16px; margin:5px; background:#222; color:white; border:none; border-radius:4px; cursor:pointer; }
+    button.active { background:#ff2a2a; }
   </style>
 </head>
 <body>
-  <h1>KLineChart Test - BTC/ETH/SOL/XRP</h1>
+  <h1>KLineChart Test (BTC/ETH/SOL/XRP)</h1>
+  
+  <div>
+    <button onclick="switchSymbol('BTC')" class="active" id="btn-BTC">BTC</button>
+    <button onclick="switchSymbol('ETH')" id="btn-ETH">ETH</button>
+    <button onclick="switchSymbol('SOL')" id="btn-SOL">SOL</button>
+    <button onclick="switchSymbol('XRP')" id="btn-XRP">XRP</button>
+  </div>
+
   <div id="chart"></div>
 
   <script>
-    window.onload = function () {
-      const chart = klinecharts.init('chart');
+    let chart = null;
+    let currentSymbol = 'BTC';
 
-      // Add indicators
-      chart.createIndicator('EMA', false, { calcParams: [9] });
-      chart.createIndicator('EMA', false, { calcParams: [21] });
-      chart.createIndicator('VOLUME', true);
-      chart.createIndicator('MACD', true);
-      chart.createIndicator('RSI', true);
-
-      // Generate data (this is the part that was failing before)
+    function generateData(basePrice) {
       const now = Date.now();
       const data = [];
-      let price = 65000;
+      let price = basePrice;
 
-      for (let i = 200; i >= 0; i--) {
-        const ts = now - (i * 60000);
-        const change = (Math.random() - 0.5) * 400;
+      for (let i = 300; i >= 0; i--) {
+        const ts = now - i * 60000; // 1min bars
         const open = price;
-        const close = open + change;
-        const high = Math.max(open, close) + Math.random() * 150;
-        const low = Math.min(open, close) - Math.random() * 150;
+        const close = open + (Math.random() * 400 - 200);
+        const high = Math.max(open, close) + Math.random() * 250;
+        const low = Math.min(open, close) - Math.random() * 250;
 
         data.push({
           timestamp: ts,
@@ -44,13 +46,55 @@
           high: Number(high.toFixed(2)),
           low: Number(low.toFixed(2)),
           close: Number(close.toFixed(2)),
-          volume: Math.floor(Math.random() * 15000) + 3000
+          volume: Math.floor(Math.random() * 15000) + 2000
         });
         price = close;
       }
+      return data;
+    }
 
-      chart.applyNewData(data);
-      console.log('✅ Applied', data.length, 'bars - Chart should now be visible');
+    function initChart() {
+      if (chart) klinecharts.dispose('chart');
+
+      chart = klinecharts.init('chart');
+
+      // Indicators
+      chart.createIndicator('EMA', false, { calcParams: [9] });
+      chart.createIndicator('EMA', false, { calcParams: [21] });
+      chart.createIndicator('VOLUME', true);
+      chart.createIndicator('MACD', true);
+      chart.createIndicator('RSI', true);
+
+      console.log('✅ Chart initialized');
+    }
+
+    function loadData() {
+      if (!chart) return;
+
+      const basePrices = { BTC: 79100, ETH: 3450, SOL: 145, XRP: 1.43 };
+      const bars = generateData(basePrices[currentSymbol] || 65000);
+
+      chart.setDataLoader({
+        getBars: ({ callback }) => {
+          callback(bars);
+        }
+      });
+
+      console.log(`✅ Loaded ${bars.length} bars for ${currentSymbol}`);
+    }
+
+    window.switchSymbol = function(symbol) {
+      currentSymbol = symbol;
+      
+      document.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+      document.getElementById(`btn-${symbol}`).classList.add('active');
+
+      loadData();
+    };
+
+    window.onload = function() {
+      initChart();
+      loadData();
     };
   </script>
 </body>
