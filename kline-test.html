@@ -2,12 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>KLineCharts Full Implementation</title>
+    <title>KLineCharts Integration</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/klinecharts/dist/klinecharts.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/klinecharts/dist/klinecharts.min.js"></script>
     <style>
         body { margin: 0; padding: 0; background: #000; }
-        /* Ensure the container has explicit dimensions */
         #chart { width: 100vw; height: 100vh; }
     </style>
 </head>
@@ -15,47 +14,49 @@
     <div id="chart"></div>
 
     <script>
-        // 1. Initialize the chart
+        // 1. Initialize
         const chart = klinecharts.init('chart');
 
-        // 2. Set symbol and period as per documentation requirements
+        // 2. Set Symbol & Period (Required for Data Loader to trigger)
         chart.setSymbol({ ticker: 'BTC' });
         chart.setPeriod({ span: 1, type: 'day' });
 
-        // 3. Add indicators
-        chart.createIndicator('MACD');
-        chart.createIndicator('RSI');
-        chart.createIndicator('EMA', true, { id: 'candle_pane' });
+        // 3. Normalization Helper (Crucial for KLineCharts field format)
+        function normalizeToKLineData(item) {
+            return {
+                timestamp: Number(item.t), // Ensure milliseconds
+                open: Number(item.o),
+                high: Number(item.h),
+                low: Number(item.l),
+                close: Number(item.c),
+                volume: Number(item.v || 0)
+            };
+        }
 
-        // 4. Set the Data Loader using the required callback pattern
+        // 4. Implement the Data Loader per the official GitHub docs
         chart.setDataLoader({
-            getBars: async ({ callback }) => {
+            getBars: async ({ type, timestamp, callback }) => {
                 try {
+                    // Fetch your data
                     const response = await fetch('http://192.168.0.66:8000/api/prices');
                     const rawData = await response.json();
                     
-                    // Log the full response to the console (F12) to verify structure
-                    console.log("Full API Response:", rawData);
+                    // Access the array (Modify 'btc' to the correct key from your console)
+                    const sourceArray = rawData.btc || [];
 
-                    // Map your response to the required KLineCharts format
-                    // UPDATE: Change 'rawData.btc' to the correct key found in your console log
-                    const rawArray = rawData.btc || []; 
+                    // Normalize data
+                    const bars = sourceArray.map(normalizeToKLineData)
+                        .sort((a, b) => a.timestamp - b.timestamp);
 
-                    const formattedData = rawArray.map(item => ({
-                        timestamp: item.t,
-                        open: item.o,
-                        high: item.h,
-                        low: item.l,
-                        close: item.c,
-                        volume: item.v
-                    }));
+                    console.log(`[KLine] Data Loaded: ${bars.length} bars. Type: ${type}`);
 
-                    // Return data to the chart via callback
-                    callback(formattedData);
-                } catch (error) {
-                    console.error("Fetch failed:", error);
-                    // Always call the callback, even on error, to avoid a frozen chart
-                    callback([]);
+                    // Use callback(data, more)
+                    // If your API returns all data at once, 'more' is false.
+                    callback(bars, false);
+
+                } catch (e) {
+                    console.error("[KLine] Data Loading Error:", e);
+                    callback([], false);
                 }
             }
         });
