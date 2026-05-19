@@ -4,40 +4,39 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KLineChart Test</title>
-  <script src="https://cdn.jsdelivr.net/npm/klinecharts@latest/dist/umd/klinecharts.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/klinecharts/dist/umd/klinecharts.min.js"></script>
   <style>
     body { margin:0; padding:20px; background:#0a0a0a; color:#ddd; font-family:Arial; }
-    #chart { width:100%; max-width:1400px; height:720px; margin:20px auto; border:1px solid #333; background:#000; }
+    #chart { width:100%; max-width:1400px; height:720px; margin:20px auto; border:2px solid #333; background:#000; }
   </style>
 </head>
 <body>
-  <h1>KLineChart Test — Should show candles + indicators</h1>
+  <h1>KLineChart Test - BTC/ETH/SOL/XRP</h1>
   <div id="chart"></div>
 
   <script>
-    let chart = null;
+    window.onload = function () {
+      const chart = klinecharts.init('chart');
 
-    function init() {
-      chart = klinecharts.init('chart');
-
-      // Add your indicators
+      // Add indicators
       chart.createIndicator('EMA', false, { calcParams: [9] });
       chart.createIndicator('EMA', false, { calcParams: [21] });
       chart.createIndicator('VOLUME', true);
       chart.createIndicator('MACD', true);
       chart.createIndicator('RSI', true);
 
-      // === CRITICAL: Generate visible data ===
+      // Generate data (this is the part that was failing before)
       const now = Date.now();
       const data = [];
       let price = 65000;
 
-      for (let i = 300; i >= 0; i--) {
-        const ts = now - i * 60000;
+      for (let i = 200; i >= 0; i--) {
+        const ts = now - (i * 60000);
+        const change = (Math.random() - 0.5) * 400;
         const open = price;
-        const close = open + (Math.random() * 300 - 150);
-        const high = Math.max(open, close) + Math.random() * 200;
-        const low = Math.min(open, close) - Math.random() * 200;
+        const close = open + change;
+        const high = Math.max(open, close) + Math.random() * 150;
+        const low = Math.min(open, close) - Math.random() * 150;
 
         data.push({
           timestamp: ts,
@@ -45,16 +44,14 @@
           high: Number(high.toFixed(2)),
           low: Number(low.toFixed(2)),
           close: Number(close.toFixed(2)),
-          volume: Math.floor(Math.random() * 12000) + 2000
+          volume: Math.floor(Math.random() * 15000) + 3000
         });
         price = close;
       }
 
       chart.applyNewData(data);
-      console.log('✅ Chart initialized with', data.length, 'bars');
-    }
-
-    window.onload = init;
+      console.log('✅ Applied', data.length, 'bars - Chart should now be visible');
+    };
   </script>
 </body>
 </html>
