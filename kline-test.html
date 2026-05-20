@@ -10,7 +10,7 @@
     #chart { width:100%; max-width:1400px; height:720px; margin:20px auto; border:2px solid #444; background:#000; }
     button { padding:10px 20px; margin:5px; background:#222; color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold; }
     button.active { background:#ff2a2a; }
-    #status { text-align:center; margin:10px; color:#0f0; }
+    #status { text-align:center; margin:10px; color:#0f0; font-family:monospace; }
   </style>
 </head>
 <body>
@@ -30,7 +30,7 @@
     let chart = null;
     let currentSymbol = 'BTC';
     let priceInterval = null;
-    let lastPrice = 65000;
+    let barsCache = [];   // Keep bars in memory for updates
 
     function generateInitialBars(basePrice) {
       const now = Date.now();
@@ -60,7 +60,6 @@
       if (chart) klinecharts.dispose('chart');
 
       chart = klinecharts.init('chart');
-
       chart.setSymbol({ ticker: currentSymbol + '/USD' });
       chart.setPeriod({ span: 1, type: 'minute' });
 
@@ -71,59 +70,60 @@
       chart.createIndicator('RSI', true);
 
       const basePrices = { BTC: 79130, ETH: 3450, SOL: 145, XRP: 1.43 };
-      const bars = generateInitialBars(basePrices[currentSymbol] || 65000);
+      barsCache = generateInitialBars(basePrices[currentSymbol] || 65000);
 
-      chart.setDataLoader({
-        getBars: ({ callback }) => callback(bars)
-      });
-
-      console.log(`✅ Loaded initial bars for ${currentSymbol}`);
+      chart.setDataLoader({ getBars: ({ callback }) => callback(barsCache) });
+      console.log(`✅ Initial bars loaded for ${currentSymbol}`);
     }
 
-    // Fetch live price and update the last candle
     async function updateLivePrice() {
       try {
         const res = await fetch('http://192.168.0.66:8000/api/prices');
         const priceMatrix = await res.json();
 
-        const apiKey = currentSymbol + '-USD';  // matches your tradesim.html
-        let newPrice = priceMatrix[apiKey] || lastPrice;
+        const apiKey = currentSymbol + '-USD';
+        let newPrice = priceMatrix[apiKey];
 
         if (typeof newPrice === 'number' && newPrice > 0) {
-          lastPrice = newPrice;
-
-          // Update the last (current) candle
+          // Update the LAST bar in cache
+          const lastBar = barsCache[barsCache.length - 1];
           const now = Date.now();
-          const lastBar = {
-            timestamp: Math.floor(now / 60000) * 60000, // current minute
-            open: lastPrice,   // simplify for demo
-            high: lastPrice + Math.random() * 20,
-            low: lastPrice - Math.random() * 20,
-            close: lastPrice,
-            volume: Math.floor(Math.random() * 5000) + 1000
-          };
+          const currentMinute = Math.floor(now / 60000) * 60000;
 
-          if (chart) {
-            chart.updateData(lastBar);
+          if (lastBar.timestamp === currentMinute) {
+            // Update current candle
+            lastBar.high = Math.max(lastBar.high, newPrice);
+            lastBar.low = Math.min(lastBar.low, newPrice);
+            lastBar.close = newPrice;
+            lastBar.volume += 100;
+          } else {
+            // New candle
+            barsCache.push({
+              timestamp: currentMinute,
+              open: newPrice,
+              high: newPrice,
+              low: newPrice,
+              close: newPrice,
+              volume: 1000
+            });
           }
 
+          // Reload data (current way in v10+)
+          chart.setDataLoader({ getBars: ({ callback }) => callback(barsCache) });
+
           document.getElementById('status').innerHTML = 
-            `Live ${currentSymbol}: <strong>$${lastPrice.toFixed(2)}</strong> (updating)`;
+            `Live ${currentSymbol}: <strong>$${newPrice.toFixed(2)}</strong> ✓`;
         }
       } catch (e) {
-        console.warn('Live API failed (normal on GitHub Pages):', e.message);
-        document.getElementById('status').innerHTML = 'Live API unavailable — using mock movement';
+        console.warn('Live API failed:', e.message);
+        document.getElementById('status').innerHTML = 'Live API unavailable (normal on GitHub) — mock movement active';
         
-        // Fake small movement when API not reachable
-        lastPrice += (Math.random() - 0.5) * 15;
-        if (chart) chart.updateData({
-          timestamp: Math.floor(Date.now() / 60000) * 60000,
-          open: lastPrice,
-          high: lastPrice + 10,
-          low: lastPrice - 10,
-          close: lastPrice,
-          volume: 5000
-        });
+        // Fake movement for testing on GitHub
+        const lastBar = barsCache[barsCache.length - 1];
+        lastBar.close += (Math.random() - 0.5) * 25;
+        lastBar.high = Math.max(lastBar.high, lastBar.close);
+        lastBar.low = Math.min(lastBar.low, lastBar.close);
+        chart.setDataLoader({ getBars: ({ callback }) => callback(barsCache) });
       }
     }
 
@@ -132,16 +132,14 @@
       document.querySelectorAll('button').forEach(b => b.classList.remove('active'));
       document.getElementById(`btn-${symbol}`).classList.add('active');
       initChart();
-      updateLivePrice(); // immediate update
+      updateLivePrice();
     };
 
     window.onload = function() {
       initChart();
       updateLivePrice();
-      
-      // Update every 1 second (like your tradesim.html)
       if (priceInterval) clearInterval(priceInterval);
-      priceInterval = setInterval(updateLivePrice, 1000);
+      priceInterval = setInterval(updateLivePrice, 1000); // every 1 second
     };
   </script>
 </body>
