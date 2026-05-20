@@ -6,7 +6,7 @@
   <title>KLineChart Test</title>
   <script src="https://cdn.jsdelivr.net/npm/klinecharts/dist/umd/klinecharts.min.js"></script>
   <style>
-    body { margin:0; padding:20px; background:#0a0a0a; color:#ddd; font-family:Arial; }
+    body { margin:0; padding:20px; background:#0a0a0a; color:#ddd; font-family:Arial, sans-serif; }
     #chart { width:100%; max-width:1400px; height:720px; margin:20px auto; border:2px solid #444; background:#000; }
     button { padding:10px 20px; margin:5px; background:#222; color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold; }
     button.active { background:#ff2a2a; }
@@ -32,7 +32,6 @@
       const now = Date.now();
       const bars = [];
       let price = basePrice;
-
       for (let i = 250; i >= 0; i--) {
         const ts = now - i * 60000;
         const open = price;
@@ -53,23 +52,21 @@
       return bars;
     }
 
-    function initAndLoad() {
+    function initChart() {
       if (chart) klinecharts.dispose('chart');
 
       chart = klinecharts.init('chart');
 
-      // === REQUIRED STEPS FROM OFFICIAL DOCS ===
       chart.setSymbol({ ticker: currentSymbol + '/USD' });
       chart.setPeriod({ span: 1, type: 'minute' });
 
-      // Indicators you wanted
+      // Your indicators
       chart.createIndicator('EMA', false, { calcParams: [9] });
       chart.createIndicator('EMA', false, { calcParams: [21] });
       chart.createIndicator('VOLUME', true);
       chart.createIndicator('MACD', true);
       chart.createIndicator('RSI', true);
 
-      // Load data
       const basePrices = { BTC: 79130, ETH: 3450, SOL: 145, XRP: 1.43 };
       const bars = generateMockBars(basePrices[currentSymbol] || 65000);
 
@@ -79,17 +76,17 @@
         }
       });
 
-      console.log(`✅ Chart loaded with ${bars.length} bars for ${currentSymbol}`);
+      console.log(`✅ Loaded ${bars.length} bars for ${currentSymbol}`);
     }
 
     window.switchSymbol = function(symbol) {
       currentSymbol = symbol;
       document.querySelectorAll('button').forEach(b => b.classList.remove('active'));
       document.getElementById(`btn-${symbol}`).classList.add('active');
-      initAndLoad();
+      initChart();
     };
 
-    window.onload = initAndLoad;
+    window.onload = initChart;
   </script>
 </body>
 </html>
