@@ -7,8 +7,8 @@
   <script src="https://cdn.jsdelivr.net/npm/klinecharts/dist/umd/klinecharts.min.js"></script>
   <style>
     body { margin:0; padding:20px; background:#0a0a0a; color:#ddd; font-family:Arial; }
-    #chart { width:100%; max-width:1400px; height:720px; margin:20px auto; border:2px solid #333; background:#000; }
-    button { padding:10px 16px; margin:5px; background:#222; color:white; border:none; border-radius:4px; cursor:pointer; }
+    #chart { width:100%; max-width:1400px; height:720px; margin:20px auto; border:2px solid #444; background:#000; }
+    button { padding:10px 20px; margin:5px; background:#222; color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold; }
     button.active { background:#ff2a2a; }
   </style>
 </head>
@@ -28,51 +28,50 @@
     let chart = null;
     let currentSymbol = 'BTC';
 
-    function generateData(basePrice) {
+    function generateMockBars(basePrice) {
       const now = Date.now();
-      const data = [];
+      const bars = [];
       let price = basePrice;
 
-      for (let i = 300; i >= 0; i--) {
-        const ts = now - i * 60000; // 1min bars
+      for (let i = 250; i >= 0; i--) {
+        const ts = now - i * 60000;
         const open = price;
-        const close = open + (Math.random() * 400 - 200);
-        const high = Math.max(open, close) + Math.random() * 250;
-        const low = Math.min(open, close) - Math.random() * 250;
+        const close = open + (Math.random() * 380 - 190);
+        const high = Math.max(open, close) + Math.random() * 220;
+        const low = Math.min(open, close) - Math.random() * 220;
 
-        data.push({
+        bars.push({
           timestamp: ts,
           open: Number(open.toFixed(2)),
           high: Number(high.toFixed(2)),
           low: Number(low.toFixed(2)),
           close: Number(close.toFixed(2)),
-          volume: Math.floor(Math.random() * 15000) + 2000
+          volume: Math.floor(Math.random() * 18000) + 2500
         });
         price = close;
       }
-      return data;
+      return bars;
     }
 
-    function initChart() {
+    function initAndLoad() {
       if (chart) klinecharts.dispose('chart');
 
       chart = klinecharts.init('chart');
 
-      // Indicators
+      // === REQUIRED STEPS FROM OFFICIAL DOCS ===
+      chart.setSymbol({ ticker: currentSymbol + '/USD' });
+      chart.setPeriod({ span: 1, type: 'minute' });
+
+      // Indicators you wanted
       chart.createIndicator('EMA', false, { calcParams: [9] });
       chart.createIndicator('EMA', false, { calcParams: [21] });
       chart.createIndicator('VOLUME', true);
       chart.createIndicator('MACD', true);
       chart.createIndicator('RSI', true);
 
-      console.log('✅ Chart initialized');
-    }
-
-    function loadData() {
-      if (!chart) return;
-
-      const basePrices = { BTC: 79100, ETH: 3450, SOL: 145, XRP: 1.43 };
-      const bars = generateData(basePrices[currentSymbol] || 65000);
+      // Load data
+      const basePrices = { BTC: 79130, ETH: 3450, SOL: 145, XRP: 1.43 };
+      const bars = generateMockBars(basePrices[currentSymbol] || 65000);
 
       chart.setDataLoader({
         getBars: ({ callback }) => {
@@ -80,22 +79,17 @@
         }
       });
 
-      console.log(`✅ Loaded ${bars.length} bars for ${currentSymbol}`);
+      console.log(`✅ Chart loaded with ${bars.length} bars for ${currentSymbol}`);
     }
 
     window.switchSymbol = function(symbol) {
       currentSymbol = symbol;
-      
       document.querySelectorAll('button').forEach(b => b.classList.remove('active'));
       document.getElementById(`btn-${symbol}`).classList.add('active');
-
-      loadData();
+      initAndLoad();
     };
 
-    window.onload = function() {
-      initChart();
-      loadData();
-    };
+    window.onload = initAndLoad;
   </script>
 </body>
 </html>
